@@ -13,6 +13,12 @@ function App() {
     <Router>
       <AuthProvider>
         <div className="app-container">
+          {/* Background Branding Watermark for all pages */}
+          <div className="bg-branding-watermark flex-center">
+            <img src="/favicon.png" alt="" className="watermark-logo" />
+            <span className="watermark-x">×</span>
+            <span>DTEHub</span>
+          </div>
           <Navbar />
           <main className="main-content">
             <Routes>

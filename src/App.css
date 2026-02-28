@@ -49,7 +49,7 @@
 
 .nav-item:hover,
 .nav-item.active {
-  color: var(--text-main);
+  color: var(--accent-color);
 }
 
 /* Footer Styles */
@@ -74,7 +74,7 @@
 }
 
 .footer-link:hover {
-  color: var(--text-main);
+  color: var(--accent-color);
 }
 
 /* ───────────── Navbar Auth Styles ───────────── */
@@ -143,4 +143,34 @@
 @keyframes skeleton-shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+/* ────────── Global Background Watermark ────────── */
+.bg-branding-watermark {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12vw;
+    font-weight: 900;
+    color: var(--accent-color);
+    opacity: 0.08;
+    pointer-events: none;
+    z-index: 1;
+    white-space: nowrap;
+    user-select: none;
+    letter-spacing: -0.05em;
+    gap: 2vw;
+}
+
+.watermark-logo {
+    height: 22vw;
+    width: auto;
+    opacity: 1;
+}
+
+.watermark-x {
+    font-size: 8vw;
+    font-weight: 300;
+    opacity: 0.6;
 }

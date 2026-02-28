@@ -92,7 +92,7 @@ export default function Profile() {
                 <section className="profile-section">
                     <div className="section-header">
                         <div className="section-title-wrapper">
-                            <History size={20} className="text-blue" />
+                            <History size={20} className="text-yellow" />
                             <h2 className="section-title">Recently Viewed</h2>
                         </div>
                         <span className="count-pill">{recentlyViewed.length}</span>

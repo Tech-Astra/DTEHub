@@ -1,184 +1,158 @@
 .notes-page {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 3rem;
+    padding-top: 3rem;
 }
 
 .page-header {
-    margin-bottom: 1rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 1.5rem;
 }
 
 .page-title {
-    font-size: 2.5rem;
+    font-size: 2.25rem;
     font-weight: 800;
     margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+    color: var(--accent-color);
 }
 
 .page-subtitle {
     color: var(--text-muted);
     font-size: 1.1rem;
+    font-weight: 500;
 }
 
-.notes-layout {
-    display: flex;
-    gap: 3rem;
-    align-items: flex-start;
-}
-
-.sidebar {
-    width: 250px;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
+/* ───────────── Folder Grid ───────────── */
+.notes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 2rem;
-    background-color: var(--card-bg);
-    padding: 1.5rem;
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border-color);
 }
 
-.filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-.filter-title {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--text-muted);
-    letter-spacing: 0.05em;
-    margin-bottom: 0.5rem;
-}
-
-.checkbox-label {
+.folder-card {
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 1.25rem;
+    padding: 1.75rem 1.5rem !important;
+    background: #18181b;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
     cursor: pointer;
-    font-size: 0.95rem;
+    overflow: hidden;
 }
 
-.checkbox-label input[type="radio"] {
-    accent-color: var(--accent-hover);
-    width: 16px;
-    height: 16px;
+.folder-card:hover {
+    background: #27272a;
+    transform: translateY(-5px);
+    box-shadow: 0 14px 28px -10px rgba(0, 0, 0, 0.8);
+    border-color: rgba(253, 224, 71, 0.3);
 }
 
-.notes-content {
-    flex: 1;
+.folder-icon-wrapper {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
     display: flex;
-    flex-direction: column;
-    gap: 2rem;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-color);
 }
 
+.folder-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-main);
+    letter-spacing: 0.01em;
+}
+
+/* ───────────── Hover Actions Overlay ───────────── */
+.folder-actions-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(12, 12, 14, 0.94);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s ease-out;
+}
+
+.folder-card:hover .folder-actions-overlay {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.action-button-group {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    transform: translateY(15px);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.folder-card:hover .action-button-group {
+    transform: translateY(0);
+}
+
+.circle-action-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
+}
+
+.circle-action-btn:hover {
+    transform: scale(1.15);
+}
+
+/* Updated Action Colors based on Yellow Theme */
+.btn-add { background-color: var(--accent-color); } /* Gold + */
+.btn-view { background-color: #ffffff; } /* Clear White Eye */
+.btn-download { background-color: #d4d4d8; } /* Silver-Gray Downloader */
+
+.btn-add.active {
+    background-color: #ef4444;
+    color: white;
+}
+
+/* ───────────── Search Bar ───────────── */
 .search-bar-modern {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    background-color: var(--card-bg);
+    gap: 0.75rem;
+    background: rgba(255, 255, 255, 0.04);
     border: 1px solid var(--border-color);
-    padding: 1rem 1.5rem;
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
+    padding: 0.6rem 1.25rem;
+    border-radius: 8px;
+    width: 380px;
+    transition: all 0.2s;
+}
+
+.search-bar-modern:focus-within {
+    border-color: var(--accent-color);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .search-bar-modern input {
     flex: 1;
-    border: none;
     background: transparent;
-    font-size: 1rem;
-    outline: none;
-    font-family: inherit;
-}
-
-.notes-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.5rem;
-}
-
-.note-card {
-    display: flex;
-    flex-direction: column;
-}
-
-.note-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 0.5rem;
-}
-
-.note-subject {
-    font-weight: 700;
-    font-size: 1rem;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    letter-spacing: 0.02em;
-}
-
-.note-icon {
-    color: var(--accent-hover);
-}
-
-.note-chapter {
-    font-weight: 600;
-    font-size: 1.125rem;
-    margin-bottom: 0.25rem;
-}
-
-.note-author {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-}
-
-.w-full {
-    width: 100%;
-}
-
-.mt-4 {
-    margin-top: 1rem;
-}
-
-.note-meta {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 1rem;
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    border-top: 1px solid var(--border-color);
-    padding-top: 1rem;
-}
-
-.gap-1 {
-    gap: 0.25rem;
-}
-
-/* Favorite button */
-.note-header-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.fav-btn {
-    background: none;
     border: none;
-    color: var(--text-muted);
-    cursor: pointer;
-    padding: 0.25rem;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    transition: color 0.2s, transform 0.2s;
+    outline: none;
+    color: white;
+    font-size: 0.95rem;
+    padding: 0.4rem 0;
 }
 
-.fav-btn:hover {
-    color: #ef4444;
-    transform: scale(1.15);
-}
-
-.fav-btn.fav-active {
-    color: #ef4444;
+.search-icon {
+    color: var(--accent-color);
 }

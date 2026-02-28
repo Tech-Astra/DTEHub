@@ -14,7 +14,7 @@ export default function Navbar() {
             <div className="container nav-container">
                 <Link to="/" className="logo-link">
                     <GraduationCap size={28} color="var(--accent-hover)" />
-                    <span>DTE_Utility</span>
+                    <span>DTEHub</span>
                 </Link>
                 <div className="nav-links">
                     <Link to="/" className={`nav-item ${isActive('/')}`}>Home</Link>

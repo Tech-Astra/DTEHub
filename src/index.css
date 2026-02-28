@@ -1,20 +1,30 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
   --font-family: 'Inter', sans-serif;
-  --bg-color: #f8fafc;
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --accent-color: #FDE047; /* Nano Banana Light */
-  --accent-hover: #eab308;
-  --card-bg: #ffffff;
-  --border-color: #e2e8f0;
   
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  /* Obsidian & Gold Theme */
+  --bg-color: #0c0c0e; 
+  --card-bg: #18181b;
+  --text-main: #ffffff;
+  --text-muted: #a1a1aa;
+  
+  --accent-color: #FDE047; /* Vibrant Yellow */
+  --accent-hover: #facc15;
+  --accent-glow: rgba(253, 224, 71, 0.3);
+  
+  --border-color: rgba(255, 255, 255, 0.08);
+  
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
+  --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.6);
   --radius-md: 8px;
-  --radius-lg: 12px;
+  --radius-lg: 16px;
   --radius-full: 9999px;
+  
+  /* Circular Action Button Colors (Yellow Theme) */
+  --btn-add: #FDE047;
+  --btn-view: #ffffff;
+  --btn-download: #facc15;
 }
 
 * {
@@ -25,9 +35,10 @@
 
 body {
   font-family: var(--font-family);
-  background-color: var(--bg-color);
+  background: radial-gradient(circle at top right, #18181b 0%, #0c0c0e 80%);
   color: var(--text-main);
   line-height: 1.5;
+  min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -41,11 +52,12 @@ button {
   cursor: pointer;
   border: none;
   background: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Base Utility Classes */
 .container {
-  max-width: 1200px;
+  max-width: 1300px;
   margin: 0 auto;
   padding: 0 2rem;
 }
@@ -53,34 +65,29 @@ button {
 .btn-primary {
   background-color: var(--accent-color);
   color: #000;
-  font-weight: 600;
-  padding: 0.5rem 1.25rem;
-  border-radius: var(--radius-full);
-  transition: all 0.2s;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+  font-weight: 700;
+  padding: 0.75rem 1.75rem;
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 14px 0 var(--accent-glow);
 }
 
 .btn-primary:hover {
   background-color: var(--accent-hover);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px 0 var(--accent-glow);
 }
 
 .btn-outline {
-  background-color: transparent;
-  color: var(--text-main);
-  font-weight: 500;
-  padding: 0.5rem 1rem;
   border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 0.625rem 1rem;
   border-radius: var(--radius-md);
-  transition: all 0.2s;
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .btn-outline:hover {
-  background-color: var(--card-bg);
-  border-color: #cbd5e1;
+  border-color: var(--accent-color);
+  background: rgba(253, 224, 71, 0.05);
 }
 
 .card {
@@ -89,28 +96,11 @@ button {
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   box-shadow: var(--shadow-sm);
-  transition: box-shadow 0.2s, transform 0.2s;
+  transition: border-color 0.3s;
 }
 
 .card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-}
-
-.input-field {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  font-family: var(--font-family);
-  font-size: 1rem;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.input-field:focus {
-  border-color: var(--accent-color);
-  box-shadow: 0 0 0 3px rgba(253, 224, 71, 0.2);
+    border-color: rgba(253, 224, 71, 0.2);
 }
 
 .flex-center {
@@ -123,4 +113,14 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade {
+  animation: fadeIn 0.4s ease-out forwards;
 }

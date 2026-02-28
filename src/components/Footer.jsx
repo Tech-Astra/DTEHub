@@ -11,7 +11,7 @@ export default function Footer() {
                     <a href="#" className="footer-link">Privacy Policy</a>
                 </div>
                 <div className="footer-copyright">
-                    &copy; {new Date().getFullYear()} DTE_Utility. All rights reserved.
+                    &copy; {new Date().getFullYear()} DTEHub. All rights reserved.
                 </div>
                 <div className="footer-socials" style={{ display: 'flex', gap: '1rem' }}>
                     <a href="#" className="footer-link"><Facebook size={20} /></a>
