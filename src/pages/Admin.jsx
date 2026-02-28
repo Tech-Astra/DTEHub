@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuthContext } from '../context/AuthContext';
 import { database } from '../firebase';
 import { ref, push, set, onValue, remove } from 'firebase/database';
-import { Plus, Trash2, Edit2, Link as LinkIcon, FolderPlus, FileText, Users, X } from 'lucide-react';
+import { Plus, Trash2, Edit2, Link as LinkIcon, FolderPlus, FileText, Users, X, Zap } from 'lucide-react';
 import './Admin.css';
 
 // Admin allowed list
@@ -25,12 +25,16 @@ export default function Admin() {
     
     // Data list states
     const [resources, setResources] = useState([]);
+    const [foldersList, setFoldersList] = useState([]); // List of items where isFolder: true
     const [usersList, setUsersList] = useState([]);
     const [isSaving, setIsSaving] = useState(false);
     
     // Admin Dashboard Stats
     const [totalUsers, setTotalUsers] = useState(0);
     const [editingId, setEditingId] = useState(null);
+    const [parentId, setParentId] = useState('root'); 
+    const [isFolder, setIsFolder] = useState(false); 
+    const [folderTitle, setFolderTitle] = useState(''); // Separate state for new folder title
 
     useEffect(() => {
         let unsubscribeResources = () => {};
@@ -66,8 +70,11 @@ export default function Admin() {
                         ...data[key]
                     }));
                     setResources(arr.reverse());
+                    // Extract Folders for selection
+                    setFoldersList(arr.filter(item => item.isFolder));
                 } else {
                     setResources([]);
+                    setFoldersList([]);
                 }
             });
         }
@@ -91,6 +98,29 @@ export default function Admin() {
     }
 
 
+    const handleAddFolder = async (e) => {
+        e.preventDefault();
+        if (!folderTitle.trim()) return;
+        setIsSaving(true);
+        try {
+            const folderRef = push(ref(database, `resources/${activeTab}`));
+            await set(folderRef, {
+                title: folderTitle,
+                isFolder: true,
+                parentId: 'root',
+                academicYear,
+                branch,
+                timestamp: Date.now()
+            });
+            setFolderTitle('');
+            alert("New folder created!");
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const handleAddResource = async (e) => {
         e.preventDefault();
         setIsSaving(true);
@@ -98,9 +128,11 @@ export default function Admin() {
         try {
             const newResource = {
                 title,
-                url, // the google drive link
+                url, 
                 academicYear,
                 branch,
+                isFolder: false,
+                parentId: parentId || 'root',
                 timestamp: Date.now(),
             };
 
@@ -109,6 +141,8 @@ export default function Admin() {
                 newResource.chapter = chapter || 'General';
             } else if (activeTab === 'papers') {
                 newResource.year = chapter || new Date().getFullYear().toString(); // Repurposing chapter input for paper year
+            } else if (activeTab === 'dcet') {
+                newResource.chapter = chapter || 'Preparation';
             }
 
             if (editingId) {
@@ -139,12 +173,23 @@ export default function Admin() {
     const handleEdit = (res) => {
         setEditingId(res.id);
         setTitle(res.title);
-        setUrl(res.url);
+        setUrl(res.url || '');
         setAcademicYear(res.academicYear);
         setBranch(res.branch);
         setChapter(activeTab === 'notes' ? res.chapter : res.year);
+        setIsFolder(res.isFolder || false);
+        setParentId(res.parentId || 'root');
         // Scroll to form for convenience
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleMove = async (res, newParentId) => {
+        try {
+            await set(ref(database, `resources/${activeTab}/${res.id}/parentId`), newParentId);
+            alert("Moved successfully!");
+        } catch (err) {
+            console.error("Move failed", err);
+        }
     };
 
     const handleCancelEdit = () => {
@@ -197,6 +242,12 @@ export default function Admin() {
                     <FileText size={18} /> Manage Papers
                 </button>
                 <button 
+                    className={`admin-tab ${activeTab === 'dcet' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('dcet')}
+                >
+                    <Zap size={18} /> Manage DCET
+                </button>
+                <button 
                     className={`admin-tab ${activeTab === 'users' ? 'active' : ''}`}
                     onClick={() => setActiveTab('users')}
                 >
@@ -232,40 +283,91 @@ export default function Admin() {
                     </div>
                 ) : (
                     <div className="admin-content-grid">
-                        {/* Add Form */}
-                        <div className="admin-card card form-card">
-                            <h3>{editingId ? 'Edit' : 'Add New'} {activeTab === 'notes' ? 'Note' : 'Paper'}</h3>
-                            <form className="admin-form" onSubmit={handleAddResource}>
-                                {editingId && (
-                                    <div className="editing-banner">
-                                        <span>Currently editing: <strong>{title}</strong></span>
-                                        <button type="button" onClick={handleCancelEdit} className="btn-text">Cancel</button>
-                                    </div>
-                                )}
-                                <div className="form-group">
-                                    <label>Title / Subject Name</label>
+                        <div className="admin-sidebar-forms">
+                            {/* NEW SECTION: Folder Creation */}
+                            <div className="admin-card card folder-create-card">
+                                <div className="card-header-with-icon">
+                                    <FolderPlus size={20} color="var(--accent-color)" />
+                                    <h3>Create New Folder</h3>
+                                </div>
+                                <form onSubmit={handleAddFolder} className="admin-form-mini" style={{flexDirection: 'column', gap: '0.75rem'}}>
                                     <input 
                                         type="text" 
-                                        required 
-                                        value={title} 
-                                        onChange={e => setTitle(e.target.value)} 
-                                        placeholder="e.g. Operating Systems (CS235AI)" 
+                                        placeholder="e.g. Unit 1: OS Basics" 
+                                        value={folderTitle} 
+                                        onChange={e => setFolderTitle(e.target.value)}
+                                        required
+                                        style={{width: '100%'}}
                                     />
-                                </div>
-                                
-                                <div className="form-group">
-                                    <label>Google Drive URL / Folder Link</label>
-                                    <div className="input-with-icon">
-                                        <LinkIcon size={16} />
+                                    <div className="form-row" style={{gap: '0.5rem'}}>
+                                        <select value={academicYear} onChange={e => setAcademicYear(e.target.value)} style={{fontSize: '0.8rem', padding: '0.4rem'}}>
+                                            <option value="">Year (All)</option>
+                                            <option value="1st Year">1st Year</option>
+                                            <option value="2nd Year">2nd Year</option>
+                                            <option value="3rd Year">3rd Year</option>
+                                        </select>
+                                        <select value={branch} onChange={e => setBranch(e.target.value)} style={{fontSize: '0.8rem', padding: '0.4rem'}}>
+                                            <option value="">Branch (All)</option>
+                                            <option value="Common">Common</option>
+                                            <option value="Computer Science">CS</option>
+                                            <option value="Mechanical">Mechanical</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" className="btn-primary w-full" disabled={isSaving} style={{marginTop: 0}}>
+                                        <Plus size={16} /> Create Folder
+                                    </button>
+                                </form>
+                            </div>
+
+                            {/* Add Resource Form (Simplified) */}
+                            <div className="admin-card card form-card">
+                                <h3>{editingId ? 'Edit' : 'Add New'} {activeTab === 'notes' ? 'Note' : activeTab === 'papers' ? 'Paper' : 'DCET Resource'}</h3>
+                                <form className="admin-form" onSubmit={handleAddResource}>
+                                    {editingId && (
+                                        <div className="editing-banner">
+                                            <span>Currently editing: <strong>{title}</strong></span>
+                                            <button type="button" onClick={handleCancelEdit} className="btn-text">Cancel</button>
+                                        </div>
+                                    )}
+                                    
+                                    <div className="form-group">
+                                        <label>Inside Folder:</label>
+                                        <select 
+                                            value={parentId} 
+                                            onChange={e => setParentId(e.target.value)}
+                                            style={{width: '100%', padding: '0.6rem', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--border-color)'}}
+                                        >
+                                            <option value="root">Main Directory (Root)</option>
+                                            {foldersList.map(f => (
+                                                <option key={f.id} value={f.id}>📁 {f.title}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Title / Subject Name</label>
                                         <input 
-                                            type="url" 
+                                            type="text" 
                                             required 
-                                            value={url} 
-                                            onChange={e => setUrl(e.target.value)} 
-                                            placeholder="https://drive.google.com/..." 
+                                            value={title} 
+                                            onChange={e => setTitle(e.target.value)} 
+                                            placeholder="e.g. Operating Systems (CS235AI)" 
                                         />
                                     </div>
-                                </div>
+                                    
+                                    <div className="form-group">
+                                        <label>Google Drive URL</label>
+                                        <div className="input-with-icon">
+                                            <LinkIcon size={16} />
+                                            <input 
+                                                type="url" 
+                                                required 
+                                                value={url} 
+                                                onChange={e => setUrl(e.target.value)} 
+                                                placeholder="https://drive.google.com/..." 
+                                            />
+                                        </div>
+                                    </div>
 
                                 <div className="form-row">
                                     <div className="form-group">
@@ -293,13 +395,13 @@ export default function Admin() {
                                 </div>
 
                                 <div className="form-group">
-                                    <label>{activeTab === 'notes' ? 'Chapter / Module' : 'Exam Year'}</label>
+                                    <label>{activeTab === 'notes' ? 'Chapter / Module' : activeTab === 'papers' ? 'Exam Year' : 'Topic'}</label>
                                     <input 
                                         type="text" 
                                         required 
                                         value={chapter} 
                                         onChange={e => setChapter(e.target.value)} 
-                                        placeholder={activeTab === 'notes' ? "e.g. Ch 4: Trees & Graphs" : "e.g. 2023"} 
+                                        placeholder={activeTab === 'notes' ? "e.g. Ch 4: Trees & Graphs" : activeTab === 'papers' ? "e.g. 2023" : "e.g. Physics Formulae"} 
                                     />
                                 </div>
 
@@ -315,10 +417,11 @@ export default function Admin() {
                                 </div>
                             </form>
                         </div>
+                    </div>
 
                         {/* List View */}
                         <div className="admin-card card list-card">
-                            <h3>Current {activeTab === 'notes' ? 'Notes' : 'Papers'}</h3>
+                            <h3>Current {activeTab === 'notes' ? 'Notes' : activeTab === 'papers' ? 'Papers' : 'DCET Resources'}</h3>
                             <div className="resource-list">
                                 {resources.length === 0 ? (
                                     <div className="empty-state">No resources added yet.</div>
@@ -334,9 +437,23 @@ export default function Admin() {
                                                 </div>
                                             </div>
                                             <div className="res-actions">
-                                                <a href={res.url} target="_blank" rel="noopener noreferrer" className="btn-outline btn-sm">
-                                                    Test Link
-                                                </a>
+                                                <select 
+                                                    className="btn-outline btn-sm"
+                                                    value={res.parentId || 'root'}
+                                                    onChange={(e) => handleMove(res, e.target.value)}
+                                                    title="Move to Folder"
+                                                    style={{maxWidth: '100px', fontSize: '0.7rem'}}
+                                                >
+                                                    <option value="root">Root</option>
+                                                    {foldersList.filter(f => f.id !== res.id).map(folder => (
+                                                        <option key={folder.id} value={folder.id}>📁 {folder.title}</option>
+                                                    ))}
+                                                </select>
+                                                {!res.isFolder && (
+                                                    <a href={res.url} target="_blank" rel="noopener noreferrer" className="btn-outline btn-sm">
+                                                        Test Link
+                                                    </a>
+                                                )}
                                                     <button onClick={() => handleEdit(res)} className="btn-icon btn-edit" title="Edit">
                                                         <Edit2 size={16} />
                                                     </button>

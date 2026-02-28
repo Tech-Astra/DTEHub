@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Download, FileText, Heart, FilterX } from 'lucide-react';
+import { Search, Download, FileText, Heart, FilterX, Folder, Plus, Eye } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext';
 import { ref, onValue } from 'firebase/database';
 import { database } from '../firebase';
@@ -9,22 +9,26 @@ import './Papers.css';
 export default function Papers() {
     const { user, addRecentlyViewed, addDownload, toggleFavorite, isFavorited, addSearchQuery } = useAuthContext();
     const [userYear, setUserYear] = useState('');
+    const [userBranch, setUserBranch] = useState('');
     const [papersData, setPapersData] = useState([]);
     const [loadingPapers, setLoadingPapers] = useState(true);
     const [viewUrl, setViewUrl] = useState(null);
+    const [currentFolder, setCurrentFolder] = useState(null);
 
     useEffect(() => {
         if (user?.uid) {
             const profileRef = ref(database, `users/${user.uid}/profile`);
             const unsubscribe = onValue(profileRef, (snapshot) => {
                 const data = snapshot.val();
-                if (data && data.year) {
-                    setUserYear(data.year);
+                if (data) {
+                    if (data.year) setUserYear(data.year);
+                    if (data.branch) setUserBranch(data.branch);
                 }
             });
             return () => unsubscribe();
         } else {
             setUserYear('');
+            setUserBranch('');
         }
     }, [user]);
 
@@ -49,6 +53,10 @@ export default function Papers() {
     }, []);
 
     const handleView = (paper) => {
+        if (paper.isFolder) {
+            setCurrentFolder(paper);
+            return;
+        }
         if (user) {
             addRecentlyViewed({
                 itemId: paper.id,
@@ -61,6 +69,17 @@ export default function Papers() {
     };
 
     const handleDownload = (paper) => {
+        if (!paper.url) return;
+
+        // Convert to download link if it's a direct file
+        let downloadLink = paper.url;
+        if (paper.url.includes('drive.google.com/file/d/')) {
+            const fileId = paper.url.split('/d/')[1]?.split('/')[0];
+            if (fileId) {
+                downloadLink = `https://drive.google.com/uc?id=${fileId}&export=download`;
+            }
+        }
+
         if (user) {
             addDownload({
                 itemId: paper.id,
@@ -70,6 +89,8 @@ export default function Papers() {
                 paperType: paper.type,
             });
         }
+
+        window.open(downloadLink, '_blank');
     };
 
     const handleFavorite = (paper) => {
@@ -89,9 +110,16 @@ export default function Papers() {
         }
     };
 
-    const filteredPapers = userYear && userYear !== 'Alumni'
-        ? papersData.filter(paper => paper.academicYear === userYear)
-        : papersData;
+    const filteredPapers = papersData.filter(paper => {
+        // Hierarchy check
+        const matchesFolder = (currentFolder?.id || 'root') === (paper.parentId || 'root');
+        
+        // Contextual filters
+        const matchesYear = !userYear || userYear === 'Alumni' || paper.academicYear === userYear || paper.academicYear === 'Common' || !paper.academicYear;
+        const matchesBranch = !userBranch || paper.branch === userBranch || paper.branch === 'Common' || !paper.branch;
+
+        return matchesFolder && matchesYear && matchesBranch;
+    });
 
     return (
         <div className="container papers-page">
@@ -135,66 +163,83 @@ export default function Papers() {
                 </div>
             </div>
 
-            <div className="card table-container">
+            {/* Breadcrumbs */}
+            <div className="breadcrumbs" style={{margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem'}}>
+                <span 
+                    onClick={() => setCurrentFolder(null)} 
+                    style={{cursor: 'pointer', color: !currentFolder ? 'var(--accent-color)' : 'inherit', fontWeight: !currentFolder ? '600' : '400'}}
+                >
+                    All Papers
+                </span>
+                {currentFolder && (
+                    <>
+                        <span>/</span>
+                        <span style={{color: 'var(--accent-color)', fontWeight: '600'}}>{currentFolder.title}</span>
+                    </>
+                )}
+            </div>
+
+            <div className="papers-content-area" style={{marginTop: '2rem'}}>
                 {loadingPapers ? (
                     <div style={{ textAlign: 'center', padding: '4rem 0' }}>
                         <div className="loader"></div>
                     </div>
                 ) : filteredPapers.length > 0 ? (
-                    <table className="papers-table">
-                        <thead>
-                            <tr>
-                                <th>EXAM YEAR</th>
-                                <th>SUBJECT</th>
-                                {(!userYear || userYear === 'Alumni') && <th>ACADEMIC YEAR</th>}
-                                <th>BRANCH</th>
-                                <th className="text-right">ACTIONS</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredPapers.map(paper => (
-                                <tr key={paper.id}>
-                                    <td>{paper.year}</td>
-                                    <td>
-                                        <div className="subject-cell">
-                                            <FileText size={16} className="text-muted" />
-                                            {paper.title}
-                                        </div>
-                                    </td>
-                                    {(!userYear || userYear === 'Alumni') && (
-                                        <td className="text-muted" style={{fontSize: '0.8rem'}}>{paper.academicYear}</td>
+                    <div className="notes-grid">
+                        {filteredPapers.map(paper => (
+                            <div key={paper.id} className="folder-card card" onClick={() => handleView(paper)}>
+                                <div className="folder-icon-wrapper">
+                                    {paper.isFolder ? (
+                                        <Folder size={18} fill="var(--accent-color)" color="var(--accent-color)" />
+                                    ) : (
+                                        <FileText size={18} color="var(--text-muted)" />
                                     )}
-                                    <td className="text-muted">{paper.branch}</td>
-                                    <td>
-                                        <div className="action-buttons">
-                                            {user && (
-                                                <button
-                                                    className={`btn-outline btn-sm btn-icon fav-btn ${isFavorited(paper.id, 'paper') ? 'fav-active' : ''}`}
-                                                    onClick={() => handleFavorite(paper)}
-                                                    title="Favorite"
-                                                >
-                                                    <Heart size={14} fill={isFavorited(paper.id, 'paper') ? 'currentColor' : 'none'} />
-                                                </button>
-                                            )}
+                                </div>
+                                <div className="folder-info">
+                                    <h3 className="folder-title" title={paper.title || paper.subject}>{paper.title || paper.subject}</h3>
+                                </div>
+
+                                {!paper.isFolder && (
+                                    <div className="folder-actions-overlay">
+                                        <div className="action-button-group">
                                             <button 
-                                                className="btn-outline btn-sm" 
-                                                onClick={() => {
-                                                    handleView(paper);
+                                                className={`circle-action-btn btn-add ${isFavorited(paper.id, 'paper') ? 'active' : ''}`}
+                                                onClick={(e) => { e.stopPropagation(); handleFavorite(paper); }}
+                                                title="Add to Workspace"
+                                            >
+                                                {isFavorited(paper.id, 'paper') ? <Heart size={16} fill="white" /> : <Plus size={16} />}
+                                            </button>
+                                            <button 
+                                                className="circle-action-btn btn-view"
+                                                onClick={(e) => { 
+                                                    e.stopPropagation(); 
+                                                    handleView(paper); 
                                                     setViewUrl(paper.url);
                                                 }}
+                                                title="Quick View"
                                             >
-                                                View Source
+                                                <Eye size={16} />
+                                            </button>
+                                            <button 
+                                                className="circle-action-btn btn-download"
+                                                onClick={(e) => { 
+                                                    e.stopPropagation(); 
+                                                    handleDownload(paper);
+                                                }}
+                                                title="Download"
+                                            >
+                                                <Download size={16} />
                                             </button>
                                         </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
                 ) : (
-                    <div style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-muted)' }}>
+                    <div className="card" style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-muted)' }}>
                         <FilterX size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-                        <h3>No past papers found for {userYear}</h3>
+                        <h3>No past papers found</h3>
                         <p>We're continually adding new resources. Check back later!</p>
                     </div>
                 )}

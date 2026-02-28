@@ -110,6 +110,53 @@
     flex-direction: column;
 }
 
+.admin-sidebar-forms {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.folder-create-card {
+    background: rgba(234, 179, 8, 0.03);
+}
+
+.card-header-with-icon {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.card-header-with-icon h3 {
+    margin: 0;
+    border: none;
+    padding: 0;
+    font-size: 1.1rem;
+}
+
+.admin-form-mini {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.admin-form-mini input {
+    flex: 1;
+    padding: 0.6rem 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-main);
+    font-size: 0.9rem;
+}
+
+.admin-form-mini button {
+    padding: 0 1rem;
+    white-space: nowrap;
+    border-radius: var(--radius-md);
+}
+
 .admin-card h3 {
     font-size: 1.35rem;
     margin-bottom: 1.5rem;

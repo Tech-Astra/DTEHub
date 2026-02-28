@@ -25,61 +25,65 @@
     font-weight: 500;
 }
 
-/* ───────────── Folder Grid ───────────── */
+/* ───────────── Folder Grid (Modern Row Style) ───────────── */
 .notes-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 2rem;
+    gap: 1rem;
 }
 
 .folder-card {
     position: relative;
     display: flex;
     align-items: center;
-    gap: 1.25rem;
-    padding: 1.75rem 1.5rem !important;
-    background: #18181b;
+    gap: 1rem;
+    padding: 1rem 1.25rem !important;
+    background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.05);
-    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    border-radius: 8px;
+    transition: all 0.2s ease-in-out;
     cursor: pointer;
     overflow: hidden;
 }
 
 .folder-card:hover {
-    background: #27272a;
-    transform: translateY(-5px);
-    box-shadow: 0 14px 28px -10px rgba(0, 0, 0, 0.8);
-    border-color: rgba(253, 224, 71, 0.3);
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(253, 224, 71, 0.2);
+    transform: none; /* Removed lift effect for cleaner list look */
 }
 
 .folder-icon-wrapper {
     flex-shrink: 0;
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--accent-color);
 }
 
 .folder-title {
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 0.95rem;
+    font-weight: 500;
     color: var(--text-main);
-    letter-spacing: 0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
 }
 
-/* ───────────── Hover Actions Overlay ───────────── */
+/* ───────────── Hover Actions Overlay (Minimalist) ───────────── */
 .folder-actions-overlay {
     position: absolute;
-    inset: 0;
-    background: rgba(12, 12, 14, 0.94);
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 0.4rem;
     opacity: 0;
     pointer-events: none;
-    transition: all 0.25s ease-out;
+    transition: all 0.2s ease;
 }
 
 .folder-card:hover .folder-actions-overlay {
@@ -90,35 +94,27 @@
 .action-button-group {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
-    transform: translateY(15px);
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.folder-card:hover .action-button-group {
-    transform: translateY(0);
+    gap: 0.5rem;
 }
 
 .circle-action-btn {
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #000;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s;
 }
 
 .circle-action-btn:hover {
-    transform: scale(1.15);
+    background: var(--accent-color);
+    color: #000;
+    border-color: var(--accent-color);
 }
-
-/* Updated Action Colors based on Yellow Theme */
-.btn-add { background-color: var(--accent-color); } /* Gold + */
-.btn-view { background-color: #ffffff; } /* Clear White Eye */
-.btn-download { background-color: #d4d4d8; } /* Silver-Gray Downloader */
 
 .btn-add.active {
     background-color: #ef4444;

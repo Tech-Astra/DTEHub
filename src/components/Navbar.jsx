@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { GraduationCap, LogOut, Home, FileText, ScrollText, BookOpen } from 'lucide-react';
+import { GraduationCap, LogOut, Home, FileText, ScrollText, Zap, Heart } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext';
 import '../App.css';
 
@@ -24,7 +24,8 @@ export default function Navbar() {
                         <Link to="/" className={`nav-item ${isActive('/')}`}>Home</Link>
                         <Link to="/notes" className={`nav-item ${isActive('/notes')}`}>Notes</Link>
                         <Link to="/papers" className={`nav-item ${isActive('/papers')}`}>Past Papers</Link>
-                        <Link to="#" className="nav-item">Syllabus</Link>
+                        <Link to="/dcet" className={`nav-item ${isActive('/dcet')}`}>DCET</Link>
+                        <Link to="/contribute" className={`nav-item ${isActive('/contribute')}`}>Contribution</Link>
                     </div>
 
                     {/* Auth section — always visible */}
@@ -67,9 +68,13 @@ export default function Navbar() {
                     <ScrollText size={20} />
                     <span>Papers</span>
                 </Link>
-                <Link to="#" className="mobile-nav-item">
-                    <BookOpen size={20} />
-                    <span>Syllabus</span>
+                <Link to="/dcet" className={`mobile-nav-item ${isActive('/dcet')}`}>
+                    <Zap size={20} />
+                    <span>DCET</span>
+                </Link>
+                <Link to="/contribute" className={`mobile-nav-item ${isActive('/contribute')}`}>
+                    <Heart size={20} />
+                    <span>Contribution</span>
                 </Link>
             </nav>
         </>

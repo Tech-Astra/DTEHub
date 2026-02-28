@@ -1,4 +1,4 @@
-import { X, ExternalLink } from 'lucide-react';
+import { X, ExternalLink, Download } from 'lucide-react';
 import './IframeModal.css';
 
 export default function IframeModal({ url, onClose }) {
@@ -6,8 +6,14 @@ export default function IframeModal({ url, onClose }) {
 
     // Convert standard Google Drive /view URLs to /preview for embedding so it works in iframes.
     let embedUrl = url;
+    let downloadUrl = url;
+
     if (url.includes('drive.google.com/file/d/')) {
-        embedUrl = url.split('/view')[0] + '/preview';
+        const fileId = url.split('/d/')[1]?.split('/')[0];
+        if (fileId) {
+            embedUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+            downloadUrl = `https://drive.google.com/uc?id=${fileId}&export=download`;
+        }
     } else if (url.includes('drive.google.com/drive/folders/')) {
         const folderId = url.split('/folders/')[1]?.split('?')[0];
         if (folderId) {
@@ -21,6 +27,9 @@ export default function IframeModal({ url, onClose }) {
                 <div className="iframe-modal-header">
                     <h3>Document Viewer</h3>
                     <div className="iframe-modal-actions">
+                        <a href={downloadUrl} target="_blank" rel="noopener noreferrer" className="btn-icon" title="Download">
+                            <Download size={20} />
+                        </a>
                         <a href={url} target="_blank" rel="noopener noreferrer" className="btn-icon" title="Open in new tab">
                             <ExternalLink size={20} />
                         </a>

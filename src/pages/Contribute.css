@@ -1,0 +1,178 @@
+.contribute-page {
+    padding-top: 3rem;
+    padding-bottom: 5rem;
+}
+
+.highlight-card {
+    border: 1px solid rgba(253, 224, 71, 0.3) !important;
+    background: linear-gradient(135deg, rgba(253, 224, 71, 0.05), transparent) !important;
+    position: relative;
+}
+
+.dev-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    color: var(--accent-color);
+    padding: 0.25rem 0.6rem;
+    border: 1px solid var(--accent-color);
+    border-radius: 4px;
+}
+
+.tech-stack-mini {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.tech-tag {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    color: var(--text-muted);
+}
+
+.icon-badge {
+    background: rgba(234, 179, 8, 0.1);
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 1.5rem;
+    border: 2px solid rgba(234, 179, 8, 0.2);
+}
+
+.contribute-header {
+    margin-bottom: 4rem;
+}
+
+.contribute-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    margin-bottom: 3rem;
+}
+
+.contribute-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.info-card {
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    border: 1px solid var(--border-color);
+}
+
+.info-card h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.info-card p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+.contribute-form-container {
+    padding: 2.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.contribute-form-container h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.contribute-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.contribute-form label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.contribute-form input,
+.contribute-form textarea {
+    width: 100%;
+    padding: 0.9rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-main);
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.contribute-form input:focus,
+.contribute-form textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.success-message {
+    padding: 1rem;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid #10b981;
+    border-radius: var(--radius-md);
+    color: #10b981;
+    font-weight: 600;
+    margin-top: 1rem;
+}
+
+.support-section {
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(234, 179, 8, 0.05));
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    margin-top: 4rem;
+}
+
+.support-section h2 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.support-section p {
+    max-width: 700px;
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    margin: 0;
+}
+
+.mb-4 {
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 900px) {
+    .contribute-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+}

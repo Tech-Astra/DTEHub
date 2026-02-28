@@ -8,6 +8,8 @@ import Home from './pages/Home';
 import Notes from './pages/Notes';
 import Papers from './pages/Papers';
 import Profile from './pages/Profile';
+import DCET from './pages/DCET';
+import Contribute from './pages/Contribute';
 import Admin from './pages/Admin';
 import './App.css';
 
@@ -28,6 +30,8 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/notes" element={<Notes />} />
               <Route path="/papers" element={<Papers />} />
+              <Route path="/dcet" element={<DCET />} />
+              <Route path="/contribute" element={<Contribute />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/admin" element={<Admin />} />
             </Routes>
