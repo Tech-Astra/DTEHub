@@ -1,4 +1,5 @@
-import { Search, Download, FileText, Star } from 'lucide-react';
+import { Search, Download, FileText, Star, Heart } from 'lucide-react';
+import { useAuthContext } from '../context/AuthContext';
 import './Notes.css';
 
 const notesData = [
@@ -11,6 +12,47 @@ const notesData = [
 ];
 
 export default function Notes() {
+    const { user, addRecentlyViewed, addDownload, toggleFavorite, isFavorited, addSearchQuery } = useAuthContext();
+
+    const handleView = (note) => {
+        if (user) {
+            addRecentlyViewed({
+                itemId: note.id,
+                type: 'note',
+                title: note.title,
+                chapter: note.chapter,
+            });
+        }
+    };
+
+    const handleDownload = (note) => {
+        if (user) {
+            addDownload({
+                itemId: note.id,
+                type: 'note',
+                title: note.title,
+                chapter: note.chapter,
+            });
+        }
+    };
+
+    const handleFavorite = (note) => {
+        if (user) {
+            toggleFavorite({
+                itemId: note.id,
+                type: 'note',
+                title: note.title,
+                chapter: note.chapter,
+            });
+        }
+    };
+
+    const handleSearch = (e) => {
+        if (e.key === 'Enter' && user) {
+            addSearchQuery(e.target.value);
+        }
+    };
+
     return (
         <div className="container notes-page">
             <div className="page-header">
@@ -56,20 +98,38 @@ export default function Notes() {
                 <main className="notes-content">
                     <div className="search-bar-modern">
                         <Search className="search-icon" size={20} />
-                        <input type="text" placeholder="Search notes, subjects or authors..." />
+                        <input
+                            type="text"
+                            placeholder="Search notes, subjects or authors..."
+                            onKeyDown={handleSearch}
+                        />
                     </div>
 
                     <div className="notes-grid">
                         {notesData.map(note => (
-                            <div key={note.id} className="note-card card">
+                            <div key={note.id} className="note-card card" onClick={() => handleView(note)}>
                                 <div className="note-header">
                                     <h4 className="note-subject">{note.title}</h4>
-                                    <FileText size={20} className="note-icon" />
+                                    <div className="note-header-actions">
+                                        {user && (
+                                            <button
+                                                className={`fav-btn ${isFavorited(note.id, 'note') ? 'fav-active' : ''}`}
+                                                onClick={(e) => { e.stopPropagation(); handleFavorite(note); }}
+                                                title="Add to favorites"
+                                            >
+                                                <Heart size={16} fill={isFavorited(note.id, 'note') ? 'currentColor' : 'none'} />
+                                            </button>
+                                        )}
+                                        <FileText size={20} className="note-icon" />
+                                    </div>
                                 </div>
                                 <p className="note-chapter">{note.chapter}</p>
                                 <p className="note-author">{note.author}</p>
 
-                                <button className="btn-primary w-full mt-4">
+                                <button
+                                    className="btn-primary w-full mt-4"
+                                    onClick={(e) => { e.stopPropagation(); handleDownload(note); }}
+                                >
                                     <Download size={18} /> Download
                                 </button>
 

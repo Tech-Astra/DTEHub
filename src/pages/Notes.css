@@ -154,3 +154,31 @@
 .gap-1 {
     gap: 0.25rem;
 }
+
+/* Favorite button */
+.note-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.fav-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s, transform 0.2s;
+}
+
+.fav-btn:hover {
+    color: #ef4444;
+    transform: scale(1.15);
+}
+
+.fav-btn.fav-active {
+    color: #ef4444;
+}

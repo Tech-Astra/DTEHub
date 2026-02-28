@@ -76,3 +76,71 @@
 .footer-link:hover {
   color: var(--text-main);
 }
+
+/* ───────────── Navbar Auth Styles ───────────── */
+.nav-user-section {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.nav-profile-link {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  color: inherit;
+  transition: opacity 0.2s;
+}
+
+.nav-profile-link:hover {
+  opacity: 0.8;
+}
+
+.nav-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent-color);
+  transition: transform 0.2s;
+}
+
+.nav-avatar:hover {
+  transform: scale(1.1);
+}
+
+.nav-username {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+.nav-logout-btn {
+  padding: 0.4rem !important;
+  border-radius: 8px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.nav-logout-btn:hover {
+  color: #ef4444;
+  border-color: #fca5a5;
+  background-color: #fef2f2;
+}
+
+.nav-auth-skeleton {
+  display: inline-block;
+  width: 80px;
+  height: 34px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

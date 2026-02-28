@@ -1,4 +1,5 @@
-import { Search, Download, Eye, FileText } from 'lucide-react';
+import { Search, Download, FileText, Heart } from 'lucide-react';
+import { useAuthContext } from '../context/AuthContext';
 import './Papers.css';
 
 const papersData = [
@@ -11,6 +12,49 @@ const papersData = [
 ];
 
 export default function Papers() {
+    const { user, addRecentlyViewed, addDownload, toggleFavorite, isFavorited, addSearchQuery } = useAuthContext();
+
+    const handleView = (paper) => {
+        if (user) {
+            addRecentlyViewed({
+                itemId: paper.id,
+                type: 'paper',
+                title: paper.subject,
+                year: paper.year,
+                paperType: paper.type,
+            });
+        }
+    };
+
+    const handleDownload = (paper) => {
+        if (user) {
+            addDownload({
+                itemId: paper.id,
+                type: 'paper',
+                title: paper.subject,
+                year: paper.year,
+                paperType: paper.type,
+            });
+        }
+    };
+
+    const handleFavorite = (paper) => {
+        if (user) {
+            toggleFavorite({
+                itemId: paper.id,
+                type: 'paper',
+                title: paper.subject,
+                year: paper.year,
+            });
+        }
+    };
+
+    const handleSearch = (e) => {
+        if (e.key === 'Enter' && user) {
+            addSearchQuery(e.target.value);
+        }
+    };
+
     return (
         <div className="container papers-page">
             <div className="papers-header">
@@ -40,7 +84,11 @@ export default function Papers() {
 
                     <div className="search-bar-modern papers-search">
                         <Search className="search-icon" size={18} />
-                        <input type="text" placeholder="Search papers by code..." />
+                        <input
+                            type="text"
+                            placeholder="Search papers by code..."
+                            onKeyDown={handleSearch}
+                        />
                     </div>
                 </div>
             </div>
@@ -72,10 +120,19 @@ export default function Papers() {
                                 <td className="text-muted">{paper.code}</td>
                                 <td>
                                     <div className="action-buttons">
-                                        <button className="btn-outline btn-sm">
+                                        {user && (
+                                            <button
+                                                className={`btn-outline btn-sm btn-icon fav-btn ${isFavorited(paper.id, 'paper') ? 'fav-active' : ''}`}
+                                                onClick={() => handleFavorite(paper)}
+                                                title="Favorite"
+                                            >
+                                                <Heart size={14} fill={isFavorited(paper.id, 'paper') ? 'currentColor' : 'none'} />
+                                            </button>
+                                        )}
+                                        <button className="btn-outline btn-sm" onClick={() => handleView(paper)}>
                                             View PDF
                                         </button>
-                                        <button className="btn-primary btn-sm btn-icon">
+                                        <button className="btn-primary btn-sm btn-icon" onClick={() => handleDownload(paper)}>
                                             <Download size={16} /> Download
                                         </button>
                                     </div>
