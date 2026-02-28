@@ -62,6 +62,17 @@ export default function Notes() {
     };
 
     const handleDownload = (note) => {
+        if (!note.url) return;
+        
+        // Convert to download link if it's a direct file
+        let downloadLink = note.url;
+        if (note.url.includes('drive.google.com/file/d/')) {
+            const fileId = note.url.split('/d/')[1]?.split('/')[0];
+            if (fileId) {
+                downloadLink = `https://drive.google.com/uc?id=${fileId}&export=download`;
+            }
+        }
+
         if (user) {
             addDownload({
                 itemId: note.id,
@@ -70,6 +81,8 @@ export default function Notes() {
                 chapter: note.chapter,
             });
         }
+        
+        window.open(downloadLink, '_blank');
     };
 
     const handleFavorite = (note) => {
@@ -155,6 +168,16 @@ export default function Notes() {
                                         title="Quick View"
                                     >
                                         <Eye size={20} />
+                                    </button>
+                                    <button 
+                                        className="circle-action-btn btn-download"
+                                        onClick={(e) => { 
+                                            e.stopPropagation(); 
+                                            handleDownload(note);
+                                        }}
+                                        title="Download"
+                                    >
+                                        <Download size={20} />
                                     </button>
                                 </div>
                             </div>
