@@ -1,9 +1,45 @@
-import { Search, MonitorPlay, Settings, Cpu } from 'lucide-react';
+import { Search, MonitorPlay, Settings, Cpu, GraduationCap, Eye, FolderOpen, UserCheck } from 'lucide-react';
 import './Home.css';
 import { useNavigate } from 'react-router-dom';
+import { useFirebaseStats } from '../hooks/useFirebaseStats';
+import { useState, useEffect, useRef } from 'react';
+
+function AnimatedCounter({ target, duration = 2000 }) {
+    const [count, setCount] = useState(0);
+    const ref = useRef(null);
+    const hasAnimated = useRef(false);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting && !hasAnimated.current && target > 0) {
+                    hasAnimated.current = true;
+                    let start = 0;
+                    const increment = target / (duration / 16);
+                    const timer = setInterval(() => {
+                        start += increment;
+                        if (start >= target) {
+                            setCount(target);
+                            clearInterval(timer);
+                        } else {
+                            setCount(Math.floor(start));
+                        }
+                    }, 16);
+                }
+            },
+            { threshold: 0.3 }
+        );
+
+        if (ref.current) observer.observe(ref.current);
+        return () => observer.disconnect();
+    }, [target, duration]);
+
+    return <span ref={ref}>{count.toLocaleString()}</span>;
+}
 
 export default function Home() {
     const navigate = useNavigate();
+    const { stats, loading } = useFirebaseStats();
 
     return (
         <div className="home-container container">
@@ -20,6 +56,50 @@ export default function Home() {
                             placeholder="Find Notes or Past Papers..."
                         />
                         <button className="btn-primary search-btn" onClick={() => navigate('/notes')}>Search</button>
+                    </div>
+                </div>
+            </section>
+
+            {/* Live Stats Section */}
+            <section className="stats-section" id="platform-stats">
+                <div className="stats-grid">
+                    <div className="stat-card stat-card--views">
+                        <div className="stat-icon-wrapper stat-icon--views">
+                            <Eye size={24} />
+                        </div>
+                        <div className="stat-info">
+                            <span className="stat-value">
+                                {loading ? <span className="stat-skeleton" /> : <AnimatedCounter target={stats.totalViews} />}
+                            </span>
+                            <span className="stat-label">Total Views</span>
+                        </div>
+                        <div className="stat-glow stat-glow--views" />
+                    </div>
+
+                    <div className="stat-card stat-card--resources">
+                        <div className="stat-icon-wrapper stat-icon--resources">
+                            <FolderOpen size={24} />
+                        </div>
+                        <div className="stat-info">
+                            <span className="stat-value">
+                                {loading ? <span className="stat-skeleton" /> : <AnimatedCounter target={stats.totalResources} />}
+                            </span>
+                            <span className="stat-label">Total Resources</span>
+                        </div>
+                        <div className="stat-glow stat-glow--resources" />
+                    </div>
+
+                    <div className="stat-card stat-card--users">
+                        <div className="stat-icon-wrapper stat-icon--users">
+                            <UserCheck size={24} />
+                        </div>
+                        <div className="stat-info">
+                            <span className="stat-value">
+                                {loading ? <span className="stat-skeleton" /> : <AnimatedCounter target={stats.totalVerifiedUsers} />}
+                            </span>
+                            <span className="stat-label">Verified Users</span>
+                        </div>
+                        <div className="stat-glow stat-glow--users" />
                     </div>
                 </div>
             </section>
@@ -60,6 +140,3 @@ export default function Home() {
         </div>
     );
 }
-
-// Just importing graduation cap ad-hoc as well
-import { GraduationCap } from 'lucide-react';
