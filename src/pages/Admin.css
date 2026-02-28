@@ -29,6 +29,31 @@
     padding: 1rem 1.5rem;
     border-radius: var(--radius-lg);
     min-width: 200px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-stat-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.bg-highlight {
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.05), transparent);
+    border-color: rgba(234, 179, 8, 0.2);
+}
+
+.bg-highlight:hover {
+    border-color: var(--accent-color) !important;
+    box-shadow: 0 8px 24px rgba(234, 179, 8, 0.1);
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 .stat-icon-wrapper {

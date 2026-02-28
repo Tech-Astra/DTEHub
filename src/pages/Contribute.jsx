@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { Heart, Send, Sparkles, Share2, MessageSquare, Coffee, Code } from 'lucide-react';
+import { Heart, Send, Share2, Coffee, Code } from 'lucide-react';
+import { useFirebaseStats } from '../hooks/useFirebaseStats';
 import './Contribute.css';
 
 export default function Contribute() {
     const [formStatus, setFormStatus] = useState(null);
+    const { stats, loading } = useFirebaseStats();
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -91,11 +93,15 @@ export default function Contribute() {
                         <h3>Impact Statistics</h3>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '0.5rem' }}>
                             <div>
-                                <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'white' }}>5K+</div>
+                                <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'white' }}>
+                                    {loading ? '...' : stats.totalResources}
+                                </div>
                                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Resources</div>
                             </div>
                             <div>
-                                <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'white' }}>10K+</div>
+                                <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'white' }}>
+                                    {loading ? '...' : stats.totalVerifiedUsers}
+                                </div>
                                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Users</div>
                             </div>
                         </div>

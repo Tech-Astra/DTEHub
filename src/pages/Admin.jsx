@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuthContext } from '../context/AuthContext';
 import { database } from '../firebase';
-import { ref, push, set, onValue, remove } from 'firebase/database';
-import { Plus, Trash2, Edit2, Link as LinkIcon, FolderPlus, FileText, Users, X, Zap } from 'lucide-react';
+import { ref, push, set, onValue, remove, runTransaction } from 'firebase/database';
+import { Plus, Trash2, Edit2, Link as LinkIcon, FolderPlus, FileText, Users, X, Zap, Database, RefreshCw } from 'lucide-react';
 import './Admin.css';
 
 // Admin allowed list
@@ -112,6 +112,13 @@ export default function Admin() {
                 branch,
                 timestamp: Date.now()
             });
+
+            // Increment Global Resource Counter
+            const statsRef = ref(database, 'stats/totalResources');
+            runTransaction(statsRef, (count) => {
+                return (count || 0) + 1;
+            });
+
             setFolderTitle('');
             alert("New folder created!");
         } catch (err) {
@@ -153,6 +160,13 @@ export default function Admin() {
                 // Add new
                 const resourceRef = push(ref(database, `resources/${activeTab}`));
                 await set(resourceRef, newResource);
+
+                // Increment Global Resource Counter
+                const statsRef = ref(database, 'stats/totalResources');
+                runTransaction(statsRef, (count) => {
+                    return (count || 0) + 1;
+                });
+
                 alert(`New ${activeTab.slice(0, -1)} added successfully!`);
             }
             
@@ -183,6 +197,37 @@ export default function Admin() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
+    const handleSyncStats = async () => {
+        setIsSaving(true);
+        try {
+            // 1. Get Actual User Count
+            const usersSnapshot = await get(ref(database, 'users'));
+            const userCount = usersSnapshot.exists() ? Object.keys(usersSnapshot.val()).length : 0;
+
+            // 2. Get Actual Resource Count (Sum of all categories)
+            const categories = ['notes', 'papers', 'dcet'];
+            let resourceCount = 0;
+            
+            for (const cat of categories) {
+                const snap = await get(ref(database, `resources/${cat}`));
+                if (snap.exists()) {
+                    resourceCount += Object.keys(snap.val()).length;
+                }
+            }
+
+            // 3. Update Stats Node
+            await set(ref(database, 'stats/totalVerifiedUsers'), userCount);
+            await set(ref(database, 'stats/totalResources'), resourceCount);
+
+            alert(`✅ Stats Synced!\nUsers: ${userCount}\nResources: ${resourceCount}`);
+        } catch (err) {
+            console.error("Sync failed:", err);
+            alert("Sync failed. Check console for details.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const handleMove = async (res, newParentId) => {
         try {
             await set(ref(database, `resources/${activeTab}/${res.id}/parentId`), newParentId);
@@ -203,6 +248,12 @@ export default function Admin() {
         if (window.confirm("Are you sure you want to delete this resource?")) {
             try {
                 await remove(ref(database, `resources/${activeTab}/${id}`));
+                
+                // Decrement Global Resource Counter
+                const statsRef = ref(database, 'stats/totalResources');
+                runTransaction(statsRef, (count) => {
+                    return Math.max(0, (count || 0) - 1);
+                });
             } catch (err) {
                 console.error("Delete failed", err);
             }
@@ -217,6 +268,16 @@ export default function Admin() {
                     <p>Add and manage Google Drive links for Notes and Past Papers.</p>
                 </div>
                 
+                <div className="admin-stat-card bg-highlight" style={{cursor: 'pointer'}} onClick={handleSyncStats} title="Recalculate Stats">
+                    <div className="stat-icon-wrapper">
+                        {isSaving ? <RefreshCw size={24} className="spin" color="var(--accent-color)" /> : <Database size={24} color="var(--accent-color)" />}
+                    </div>
+                    <div>
+                        <span className="stat-label">Sync Database</span>
+                        <h2 className="stat-value" style={{fontSize: '1rem'}}>Recalibrate Stats</h2>
+                    </div>
+                </div>
+
                 <div className="admin-stat-card">
                     <div className="stat-icon-wrapper">
                         <Users size={24} color="var(--accent-color)" />
