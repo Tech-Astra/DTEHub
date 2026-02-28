@@ -2,10 +2,13 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import WorkspaceDock from './components/WorkspaceDock';
+import ProfileOnboardingModal from './components/ProfileOnboardingModal';
 import Home from './pages/Home';
 import Notes from './pages/Notes';
 import Papers from './pages/Papers';
 import Profile from './pages/Profile';
+import Admin from './pages/Admin';
 import './App.css';
 
 function App() {
@@ -26,9 +29,15 @@ function App() {
               <Route path="/notes" element={<Notes />} />
               <Route path="/papers" element={<Papers />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/admin" element={<Admin />} />
             </Routes>
           </main>
           <Footer />
+          {/* Global Workspace Dock — visible on every page */}
+          <WorkspaceDock />
+          
+          {/* Profile Onboarding Modal for first-time sign-ins */}
+          <ProfileOnboardingModal />
         </div>
       </AuthProvider>
     </Router>

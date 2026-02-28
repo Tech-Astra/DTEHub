@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Folder, Search, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useFirebaseStats } from '../hooks/useFirebaseStats';
 import './Home.css';
 
@@ -69,7 +69,7 @@ export default function Home() {
                         Continuously updated for the current semester
                     </p>
 
-                    {/* Live Stats Bar - Matches Screenshot style */}
+                    {/* Live Stats Bar */}
                     <div className="home-stats-bar">
                         <AnimatedCounter value={stats.totalResources || 7} label="TOTAL RESOURCES" />
                         <div className="stat-divider" />
@@ -79,16 +79,6 @@ export default function Home() {
                     </div>
                 </div>
             </main>
-
-            {/* Floating Quick Navigation (based on screenshot icons) */}
-            <div className="floating-nav-icons">
-                <button className="float-btn pulse-yellow" title="Quick Menu">
-                    <Folder size={24} />
-                </button>
-                <button className="float-btn glass-accent" title="Settings">
-                    <Search size={24} />
-                </button>
-            </div>
         </div>
     );
 }

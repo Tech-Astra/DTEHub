@@ -1,18 +1,52 @@
-import { Search, Download, Folder, Eye, Plus, Heart } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Download, Folder, Eye, Plus, Heart, FilterX } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext';
+import { ref, onValue } from 'firebase/database';
+import { database } from '../firebase';
 import './Notes.css';
-
-const notesData = [
-    { id: 1, title: 'OS (CS235AI)', chapter: 'Ch 4: Trees & Graphs', author: 'Prof. Sharma', size: '2.1 MB', rating: 4.8 },
-    { id: 2, title: 'Maths (MAT231CT)', chapter: 'Ch 3: Process Scheduling', author: 'Dr. R. K. Singh', size: '3.4 MB', rating: 4.5 },
-    { id: 3, title: 'DTL (CS237DL)', chapter: 'Ch 6: Transport Layer', author: 'Prof. Sharma', size: '1.8 MB', rating: 4.7 },
-    { id: 4, title: 'DSA (IS233AI)', chapter: 'Ch 2: SDLC Models', author: 'Mrs. Anjali', size: '4.2 MB', rating: 4.6 },
-    { id: 5, title: 'ADLD (CS234AI)', chapter: 'Ch 5: Normalization', author: 'Dr. R. K. Singh', size: '2.5 MB', rating: 4.9 },
-    { id: 6, title: 'Environment and Sustainability (CV232AT)', chapter: 'General', author: 'Mr. Verma', size: '1.5 MB', rating: 4.4 },
-];
 
 export default function Notes() {
     const { user, addRecentlyViewed, addDownload, toggleFavorite, isFavorited, addSearchQuery } = useAuthContext();
+    const [userYear, setUserYear] = useState('');
+    const [notesData, setNotesData] = useState([]);
+    const [loadingNotes, setLoadingNotes] = useState(true);
+
+    // Fetch User Profile
+    useEffect(() => {
+        if (user?.uid) {
+            const profileRef = ref(database, `users/${user.uid}/profile`);
+            const unsubscribe = onValue(profileRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data && data.year) {
+                    setUserYear(data.year);
+                }
+            });
+            return () => unsubscribe();
+        } else {
+            setUserYear('');
+        }
+    }, [user]);
+
+    // Fetch Notes from Database
+    useEffect(() => {
+        const notesRef = ref(database, 'resources/notes');
+        const unsubscribe = onValue(notesRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                const arr = Object.keys(data).map(key => ({
+                    id: key,
+                    ...data[key]
+                }));
+                // Sort by timestamp if needed
+                setNotesData(arr.reverse());
+            } else {
+                setNotesData([]);
+            }
+            setLoadingNotes(false);
+        });
+
+        return () => unsubscribe();
+    }, []);
 
     const handleView = (note) => {
         if (user) {
@@ -23,7 +57,6 @@ export default function Notes() {
                 chapter: note.chapter,
             });
         }
-        // Redirect to PDF viewer or something equivalent...
         alert(`Opening ${note.title}`);
     };
 
@@ -56,12 +89,22 @@ export default function Notes() {
         }
     };
 
+    // Filter notes based on user year. If not logged in or no year selected, show all notes or prompt them.
+    // Let's show all notes if no userYear, but prioritize if there is one.
+    const filteredNotes = userYear && userYear !== 'Alumni'
+        ? notesData.filter(note => note.academicYear === userYear)
+        : notesData;
+
     return (
         <div className="container notes-page">
             <div className="page-header flex-between">
                 <div>
                     <h1 className="page-title">Resource Folders</h1>
-                    <p className="page-subtitle">Your one-stop destination for all college resource</p>
+                    <p className="page-subtitle">
+                        {userYear && userYear !== 'Alumni' 
+                            ? `Showing filtered notes for your academic year (${userYear})` 
+                            : 'Your one-stop destination for all college resource'}
+                    </p>
                 </div>
                 <div className="search-bar-modern">
                     <Search className="search-icon" size={18} />
@@ -73,45 +116,58 @@ export default function Notes() {
                 </div>
             </div>
 
-            <div className="notes-grid">
-                {notesData.map(note => (
-                    <div key={note.id} className="folder-card card" onClick={() => handleView(note)}>
-                        <div className="folder-icon-wrapper">
-                            <Folder size={20} fill="white" color="white" />
-                        </div>
-                        <div className="folder-info">
-                            <h3 className="folder-title">{note.title}</h3>
-                        </div>
+            {loadingNotes ? (
+                <div style={{ textAlign: 'center', padding: '4rem 0' }}>
+                    <div className="loader"></div>
+                </div>
+            ) : filteredNotes.length > 0 ? (
+                <div className="notes-grid">
+                    {filteredNotes.map(note => (
+                        <div key={note.id} className="folder-card card" onClick={() => handleView(note)}>
+                            <div className="folder-icon-wrapper">
+                                <Folder size={20} fill="white" color="white" />
+                            </div>
+                            <div className="folder-info">
+                                <h3 className="folder-title">{note.title}</h3>
+                                {(!userYear || userYear === 'Alumni') ? (
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{note.academicYear} • {note.branch}</span>
+                                ) : (
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{note.chapter} • {note.branch}</span>
+                                )}
+                            </div>
 
-                        {/* Hover Actions shown as circles (based on your screenshot) */}
-                        <div className="folder-actions-overlay">
-                            <div className="action-button-group">
-                                <button 
-                                    className={`circle-action-btn btn-add ${isFavorited(note.id, 'note') ? 'active' : ''}`}
-                                    onClick={(e) => { e.stopPropagation(); handleFavorite(note); }}
-                                    title="Add to Workspace"
-                                >
-                                    {isFavorited(note.id, 'note') ? <Heart size={20} fill="white" /> : <Plus size={20} />}
-                                </button>
-                                <button 
-                                    className="circle-action-btn btn-view"
-                                    onClick={(e) => { e.stopPropagation(); handleView(note); }}
-                                    title="Quick View"
-                                >
-                                    <Eye size={20} />
-                                </button>
-                                <button 
-                                    className="circle-action-btn btn-download"
-                                    onClick={(e) => { e.stopPropagation(); handleDownload(note); }}
-                                    title="Download"
-                                >
-                                    <Download size={20} />
-                                </button>
+                            <div className="folder-actions-overlay">
+                                <div className="action-button-group">
+                                    <button 
+                                        className={`circle-action-btn btn-add ${isFavorited(note.id, 'note') ? 'active' : ''}`}
+                                        onClick={(e) => { e.stopPropagation(); handleFavorite(note); }}
+                                        title="Add to Workspace"
+                                    >
+                                        {isFavorited(note.id, 'note') ? <Heart size={20} fill="white" /> : <Plus size={20} />}
+                                    </button>
+                                    <button 
+                                        className="circle-action-btn btn-view"
+                                        onClick={(e) => { 
+                                            e.stopPropagation(); 
+                                            handleView(note); 
+                                            window.open(note.url, '_blank'); 
+                                        }}
+                                        title="Quick View"
+                                    >
+                                        <Eye size={20} />
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            ) : (
+                <div style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-muted)' }}>
+                    <FilterX size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
+                    <h3>No notes found for {userYear}</h3>
+                    <p>We're continually adding new resources. Check back later!</p>
+                </div>
+            )}
         </div>
     );
 }

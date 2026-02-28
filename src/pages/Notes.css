@@ -156,3 +156,45 @@
 .search-icon {
     color: var(--accent-color);
 }
+
+@media (max-width: 768px) {
+    .notes-page {
+        gap: 1.5rem;
+        padding-top: 1.5rem;
+    }
+
+    .page-header {
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+    }
+
+    .page-subtitle {
+        font-size: 0.9rem;
+    }
+
+    .notes-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .search-bar-modern {
+        width: 100%;
+    }
+
+    .folder-card {
+        padding: 1.25rem 1rem !important;
+    }
+
+    .circle-action-btn {
+        width: 44px;
+        height: 44px;
+    }
+
+    .action-button-group {
+        gap: 1rem;
+    }
+}
