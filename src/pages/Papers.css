@@ -1,0 +1,115 @@
+.papers-page {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.papers-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.papers-filters {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+}
+
+.filter-select {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-select label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.filter-select select {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background-color: var(--card-bg);
+    font-family: inherit;
+    font-size: 0.95rem;
+    outline: none;
+    min-width: 150px;
+}
+
+.filter-select select:focus {
+    border-color: var(--accent-color);
+}
+
+.papers-search {
+    padding: 0.75rem 1rem;
+}
+
+.table-container {
+    padding: 0;
+    overflow-x: auto;
+}
+
+.papers-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.papers-table th {
+    padding: 1.25rem 1.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.papers-table td {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.papers-table tr:last-child td {
+    border-bottom: none;
+}
+
+.papers-table tbody tr:hover {
+    background-color: var(--bg-color);
+}
+
+.subject-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.text-muted {
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+}
+
+.btn-icon {
+    gap: 0.25rem;
+}

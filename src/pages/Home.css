@@ -1,0 +1,108 @@
+.home-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4rem;
+}
+
+.hero-section {
+    text-align: center;
+    padding: 4rem 0 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+}
+
+.hero-subtitle {
+    font-size: 1.125rem;
+    color: var(--text-muted);
+    margin-bottom: 3rem;
+}
+
+.search-bar-container {
+    display: flex;
+    align-items: center;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-full);
+    padding: 0.5rem 0.5rem 0.5rem 1.5rem;
+    width: 100%;
+    max-width: 600px;
+    box-shadow: var(--shadow-md);
+    transition: box-shadow 0.2s;
+}
+
+.search-bar-container:focus-within {
+    box-shadow: 0 0 0 3px rgba(253, 224, 71, 0.2);
+    border-color: var(--accent-color);
+}
+
+.search-icon {
+    color: var(--text-muted);
+}
+
+.main-search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    font-family: inherit;
+    outline: none;
+    color: var(--text-main);
+}
+
+.search-btn {
+    padding: 0.75rem 2rem;
+    border-radius: var(--radius-full);
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+}
+
+.branches-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+}
+
+.branch-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    cursor: pointer;
+}
+
+.branch-icon-container {
+    background-color: var(--accent-color);
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+}
+
+.branch-name {
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.branch-desc {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
