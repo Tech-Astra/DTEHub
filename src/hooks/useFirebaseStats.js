@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ref, onValue, runTransaction } from 'firebase/database';
+import { ref, onValue, runTransaction, get, set } from 'firebase/database';
 import { database } from '../firebase';
 
 export function useFirebaseStats() {
@@ -12,60 +12,66 @@ export function useFirebaseStats() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // 1. Session-based View Counter
-    const SESSION_KEY = 'dte_hub_view_counted';
-    if (!sessionStorage.getItem(SESSION_KEY)) {
-      const viewsRef = ref(database, 'stats/totalViews');
-      runTransaction(viewsRef, (currentValue) => {
-        return (currentValue || 0) + 1;
-      }).then(() => {
-        sessionStorage.setItem(SESSION_KEY, 'true');
-        console.log('✅ New session view recorded');
-      }).catch(err => console.error('View Counter Error:', err));
-    }
+    const syncAndListen = async () => {
+      try {
+        // 1. Session-based View Counter
+        const SESSION_KEY = 'dte_hub_view_counted';
+        if (!sessionStorage.getItem(SESSION_KEY)) {
+          const viewsRef = ref(database, 'stats/totalViews');
+          await runTransaction(viewsRef, (currentValue) => {
+            return (currentValue || 0) + 1;
+          });
+          sessionStorage.setItem(SESSION_KEY, 'true');
+        }
 
-    // 2. Listen to Stats Node (Views & Resources)
-    const statsRef = ref(database, 'stats');
-    const unsubscribeStats = onValue(statsRef, (snapshot) => {
-      const data = snapshot.val() || {};
-      
-      // Seed totalResources with initial data if it's missing (one-time setup)
-      if (data.totalResources === undefined) {
-        runTransaction(ref(database, 'stats/totalResources'), () => 12);
+        // 2. Automated Stats Sync on Refresh
+        // Fetch reality from all nodes
+        const [usersSnap, notesSnap, papersSnap, dcetSnap] = await Promise.all([
+          get(ref(database, 'users')),
+          get(ref(database, 'resources/notes')),
+          get(ref(database, 'resources/papers')),
+          get(ref(database, 'resources/dcet'))
+        ]);
+
+        const actualUsers = usersSnap.exists() ? Object.keys(usersSnap.val()).length : 0;
+        const actualResources = 
+          (notesSnap.exists() ? Object.keys(notesSnap.val()).length : 0) +
+          (papersSnap.exists() ? Object.keys(papersSnap.val()).length : 0) +
+          (dcetSnap.exists() ? Object.keys(dcetSnap.val()).length : 0);
+
+        // Calibrate the stats node so previous and current data match perfectly
+        await Promise.all([
+          set(ref(database, 'stats/totalVerifiedUsers'), actualUsers),
+          set(ref(database, 'stats/totalResources'), actualResources)
+        ]);
+
+        // 3. Setup listener for the calibrated stats
+        const statsRef = ref(database, 'stats');
+        const unsubscribe = onValue(statsRef, (snapshot) => {
+          const data = snapshot.val() || {};
+          setStats({
+            totalViews: data.totalViews || 0,
+            totalResources: data.totalResources || 0,
+            totalVerifiedUsers: data.totalVerifiedUsers || 0
+          });
+          setLoading(false);
+        });
+
+        return unsubscribe;
+
+      } catch (err) {
+        console.error('Stats Sync Error:', err);
+        setError(err.message);
+        setLoading(false);
       }
-
-      setStats(prev => ({
-        ...prev,
-        totalViews: data.totalViews || 0,
-        totalResources: data.totalResources || 0
-      }));
-    }, (err) => {
-      console.error('Stats Read Error:', err);
-      setError(err.message);
-    });
-
-    // 3. Count Verified Users directly from Users node
-    // This is the most accurate way - counts every account in the DB
-    const usersRef = ref(database, 'users');
-    const unsubscribeUsers = onValue(usersRef, (snapshot) => {
-      const usersData = snapshot.val();
-      if (usersData) {
-        const count = Object.keys(usersData).length;
-        setStats(prev => ({
-          ...prev,
-          totalVerifiedUsers: count
-        }));
-      }
-      setLoading(false);
-    }, (err) => {
-      console.error('Users Count Error:', err);
-      setLoading(false);
-    });
-
-    return () => {
-      unsubscribeStats();
-      unsubscribeUsers();
     };
+
+    let unsubscribeStats = () => {};
+    syncAndListen().then(cleanup => {
+      if (typeof cleanup === 'function') unsubscribeStats = cleanup;
+    });
+
+    return () => unsubscribeStats();
   }, []);
 
   return { stats, loading, error };

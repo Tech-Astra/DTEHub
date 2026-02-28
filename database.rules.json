@@ -1,0 +1,48 @@
+{
+  "rules": {
+    "stats": {
+      ".read": true,
+      "totalViews": {
+        ".write": true
+      },
+      "totalResources": {
+        ".write": true
+      },
+      "totalVerifiedUsers": {
+        ".write": true
+      }
+    },
+    "users": {
+      ".read": "auth != null",
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('admins').hasChild(auth.email.replace('.', ',')))",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "favorites": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "notes": {
+      ".read": true,
+      ".write": "auth != null && root.child('admins').hasChild(auth.email.replace('.', ','))",
+      ".indexOn": ["academicYear", "branch", "parentId"]
+    },
+    "papers": {
+      ".read": true,
+      ".write": "auth != null && root.child('admins').hasChild(auth.email.replace('.', ','))",
+      ".indexOn": ["academicYear", "branch", "parentId"]
+    },
+    "dcet": {
+      ".read": true,
+      ".write": "auth != null && root.child('admins').hasChild(auth.email.replace('.', ','))",
+      ".indexOn": ["academicYear", "branch", "parentId"]
+    },
+    "admins": {
+      ".read": true,
+      ".write": false
+    }
+  }
+}

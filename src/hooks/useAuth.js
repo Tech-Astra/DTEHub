@@ -18,6 +18,14 @@ export function useAuth() {
         const snapshot = await get(userRef);
         const existingData = snapshot.val() || {};
         
+        // If it's a new user, increment the global verified users counter
+        if (!existingData.createdAt) {
+          const statsRef = ref(database, 'stats/totalVerifiedUsers');
+          runTransaction(statsRef, (count) => {
+            return (count || 0) + 1;
+          }).catch(err => console.error('Error incrementing user count:', err));
+        }
+
         await set(userRef, {
           ...existingData,
           uid: firebaseUser.uid,

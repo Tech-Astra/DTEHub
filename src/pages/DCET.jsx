@@ -6,37 +6,17 @@ import { database } from '../firebase';
 import IframeModal from '../components/IframeModal';
 import './Notes.css';
 
-export default function Notes() {
+export default function DCET() {
     const { user, addRecentlyViewed, addDownload, toggleFavorite, isFavorited, addSearchQuery } = useAuthContext();
-    const [userYear, setUserYear] = useState('');
-    const [userBranch, setUserBranch] = useState('');
-    const [notesData, setNotesData] = useState([]);
-    const [loadingNotes, setLoadingNotes] = useState(true);
+    const [dcetData, setDcetData] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [viewUrl, setViewUrl] = useState(null);
     const [currentFolder, setCurrentFolder] = useState(null); // null means root
 
-    // Fetch User Profile
+    // Fetch DCET Resources from Database
     useEffect(() => {
-        if (user?.uid) {
-            const profileRef = ref(database, `users/${user.uid}/profile`);
-            const unsubscribe = onValue(profileRef, (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    if (data.year) setUserYear(data.year);
-                    if (data.branch) setUserBranch(data.branch);
-                }
-            });
-            return () => unsubscribe();
-        } else {
-            setUserYear('');
-            setUserBranch('');
-        }
-    }, [user]);
-
-    // Fetch Notes from Database
-    useEffect(() => {
-        const notesRef = ref(database, 'resources/notes');
-        const unsubscribe = onValue(notesRef, (snapshot) => {
+        const dcetRef = ref(database, 'resources/dcet');
+        const unsubscribe = onValue(dcetRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
                 const arr = Object.keys(data).map(key => ({
@@ -44,38 +24,36 @@ export default function Notes() {
                     ...data[key]
                 }));
                 // Sort by timestamp if needed
-                setNotesData(arr.reverse());
+                setDcetData(arr.reverse());
             } else {
-                setNotesData([]);
+                setDcetData([]);
             }
-            setLoadingNotes(false);
+            setLoading(false);
         });
 
         return () => unsubscribe();
     }, []);
 
-    const handleView = (note) => {
-        if (note.isFolder) {
-            setCurrentFolder(note);
+    const handleView = (item) => {
+        if (item.isFolder) {
+            setCurrentFolder(item);
             return;
         }
         if (user) {
             addRecentlyViewed({
-                itemId: note.id,
-                type: 'note',
-                title: note.title,
-                chapter: note.chapter,
+                itemId: item.id,
+                type: 'dcet',
+                title: item.title,
             });
         }
     };
 
-    const handleDownload = (note) => {
-        if (!note.url) return;
+    const handleDownload = (item) => {
+        if (!item.url) return;
         
-        // Convert to download link if it's a direct file
-        let downloadLink = note.url;
-        if (note.url.includes('drive.google.com/file/d/')) {
-            const fileId = note.url.split('/d/')[1]?.split('/')[0];
+        let downloadLink = item.url;
+        if (item.url.includes('drive.google.com/file/d/')) {
+            const fileId = item.url.split('/d/')[1]?.split('/')[0];
             if (fileId) {
                 downloadLink = `https://drive.google.com/uc?id=${fileId}&export=download`;
             }
@@ -83,23 +61,21 @@ export default function Notes() {
 
         if (user) {
             addDownload({
-                itemId: note.id,
-                type: 'note',
-                title: note.title,
-                chapter: note.chapter,
+                itemId: item.id,
+                type: 'dcet',
+                title: item.title,
             });
         }
         
         window.open(downloadLink, '_blank');
     };
 
-    const handleFavorite = (note) => {
+    const handleFavorite = (item) => {
         if (user) {
             toggleFavorite({
-                itemId: note.id,
-                type: 'note',
-                title: note.title,
-                chapter: note.chapter,
+                itemId: item.id,
+                type: 'dcet',
+                title: item.title,
             });
         }
     };
@@ -110,37 +86,23 @@ export default function Notes() {
         }
     };
 
-    // Filter notes based on user year. If not logged in or no year selected, show all notes or prompt them.
-    // Let's show all notes if no userYear, but prioritize if there is one.
-    const filteredNotes = notesData.filter(note => {
-        // Folder hierarchy check
-        const matchesFolder = (currentFolder?.id || 'root') === (note.parentId || 'root');
-        
-        // If not deeply nested, apply year/branch filters
-        // If it's a folder, we might want to show it more broadly or strictly. 
-        // For now, let's show resources that match year OR are common.
-        const matchesYear = !userYear || userYear === 'Alumni' || note.academicYear === userYear || note.academicYear === 'Common' || !note.academicYear;
-        const matchesBranch = !userBranch || note.branch === userBranch || note.branch === 'Common' || !note.branch;
-        
-        return matchesFolder && matchesYear && matchesBranch;
+    const filteredDcet = dcetData.filter(item => {
+        const matchesFolder = (currentFolder?.id || 'root') === (item.parentId || 'root');
+        return matchesFolder;
     });
 
     return (
         <div className="container notes-page">
             <div className="page-header flex-between">
                 <div>
-                    <h1 className="page-title">Resource Folders</h1>
-                    <p className="page-subtitle">
-                        {userYear && userYear !== 'Alumni' 
-                            ? `Showing filtered notes for your academic year (${userYear})` 
-                            : 'Your one-stop destination for all college resource'}
-                    </p>
+                    <h1 className="page-title">DCET Preparation</h1>
+                    <p className="page-subtitle">Diploma Common Entrance Test resources and materials.</p>
                 </div>
                 <div className="search-bar-modern">
                     <Search className="search-icon" size={18} />
                     <input
                         type="text"
-                        placeholder="Search files..."
+                        placeholder="Search DCET materials..."
                         onKeyDown={handleSearch}
                     />
                 </div>
@@ -152,7 +114,7 @@ export default function Notes() {
                     onClick={() => setCurrentFolder(null)} 
                     style={{cursor: 'pointer', color: !currentFolder ? 'var(--accent-color)' : 'inherit', fontWeight: !currentFolder ? '600' : '400'}}
                 >
-                    All Resources
+                    DCET Home
                 </span>
                 {currentFolder && (
                     <>
@@ -162,41 +124,41 @@ export default function Notes() {
                 )}
             </div>
 
-            {loadingNotes ? (
+            {loading ? (
                 <div style={{ textAlign: 'center', padding: '4rem 0' }}>
                     <div className="loader"></div>
                 </div>
-            ) : filteredNotes.length > 0 ? (
+            ) : filteredDcet.length > 0 ? (
                 <div className="notes-grid">
-                    {filteredNotes.map(note => (
-                        <div key={note.id} className="folder-card card" onClick={() => handleView(note)}>
+                    {filteredDcet.map(item => (
+                        <div key={item.id} className="folder-card card" onClick={() => handleView(item)}>
                             <div className="folder-icon-wrapper">
-                                {note.isFolder ? (
+                                {item.isFolder ? (
                                     <Folder size={18} fill="var(--accent-color)" color="var(--accent-color)" />
                                 ) : (
                                     <FileText size={18} color="var(--text-muted)" />
                                 )}
                             </div>
                             <div className="folder-info">
-                                <h3 className="folder-title" title={note.title}>{note.title}</h3>
+                                <h3 className="folder-title" title={item.title}>{item.title}</h3>
                             </div>
 
-                            {!note.isFolder && (
+                            {!item.isFolder && (
                                 <div className="folder-actions-overlay">
                                     <div className="action-button-group">
                                         <button 
-                                            className={`circle-action-btn btn-add ${isFavorited(note.id, 'note') ? 'active' : ''}`}
-                                            onClick={(e) => { e.stopPropagation(); handleFavorite(note); }}
+                                            className={`circle-action-btn btn-add ${isFavorited(item.id, 'dcet') ? 'active' : ''}`}
+                                            onClick={(e) => { e.stopPropagation(); handleFavorite(item); }}
                                             title="Add to Workspace"
                                         >
-                                            {isFavorited(note.id, 'note') ? <Heart size={20} fill="white" /> : <Plus size={20} />}
+                                            {isFavorited(item.id, 'dcet') ? <Heart size={20} fill="white" /> : <Plus size={20} />}
                                         </button>
                                         <button 
                                             className="circle-action-btn btn-view"
                                             onClick={(e) => { 
                                                 e.stopPropagation(); 
-                                                handleView(note); 
-                                                setViewUrl(note.url);
+                                                handleView(item); 
+                                                setViewUrl(item.url);
                                             }}
                                             title="Quick View"
                                         >
@@ -206,7 +168,7 @@ export default function Notes() {
                                             className="circle-action-btn btn-download"
                                             onClick={(e) => { 
                                                 e.stopPropagation(); 
-                                                handleDownload(note);
+                                                handleDownload(item);
                                             }}
                                             title="Download"
                                         >
@@ -221,8 +183,8 @@ export default function Notes() {
             ) : (
                 <div style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-muted)' }}>
                     <FilterX size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-                    <h3>No notes found for {userYear}</h3>
-                    <p>We're continually adding new resources. Check back later!</p>
+                    <h3>No materials found</h3>
+                    <p>Preparation materials for DCET will appear here soon.</p>
                 </div>
             )}
 

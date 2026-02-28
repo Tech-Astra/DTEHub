@@ -1,0 +1,99 @@
+.iframe-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+}
+
+.iframe-modal-container {
+    background: var(--bg-color);
+    width: 100%;
+    max-width: 1200px;
+    height: 90vh;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    animation: modalSlideUp 0.3s ease-out;
+}
+
+.iframe-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--card-bg);
+}
+
+.iframe-modal-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--text-main);
+    font-weight: 700;
+}
+
+.iframe-modal-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.iframe-modal-actions .btn-icon {
+    color: var(--text-muted);
+    transition: color 0.2s;
+}
+
+.iframe-modal-actions .btn-icon:hover {
+    color: var(--text-main);
+}
+
+.iframe-modal-body {
+    flex: 1;
+    background: #ffffff; /* Keep white so PDF backgrounds etc match nicely */
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.iframe-modal-body iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+@keyframes modalSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 768px) {
+    .iframe-modal-overlay {
+        padding: 0;
+    }
+    .iframe-modal-container {
+        height: 100vh;
+        border-radius: 0;
+        border: none;
+    }
+}
