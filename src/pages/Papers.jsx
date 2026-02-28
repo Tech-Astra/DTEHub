@@ -3,6 +3,7 @@ import { Search, Download, FileText, Heart, FilterX } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext';
 import { ref, onValue } from 'firebase/database';
 import { database } from '../firebase';
+import IframeModal from '../components/IframeModal';
 import './Papers.css';
 
 export default function Papers() {
@@ -10,6 +11,7 @@ export default function Papers() {
     const [userYear, setUserYear] = useState('');
     const [papersData, setPapersData] = useState([]);
     const [loadingPapers, setLoadingPapers] = useState(true);
+    const [viewUrl, setViewUrl] = useState(null);
 
     useEffect(() => {
         if (user?.uid) {
@@ -178,7 +180,7 @@ export default function Papers() {
                                                 className="btn-outline btn-sm" 
                                                 onClick={() => {
                                                     handleView(paper);
-                                                    window.open(paper.url, '_blank');
+                                                    setViewUrl(paper.url);
                                                 }}
                                             >
                                                 View Source
@@ -197,6 +199,9 @@ export default function Papers() {
                     </div>
                 )}
             </div>
+
+            {/* In-page Document Viewer */}
+            {viewUrl && <IframeModal url={viewUrl} onClose={() => setViewUrl(null)} />}
         </div>
     );
 }

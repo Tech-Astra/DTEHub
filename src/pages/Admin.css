@@ -188,6 +188,44 @@
 }
 
 /* Resources List */
+.users-full-card {
+    grid-column: 1 / -1;
+    margin-top: 1rem;
+}
+
+.users-table-container {
+    overflow-x: auto;
+    margin-top: 1.5rem;
+}
+
+.admin-users-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.95rem;
+}
+
+.admin-users-table th {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 1rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.admin-users-table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-main);
+}
+
+.admin-users-table tr:hover td {
+    background: rgba(255, 255, 255, 0.01);
+}
+
 .resource-list {
     display: flex;
     flex-direction: column;
@@ -272,7 +310,47 @@
     border-color: #ef4444;
 }
 
+.editing-banner {
+    background: rgba(234, 179, 8, 0.1);
+    border: 1px solid var(--accent-color);
+    padding: 0.8rem 1rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.editing-banner span {
+    color: var(--text-main);
+}
+
+.editing-banner .btn-text {
+    background: none;
+    border: none;
+    color: var(--accent-color);
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.btn-edit {
+    color: var(--text-muted);
+}
+
+.btn-edit:hover {
+    color: var(--accent-color);
+    background: rgba(234, 179, 8, 0.1);
+}
+
 @media (max-width: 1024px) {
+    .admin-content-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 992px) {
     .admin-content-grid {
         grid-template-columns: 1fr;
     }
@@ -294,6 +372,27 @@
         gap: 1rem;
     }
 
+    .res-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 600px) {
+    .admin-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .admin-tabs {
+        flex-direction: column;
+    }
+    
+    .resource-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
     .res-actions {
         width: 100%;
         justify-content: flex-end;

@@ -3,6 +3,7 @@ import { Search, Download, Folder, Eye, Plus, Heart, FilterX } from 'lucide-reac
 import { useAuthContext } from '../context/AuthContext';
 import { ref, onValue } from 'firebase/database';
 import { database } from '../firebase';
+import IframeModal from '../components/IframeModal';
 import './Notes.css';
 
 export default function Notes() {
@@ -10,6 +11,7 @@ export default function Notes() {
     const [userYear, setUserYear] = useState('');
     const [notesData, setNotesData] = useState([]);
     const [loadingNotes, setLoadingNotes] = useState(true);
+    const [viewUrl, setViewUrl] = useState(null);
 
     // Fetch User Profile
     useEffect(() => {
@@ -57,7 +59,6 @@ export default function Notes() {
                 chapter: note.chapter,
             });
         }
-        alert(`Opening ${note.title}`);
     };
 
     const handleDownload = (note) => {
@@ -69,7 +70,6 @@ export default function Notes() {
                 chapter: note.chapter,
             });
         }
-        alert(`Downloading ${note.title}`);
     };
 
     const handleFavorite = (note) => {
@@ -150,7 +150,7 @@ export default function Notes() {
                                         onClick={(e) => { 
                                             e.stopPropagation(); 
                                             handleView(note); 
-                                            window.open(note.url, '_blank'); 
+                                            setViewUrl(note.url);
                                         }}
                                         title="Quick View"
                                     >
@@ -168,6 +168,9 @@ export default function Notes() {
                     <p>We're continually adding new resources. Check back later!</p>
                 </div>
             )}
+
+            {/* In-page Document Viewer */}
+            {viewUrl && <IframeModal url={viewUrl} onClose={() => setViewUrl(null)} />}
         </div>
     );
 }
