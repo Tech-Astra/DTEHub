@@ -1073,6 +1073,27 @@ export default function Admin() {
                                                 <p>{folder.branch} • {folder.syllabus || folder.academicYear || 'No Year'} {folder.semester ? `• ${folder.semester}` : ''}</p>
                                             </div>
                                             <div className="folder-actions-overlay">
+                                                <select
+                                                    value={folder.parentId || 'root'}
+                                                    onChange={(e) => { e.stopPropagation(); handleMove(folder, e.target.value); }}
+                                                    style={{
+                                                        background: 'rgba(255,255,255,0.1)',
+                                                        border: '1px solid rgba(255,255,255,0.1)',
+                                                        color: 'white',
+                                                        fontSize: '0.65rem',
+                                                        borderRadius: '4px',
+                                                        padding: '2px 4px',
+                                                        maxWidth: '70px',
+                                                        cursor: 'pointer',
+                                                        marginRight: 'auto'
+                                                    }}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <option value="root" style={{ color: '#000' }}>Root</option>
+                                                    {foldersList.filter(f => f.id !== folder.id).map(f => (
+                                                        <option key={f.id} value={f.id} style={{ color: '#000' }}>{f.title}</option>
+                                                    ))}
+                                                </select>
                                                 <button type="button" className="mini-action-btn" onClick={(e) => { e.stopPropagation(); handleEdit(folder); }} title="Edit">
                                                     <Edit2 size={14} />
                                                 </button>
@@ -1593,6 +1614,17 @@ export default function Admin() {
                                             <p>{res.chapter || 'No chapter info'}</p>
                                         </div>
                                         <div className="res-actions">
+                                            <select
+                                                className="btn-outline btn-sm"
+                                                value={res.parentId || 'root'}
+                                                onChange={(e) => handleMove(res, e.target.value)}
+                                                style={{ maxWidth: '80px', fontSize: '0.65rem', padding: '0.3rem' }}
+                                            >
+                                                <option value="root">Root</option>
+                                                {foldersList.filter(f => f.id !== res.id).map(folder => (
+                                                    <option key={folder.id} value={folder.id}>{folder.title}</option>
+                                                ))}
+                                            </select>
                                             <button onClick={() => setViewUrl(res.url)} className="btn-outline btn-sm">View</button>
                                             <button onClick={() => { setPeakedFolder(null); handleEdit(res); }} className="btn-edit" style={{ padding: '0.4rem' }}><Edit2 size={14} /></button>
                                         </div>
