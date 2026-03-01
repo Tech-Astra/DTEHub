@@ -5,7 +5,7 @@ import { ref, push, set, onValue, remove, runTransaction, get } from 'firebase/d
 import { 
     Plus, Trash2, Edit2, Link as LinkIcon, FolderPlus, FileText, 
     Users, Zap, Database, RefreshCw, LayoutDashboard, LogOut, 
-    CheckCircle2, Eye, BarChart3, ShieldCheck 
+    CheckCircle2, Eye, BarChart3, ShieldCheck, Menu, X
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import './Admin.css';
@@ -45,6 +45,7 @@ const mockPieData = [
 export default function Admin() {
     const { user, loading, logout } = useAuthContext();
     const [activeTab, setActiveTab] = useState('dashboard');
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
     // Form States
     const [title, setTitle] = useState('');
@@ -269,10 +270,19 @@ export default function Admin() {
 
     return (
         <div className="admin-dashboard-layout">
-            <aside className="admin-sidebar">
+            {isMobileMenuOpen && (
+                <div className="mobile-overlay" onClick={() => setIsMobileMenuOpen(false)}></div>
+            )}
+            
+            <aside className={`admin-sidebar ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
                 <div className="sidebar-brand">
-                    <Zap color="var(--accent-color)" size={28}/> 
-                    <span style={{letterSpacing: '2px', fontFamily: 'monospace'}}>TECHASTRA</span>
+                    <div style={{display: 'flex', alignItems: 'center', gap: '0.75rem'}}>
+                        <Zap color="var(--accent-color)" size={28}/> 
+                        <span style={{letterSpacing: '2px', fontFamily: 'monospace'}}>TECHASTRA</span>
+                    </div>
+                    <button className="mobile-close-btn" onClick={() => setIsMobileMenuOpen(false)}>
+                        <X size={24} />
+                    </button>
                 </div>
                 
                 <div className="sidebar-menu">
@@ -306,8 +316,13 @@ export default function Admin() {
 
             <main className="admin-main">
                 <header className="admin-topbar">
-                    <div className="topbar-breadcrumbs">
-                        <span>Dashboard</span> / {activeTab === 'dashboard' ? 'Overview' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <button className="mobile-menu-btn" onClick={() => setIsMobileMenuOpen(true)}>
+                            <Menu size={24} />
+                        </button>
+                        <div className="topbar-breadcrumbs">
+                            <span>Dashboard</span> / {activeTab === 'dashboard' ? 'Overview' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                        </div>
                     </div>
                     <div className="topbar-user">
                         <div>
