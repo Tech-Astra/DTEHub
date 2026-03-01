@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, GraduationCap } from 'lucide-react';
 import { useFirebaseStats } from '../hooks/useFirebaseStats';
 import { useAuthContext } from '../context/AuthContext';
+import Footer from '../components/Footer';
 import './Home.css';
 
 // Simple Counter Component for the Stats
@@ -86,6 +87,7 @@ export default function Home() {
                     </div>
                 </div>
             </main>
+            <Footer />
         </div>
     );
 }

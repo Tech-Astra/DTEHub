@@ -4,6 +4,7 @@ import { useAuthContext } from '../context/AuthContext';
 import { ref, onValue } from 'firebase/database';
 import { database } from '../firebase';
 import CustomSelect from '../components/CustomSelect';
+import IframeModal from '../components/IframeModal';
 import { Filter, ChevronDown } from 'lucide-react';
 import './Papers.css';
 
@@ -142,7 +143,7 @@ export default function Papers() {
                     </p>
                 </div>
 
-                <div className="workspace-selectors search-only-mobile">
+                <div className="workspace-selectors search-only-global">
                     <div className="selectors-body">
                         <div className="selector-group desktop-only-flex">
                             <div className="selector-item">
@@ -190,8 +191,8 @@ export default function Papers() {
                 </div>
             </div>
 
-            {/* Mobile Filter FAB — sits above Workspace Dock */}
-            <div className="mobile-filter-dock">
+            {/* Unified Filter FAB — sits above Workspace Dock */}
+            <div className="global-filter-dock">
                 <button 
                     className="dock-btn filter-fab" 
                     onClick={() => setIsFilterModalOpen(true)}

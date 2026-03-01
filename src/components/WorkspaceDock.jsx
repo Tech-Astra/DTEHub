@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LayoutGrid, X, History, Heart, Download, FileText, ChevronRight } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext';
@@ -7,6 +7,16 @@ export default function WorkspaceDock() {
     const navigate = useNavigate();
     const { user, workspace } = useAuthContext();
     const [panelOpen, setPanelOpen] = useState(false);
+
+    // Toggle body class to hide other floating elements when workspace is open
+    useEffect(() => {
+        if (panelOpen) {
+            document.body.classList.add('workspace-active');
+        } else {
+            document.body.classList.remove('workspace-active');
+        }
+        return () => document.body.classList.remove('workspace-active');
+    }, [panelOpen]);
 
     const wsData = workspace || { recentlyViewed: [], downloads: [], favorites: [] };
 
@@ -17,7 +27,6 @@ export default function WorkspaceDock() {
                 <button className="dock-btn dock-workspace" title="Workspace" onClick={() => setPanelOpen(!panelOpen)}>
                     <LayoutGrid size={24} />
                 </button>
-                <span className="dock-label">Workspace</span>
             </div>
 
             {/* Workspace Slide Panel */}

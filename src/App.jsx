@@ -39,7 +39,6 @@ function App() {
               <Route path="/privacy" element={<PrivacyPolicy />} />
             </Routes>
           </main>
-          <Footer />
           {/* Global Workspace Dock — visible on every page */}
           <WorkspaceDock />
 

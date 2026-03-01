@@ -1,19 +1,10 @@
 import { useState, useEffect } from 'react';
-import Search from 'lucide-react/dist/esm/icons/search';
-import Download from 'lucide-react/dist/esm/icons/download';
-import Folder from 'lucide-react/dist/esm/icons/folder';
-import FileText from 'lucide-react/dist/esm/icons/file-text';
-import FileSpreadsheet from 'lucide-react/dist/esm/icons/file-spreadsheet';
-import Eye from 'lucide-react/dist/esm/icons/eye';
-import Plus from 'lucide-react/dist/esm/icons/plus';
-import Heart from 'lucide-react/dist/esm/icons/heart';
-import FilterX from 'lucide-react/dist/esm/icons/filter-x';
-import ChevronDown from 'lucide-react/dist/esm/icons/chevron-down';
-import Filter from 'lucide-react/dist/esm/icons/filter';
+import { Search, Download, Folder, FileText, FileSpreadsheet, Eye, Plus, Heart, FilterX, ChevronDown, Filter } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext';
 import { ref, onValue } from 'firebase/database';
 import { database } from '../firebase';
 import CustomSelect from '../components/CustomSelect';
+import IframeModal from '../components/IframeModal';
 import './Notes.css';
 
 export default function Notes() {
@@ -181,7 +172,7 @@ export default function Notes() {
     return (
         <div className="container notes-page">
             {/* Desktop View & Mobile Search Only */}
-            <div className="workspace-selectors search-only-mobile">
+            <div className="workspace-selectors search-only-global">
                 <div className="selectors-body">
                     <div className="selector-group desktop-only-flex">
                         <div className="selector-item">
@@ -262,8 +253,8 @@ export default function Notes() {
                 </div>
             </div>
 
-            {/* Mobile Filter FAB — sits above Workspace Dock */}
-            <div className="floating-dock-left mobile-filter-dock">
+            {/* Unified Filter FAB — sits above Workspace Dock */}
+            <div className="global-filter-dock">
                 <button 
                     className="dock-btn filter-fab" 
                     onClick={() => setIsFilterModalOpen(true)}

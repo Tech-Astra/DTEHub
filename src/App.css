@@ -209,10 +209,11 @@
     align-items: center;
     justify-content: center;
     color: #000;
-    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(10px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.1);
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    backface-visibility: hidden;
+    transform: translateZ(0); /* Hardware acceleration for sharpness */
 }
 
 .dock-btn:hover {
@@ -245,15 +246,26 @@
     height: 100vh;
     background: var(--card-bg);
     border-right: 1px solid var(--border-color);
-    z-index: 300;
+    z-index: 3000;
     display: flex;
     flex-direction: column;
     transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     box-shadow: 20px 0 60px rgba(0, 0, 0, 0.5);
+    backface-visibility: hidden;
+    transform: translateZ(0); /* Fix blurry transition */
 }
 
 .workspace-panel.panel-open {
     left: 0;
+}
+
+/* Hide floating elements when workspace is active */
+body.workspace-active .global-filter-dock,
+body.workspace-active .floating-dock-left {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: translateX(-20px);
+    transition: all 0.3s ease;
 }
 
 .ws-overlay {
@@ -428,11 +440,11 @@
 
 @keyframes gold-pulse {
     0% {
-        box-shadow: 0 0 0 0 rgba(253, 224, 71, 0.6);
+        box-shadow: 0 0 0 0 rgba(253, 224, 71, 0.5);
     }
 
     70% {
-        box-shadow: 0 0 0 35px rgba(253, 224, 71, 0);
+        box-shadow: 0 0 0 18px rgba(253, 224, 71, 0);
     }
 
     100% {
@@ -635,49 +647,69 @@
     }
 }
 
-/* ────────── Global Mobile Filter UI ────────── */
+/* ────────── Global Unified Filter UI ────────── */
 .desktop-only-flex {
-    display: flex;
+    display: none !important;
 }
 
-.mobile-filter-dock {
-    display: none;
+.global-filter-dock {
+    display: flex;
     position: fixed;
-    bottom: 9.5rem; /* Sits above Workspace Dock */
-    left: 1.25rem;
+    bottom: 8.5rem; /* Adjusted for desktop workspace dock height */
+    left: 2.5rem;
     z-index: 2200;
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    animation: dockFadeIn 1s 0.6s ease-out both;
+}
+
+.filter-fab {
+    background: #1c1c1f !important;
+    color: var(--accent-color) !important;
+    border: 1px solid var(--accent-color) !important;
 }
 
 @media (max-width: 1024px) {
-    .desktop-only-flex {
-        display: none !important;
+    .global-filter-dock {
+        left: 1.25rem;
+        bottom: 10rem; /* Adjusted for mobile bottom nav + dock */
+        flex-direction: column-reverse;
+        align-items: flex-start;
+        gap: 0.85rem;
     }
 
-    .mobile-filter-dock {
-        display: flex !important;
+    .global-filter-dock .dock-label {
+        display: none;
     }
 
-    .search-only-mobile {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-        margin-bottom: 1.5rem !important;
+    .filter-fab {
+        animation: none !important;
     }
+}
 
-    .search-only-mobile .selectors-body {
-        max-height: unset !important;
-        opacity: 1 !important;
-        padding: 0 !important;
-    }
+.search-only-global {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin-bottom: 2rem !important;
+    width: 100%;
+}
 
-    .search-only-mobile .search-bar-modern {
-        margin-top: 0 !important;
-        background: rgba(255, 255, 255, 0.05) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    }
+.search-only-global .selectors-body {
+    max-height: unset !important;
+    opacity: 1 !important;
+    padding: 0 !important;
+}
+
+.search-only-global .search-bar-modern {
+    margin-top: 0 !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto !important;
 }
 
 /* Filter Modal Global */
@@ -696,11 +728,11 @@
 
 .filter-modal-content {
     width: 100%;
-    max-width: 400px;
+    max-width: 450px;
     background: #111114;
     border: 1px solid var(--accent-color);
     border-radius: 28px;
-    padding: 2rem;
+    padding: 2.5rem;
     position: relative;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
     animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -715,28 +747,46 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 2.25rem;
 }
 
 .filter-modal-header h3 {
     margin: 0;
-    font-size: 1.25rem;
+    font-size: 1.5rem;
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    color: white;
 }
 
 .filter-modal-header .close-btn {
     background: none;
     border: none;
     color: var(--text-muted);
-    font-size: 2rem;
-    line-height: 1;
+    font-size: 2.5rem;
+    line-height: 0.8;
     cursor: pointer;
+    transition: color 0.2s;
+}
+
+.filter-modal-header .close-btn:hover {
+    color: white;
 }
 
 .filter-modal-body {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 2rem;
+}
+
+.filter-modal-body .selector-item label {
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .filter-modal-content {
+        padding: 2rem;
+    }
 }
