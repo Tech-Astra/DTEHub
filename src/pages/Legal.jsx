@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
-import './PrivacyPolicy.css';
+import './Legal.css';
 
 export default function PrivacyPolicy() {
     const navigate = useNavigate();

@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
+import { getAnalytics, isSupported } from "firebase/analytics";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getDatabase } from "firebase/database";
 
@@ -16,9 +16,16 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 const database = getDatabase(app);
+
+// Only load analytics if the browser supports it (skips when ad blockers are active)
+let analytics = null;
+isSupported().then(supported => {
+  if (supported) {
+    analytics = getAnalytics(app);
+  }
+}).catch(() => {});
 
 export { app, analytics, auth, googleProvider, database };
