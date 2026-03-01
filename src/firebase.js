@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAnalytics, isSupported } from "firebase/analytics";
+import { getAnalytics, initializeAnalytics, isSupported } from "firebase/analytics";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getDatabase } from "firebase/database";
 
@@ -24,8 +24,12 @@ const database = getDatabase(app);
 let analytics = null;
 isSupported().then(supported => {
   if (supported) {
-    analytics = getAnalytics(app);
+    analytics = initializeAnalytics(app, {
+      config: {
+        cookie_flags: 'SameSite=None;Secure'
+      }
+    });
   }
-}).catch(() => {});
+}).catch(() => { });
 
 export { app, analytics, auth, googleProvider, database };
