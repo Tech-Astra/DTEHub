@@ -1,80 +1,144 @@
 .privacy-container {
-    padding: 6rem 1rem 4rem;
+    padding: 2.5rem 1.5rem;
     min-height: calc(100vh - 60px);
     display: flex;
     justify-content: center;
-    align-items: flex-start;
+    align-items: center;
 }
 
 .privacy-content {
-    max-width: 800px;
+    max-width: 1000px;
     width: 100%;
-    margin: 0 auto;
     padding: 3rem;
-    animation: fadeInDown 0.6s ease-out;
+    background: rgba(24, 24, 27, 0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--accent-color);
+    border-radius: 28px;
+    animation: fadeInDown 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+}
+
+.privacy-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.privacy-content h1 {
+    font-size: 2.25rem;
+    color: var(--text-main);
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+}
+
+.privacy-subtitle {
+    color: var(--text-muted);
+    font-size: 1rem;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.policy-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+.policy-section h2 {
+    font-size: 1.25rem;
+    color: var(--accent-color);
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.policy-section p {
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+}
+
+.notice-box {
+    padding: 1.25rem;
+    background: rgba(253, 224, 71, 0.05);
+    border: 1px solid rgba(253, 224, 71, 0.15);
+    border-radius: 16px;
+    margin-top: 1.5rem;
+}
+
+.notice-box p {
+    margin-bottom: 0;
+    font-size: 0.9rem;
+}
+
+.contact-card {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 2rem;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.contact-email-btn {
+    display: inline-block;
+    padding: 0.8rem 1.2rem;
+    background: var(--accent-color);
+    color: #000;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    margin-top: 0.5rem;
+}
+
+.contact-email-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(253, 224, 71, 0.3);
+}
+
+.swift-action-text {
+    font-size: 0.8rem !important;
+    opacity: 0.6;
+    margin-top: 1rem;
 }
 
 .privacy-close-btn {
     position: absolute;
     top: 1.5rem;
     right: 1.5rem;
-    background: transparent;
+    background: rgba(255, 255, 255, 0.05);
     color: var(--text-muted);
-    border: none;
-    cursor: pointer;
-    border-radius: 50%;
+    border-radius: 12px;
     padding: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
+    transition: all 0.2s;
 }
 
-.privacy-close-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-main);
-    transform: rotate(90deg);
-}
+@media (max-width: 900px) {
+    .policy-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
 
-
-
-.privacy-content h1 {
-    font-size: 2.5rem;
-    color: var(--accent-color);
-    margin-bottom: 0.5rem;
-    text-align: center;
-    font-weight: 800;
-}
-
-.policy-section {
-    margin-bottom: 2rem;
-}
-
-.policy-section h2 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    color: var(--text-main);
-    font-weight: 700;
-}
-
-.policy-section p {
-    color: var(--text-muted);
-    line-height: 1.8;
-    margin-bottom: 1rem;
-    font-size: 1.05rem;
-}
-
-.policy-section strong {
-    color: var(--text-main);
-}
-
-@media (max-width: 768px) {
     .privacy-content {
-        padding: 2rem 1.5rem;
+        padding: 2rem 1.25rem;
+    }
+
+    .privacy-container {
+        padding: 1rem;
+        align-items: flex-start;
+        padding-top: 2rem;
+    }
+
+    .privacy-header {
+        margin-bottom: 1.5rem;
     }
 
     .privacy-content h1 {
-        font-size: 2rem;
+        font-size: 1.75rem;
+    }
+
+    .contact-card {
+        padding: 1.5rem;
     }
 }

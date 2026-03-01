@@ -7,7 +7,7 @@ import {
     Plus, Trash2, Edit2, Link as LinkIcon, FolderPlus, FileText,
     Users, Zap, Database, RefreshCw, LayoutDashboard, LogOut,
     CheckCircle2, Eye, BarChart3, ShieldCheck, Menu, X, Home, History,
-    Search, Filter, ChevronDown, Folder
+    Search, Filter, ChevronDown, Folder, MessageSquare, Quote, Star
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import IframeModal from '../components/IframeModal';
@@ -59,6 +59,17 @@ export default function Admin() {
     const [showSyllabusModal, setShowSyllabusModal] = useState(false);
     const [syllabusesList, setSyllabusesList] = useState([]);
     const [newSyllabusTitle, setNewSyllabusTitle] = useState('');
+
+    // Testimonial States
+    const [testimonialsList, setTestimonialsList] = useState([]);
+    const [showTestimonialModal, setShowTestimonialModal] = useState(false);
+    const [testimonialForm, setTestimonialForm] = useState({
+        name: '',
+        role: '',
+        message: '',
+        rating: 5,
+        photoUrl: ''
+    });
 
     // Form States
     const [title, setTitle] = useState('');
@@ -249,6 +260,18 @@ export default function Admin() {
                         setActivityLogs([]);
                     }
                 });
+            } else if (activeTab === 'testimonials') {
+                const testRef = ref(database, 'testimonials');
+                const unsubscribe = onValue(testRef, (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        const arr = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+                        setTestimonialsList(arr.reverse());
+                    } else {
+                        setTestimonialsList([]);
+                    }
+                });
+                return () => unsubscribe();
             }
 
             // Log this session login once per mount
@@ -563,6 +586,9 @@ export default function Admin() {
                         <button className={`sidebar-btn ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
                             <Users size={18} /> Users
                         </button>
+                        <button className={`sidebar-btn ${activeTab === 'testimonials' ? 'active' : ''}`} onClick={() => setActiveTab('testimonials')}>
+                            <MessageSquare size={18} /> Testimonials
+                        </button>
                         <button className={`sidebar-btn ${activeTab === 'logs' ? 'active' : ''}`} onClick={() => setActiveTab('logs')}>
                             <History size={18} /> System Logs
                         </button>
@@ -849,6 +875,54 @@ export default function Admin() {
                                             )}
                                         </tbody>
                                     </table>
+                                </div>
+                            </div>
+                        ) : activeTab === 'testimonials' ? (
+                            <div className="admin-card card animate-fade">
+                                <div className="resource-management-header">
+                                    <div className="header-left">
+                                        <h3>Student Testimonials</h3>
+                                        <p>Manage reviews and success stories shown on the home page</p>
+                                    </div>
+                                    <button className="btn-primary" onClick={() => {
+                                        setEditingId(null);
+                                        setTestimonialForm({ name: '', role: '', message: '', rating: 5, photoUrl: '' });
+                                        setShowTestimonialModal(true);
+                                    }}>
+                                        <Plus size={16} /> Add Testimonial
+                                    </button>
+                                </div>
+
+                                <div className="testimonial-grid-admin">
+                                    {testimonialsList.length > 0 ? testimonialsList.map(item => (
+                                        <div key={item.id} className="testimonial-card-admin">
+                                            <div className="test-header">
+                                                <div className="test-avatar">
+                                                    {item.photoUrl ? <img src={item.photoUrl} alt={item.name} /> : <Users size={20} />}
+                                                </div>
+                                                <div className="test-meta">
+                                                    <h4>{item.name}</h4>
+                                                    <p>{item.role}</p>
+                                                </div>
+                                                <div className="test-actions">
+                                                    <button onClick={() => {
+                                                        setEditingId(item.id);
+                                                        setTestimonialForm(item);
+                                                        setShowTestimonialModal(true);
+                                                    }} className="btn-edit"><Edit2 size={14} /></button>
+                                                    <button onClick={async () => {
+                                                        if (window.confirm("Delete this testimonial?")) {
+                                                            await remove(ref(database, `testimonials/${item.id}`));
+                                                            logAdminAction('Deleted Testimonial', 'testimonials', item.name);
+                                                        }
+                                                    }} className="btn-delete"><Trash2 size={14} /></button>
+                                                </div>
+                                            </div>
+                                            <p className="test-message">"{item.message}"</p>
+                                        </div>
+                                    )) : (
+                                        <div className="empty-state">No testimonials found. Add your first one!</div>
+                                    )}
                                 </div>
                             </div>
                         ) : activeTab === 'logs' ? (
@@ -1483,6 +1557,68 @@ export default function Admin() {
 
             {/* View Document Modal */}
             {viewUrl && <IframeModal url={viewUrl} onClose={() => setViewUrl(null)} />}
+            {/* Testimonial Modal */}
+            {showTestimonialModal && (
+                <div className="admin-modal-overlay" onClick={(e) => { if (e.target.className === 'admin-modal-overlay') setShowTestimonialModal(false); }}>
+                    <div className="admin-modal-content">
+                        <div className="admin-modal-header">
+                            <div className="admin-modal-header-left">
+                                <div className="admin-modal-header-icon update">
+                                    <MessageSquare size={18} />
+                                </div>
+                                <div>
+                                    <h3>{editingId ? 'Edit' : 'Add'} Testimonial</h3>
+                                    <p>Share a student success story</p>
+                                </div>
+                            </div>
+                            <button className="admin-modal-close" onClick={() => setShowTestimonialModal(false)}><X size={16} /></button>
+                        </div>
+                        <form onSubmit={async (e) => {
+                            e.preventDefault();
+                            setIsSaving(true);
+                            try {
+                                if (editingId) {
+                                    await set(ref(database, `testimonials/${editingId}`), { ...testimonialForm, timestamp: Date.now() });
+                                    logAdminAction('Updated Testimonial', 'testimonials', testimonialForm.name);
+                                } else {
+                                    const newRef = push(ref(database, 'testimonials'));
+                                    await set(newRef, { ...testimonialForm, timestamp: Date.now() });
+                                    logAdminAction('Added Testimonial', 'testimonials', testimonialForm.name);
+                                }
+                                setShowTestimonialModal(false);
+                                alert("Testimonial saved!");
+                            } catch (err) { console.error(err); }
+                            finally { setIsSaving(false); }
+                        }}>
+                            <div className="admin-modal-body">
+                                <div className="modal-form">
+                                    <div className="modal-field">
+                                        <label>Student Name</label>
+                                        <input type="text" value={testimonialForm.name} onChange={e => setTestimonialForm({ ...testimonialForm, name: e.target.value })} required />
+                                    </div>
+                                    <div className="modal-field">
+                                        <label>Role / College (e.g. 5th Sem CS, Gp Belgaum)</label>
+                                        <input type="text" value={testimonialForm.role} onChange={e => setTestimonialForm({ ...testimonialForm, role: e.target.value })} required />
+                                    </div>
+                                    <div className="modal-field">
+                                        <label>Message</label>
+                                        <textarea rows="4" value={testimonialForm.message} onChange={e => setTestimonialForm({ ...testimonialForm, message: e.target.value })} required style={{width: '100%', padding: '0.75rem', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white'}} />
+                                    </div>
+                                    <div className="modal-field">
+                                        <label>Student Photo URL (Optional)</label>
+                                        <input type="text" value={testimonialForm.photoUrl} onChange={e => setTestimonialForm({ ...testimonialForm, photoUrl: e.target.value })} />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="admin-modal-footer">
+                                <button type="submit" className="modal-submit-btn primary" disabled={isSaving}>
+                                    <CheckCircle2 size={16} /> {isSaving ? 'Saving...' : 'Save Testimonial'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </>
     );
 }

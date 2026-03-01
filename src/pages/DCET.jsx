@@ -4,6 +4,7 @@ import { useAuthContext } from '../context/AuthContext';
 import { ref, onValue } from 'firebase/database';
 import { database } from '../firebase';
 import CustomSelect from '../components/CustomSelect';
+import IframeModal from '../components/IframeModal';
 import { Filter, ChevronDown } from 'lucide-react';
 import './Notes.css';
 
@@ -90,6 +91,7 @@ export default function DCET() {
     const handleDownload = (item) => {
         if (!item.url) return;
         
+        // Convert to download link if it's a direct file
         let downloadLink = item.url;
         if (item.url.includes('drive.google.com/file/d/')) {
             const fileId = item.url.split('/d/')[1]?.split('/')[0];
@@ -148,67 +150,142 @@ export default function DCET() {
             return 0;
         });
 
+    const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+
     return (
         <div className="container notes-page">
-            <div className="workspace-selectors">
-                <div className="selector-group">
-                    <div className="selector-item">
-                        <label>Academic Branch</label>
-                        <CustomSelect 
-                            options={[
-                                { value: '', label: 'Select Branch' },
-                                { value: 'Common', label: 'Common to All' },
-                                ...branches.map(b => ({ value: b.title, label: b.title }))
-                            ]}
-                            value={selBranch}
-                            onChange={setSelBranch}
-                            placeholder="Select Branch"
-                            icon={Filter}
-                        />
+            {/* Desktop View & Mobile Search Only */}
+            <div className="workspace-selectors search-only-global">
+                <div className="selectors-body">
+                    <div className="selector-group desktop-only-flex">
+                        <div className="selector-item">
+                            <label>Academic Branch</label>
+                            <CustomSelect 
+                                options={[
+                                    { value: '', label: 'Select Branch' },
+                                    { value: 'Common', label: 'Common to All' },
+                                    ...branches.map(b => ({ value: b.title, label: b.title }))
+                                ]}
+                                value={selBranch}
+                                onChange={setSelBranch}
+                                placeholder="Select Branch"
+                                icon={Filter}
+                            />
+                        </div>
+
+                        <div className="selector-item">
+                            <label>Syllabus Scheme</label>
+                            <CustomSelect 
+                                options={[
+                                    { value: '', label: 'Select Scheme' },
+                                    ...syllabuses.map(s => ({ value: s.title, label: `${s.title} Scheme` }))
+                                ]}
+                                value={selSyllabus}
+                                onChange={setSelSyllabus}
+                                placeholder="Select Scheme"
+                                icon={Filter}
+                            />
+                        </div>
+
+                        <div className="selector-item">
+                            <label>Sort By</label>
+                            <CustomSelect 
+                                options={[
+                                    { value: 'newest', label: 'Newest First' },
+                                    { value: 'oldest', label: 'Oldest First' },
+                                    { value: 'az', label: 'Alphabetical (A-Z)' },
+                                    { value: 'za', label: 'Alphabetical (Z-A)' }
+                                ]}
+                                value={sortBy}
+                                onChange={setSortBy}
+                                placeholder="Sort By"
+                                icon={ChevronDown}
+                            />
+                        </div>
                     </div>
 
-                    <div className="selector-item">
-                        <label>Syllabus Scheme</label>
-                        <CustomSelect 
-                            options={[
-                                { value: '', label: 'Select Scheme' },
-                                ...syllabuses.map(s => ({ value: s.title, label: `${s.title} Scheme` }))
-                            ]}
-                            value={selSyllabus}
-                            onChange={setSelSyllabus}
-                            placeholder="Select Scheme"
-                            icon={Filter}
+                    <div className="search-bar-modern">
+                        <Search className="search-icon" size={18} />
+                        <input
+                            type="text"
+                            placeholder="Search DCET materials..."
+                            value={searchQuery}
+                            onChange={handleSearch}
+                            onKeyDown={handleSearch}
                         />
                     </div>
-
-                    <div className="selector-item">
-                        <label>Sort By</label>
-                        <CustomSelect 
-                            options={[
-                                { value: 'newest', label: 'Newest First' },
-                                { value: 'oldest', label: 'Oldest First' },
-                                { value: 'az', label: 'Alphabetical (A-Z)' },
-                                { value: 'za', label: 'Alphabetical (Z-A)' }
-                            ]}
-                            value={sortBy}
-                            onChange={setSortBy}
-                            placeholder="Sort By"
-                            icon={ChevronDown}
-                        />
-                    </div>
-                </div>
-
-                <div className="search-bar-modern">
-                    <Search className="search-icon" size={18} />
-                    <input
-                        type="text"
-                        placeholder="Search DCET materials..."
-                        value={searchQuery}
-                        onChange={handleSearch}
-                        onKeyDown={handleSearch}
-                    />
                 </div>
             </div>
+
+            {/* Unified Filter FAB — sits above Workspace Dock */}
+            <div className="global-filter-dock">
+                <button 
+                    className="dock-btn filter-fab" 
+                    onClick={() => setIsFilterModalOpen(true)}
+                    title="Filters & Sorting"
+                >
+                    <Filter size={24} />
+                </button>
+            </div>
+
+            {/* Mobile Filter Popup Modal */}
+            {isFilterModalOpen && (
+                <div className="filter-modal-overlay" onClick={() => setIsFilterModalOpen(false)}>
+                    <div className="filter-modal-content card" onClick={e => e.stopPropagation()}>
+                        <div className="filter-modal-header">
+                            <h3><Filter size={18} /> Filters & Sorting</h3>
+                            <button className="close-btn" onClick={() => setIsFilterModalOpen(false)}>&times;</button>
+                        </div>
+                        <div className="filter-modal-body">
+                            <div className="selector-item">
+                                <label>Academic Branch</label>
+                                <CustomSelect 
+                                    options={[
+                                        { value: '', label: 'Select Branch' },
+                                        { value: 'Common', label: 'Common to All' },
+                                        ...branches.map(b => ({ value: b.title, label: b.title }))
+                                    ]}
+                                    value={selBranch}
+                                    onChange={setSelBranch}
+                                    placeholder="Select Branch"
+                                />
+                            </div>
+
+                            <div className="selector-item">
+                                <label>Syllabus Scheme</label>
+                                <CustomSelect 
+                                    options={[
+                                        { value: '', label: 'Select Scheme' },
+                                        ...syllabuses.map(s => ({ value: s.title, label: `${s.title} Scheme` }))
+                                    ]}
+                                    value={selSyllabus}
+                                    onChange={setSelSyllabus}
+                                    placeholder="Select Scheme"
+                                />
+                            </div>
+
+                            <div className="selector-item">
+                                <label>Sort By</label>
+                                <CustomSelect 
+                                    options={[
+                                        { value: 'newest', label: 'Newest First' },
+                                        { value: 'oldest', label: 'Oldest First' },
+                                        { value: 'az', label: 'Alphabetical (A-Z)' },
+                                        { value: 'za', label: 'Alphabetical (Z-A)' }
+                                    ]}
+                                    value={sortBy}
+                                    onChange={setSortBy}
+                                    placeholder="Sort By"
+                                />
+                            </div>
+
+                            <button className="btn-primary w-full" style={{ marginTop: '1.5rem' }} onClick={() => setIsFilterModalOpen(false)}>
+                                Apply Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Breadcrumbs */}
             <div className="breadcrumbs" style={{margin: '1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem'}}>
@@ -258,7 +335,7 @@ export default function DCET() {
                                         <button 
                                             className={`circle-action-btn btn-add ${isFavorited(item.id, 'dcet') ? 'active' : ''}`}
                                             onClick={(e) => { e.stopPropagation(); handleFavorite(item); }}
-                                            title="Add to Workspace"
+                                            title={isFavorited(item.id, 'dcet') ? "Remove from Favorites" : "Add to Favorites"}
                                         >
                                             {isFavorited(item.id, 'dcet') ? <Heart size={20} fill="white" /> : <Plus size={20} />}
                                         </button>

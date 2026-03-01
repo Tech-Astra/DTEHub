@@ -179,15 +179,6 @@
     margin-bottom: 1.5rem;
 }
 
-
-
-@media (max-width: 900px) {
-    .contribute-grid {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-    }
-}
-
 /* Dev Modal */
 .dev-modal-overlay {
     position: fixed;
@@ -200,16 +191,18 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 2500;
 }
 
 .dev-modal-content {
-    background: var(--bg-card, #1e1e24);
+    background: #111114;
     width: 90%;
     max-width: 550px;
     padding: 2.5rem;
     position: relative;
     border: 1px solid var(--border-color);
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
 }
 
 .dev-modal-header {
@@ -265,4 +258,49 @@
 
 .file-input::file-selector-button:hover {
     background: rgba(255, 255, 255, 0.15);
+}
+
+
+
+@media (max-width: 768px) {
+    .contribute-page {
+        padding-top: 1rem;
+    }
+
+    .contribute-header {
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        font-size: 1.75rem;
+    }
+
+    .page-subtitle {
+        font-size: 0.9rem;
+    }
+
+    .contribute-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .contribute-form-container {
+        padding: 1.25rem;
+    }
+
+    .dev-modal-content {
+        padding: 1.5rem;
+        width: 95%;
+        max-height: 90vh;
+        overflow-y: auto;
+        border-radius: 20px;
+    }
+
+    .dev-modal-header {
+        margin-bottom: 1.25rem;
+    }
+
+    .dev-modal-header h3 {
+        font-size: 1.25rem;
+    }
 }

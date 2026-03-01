@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, GraduationCap } from 'lucide-react';
+import { ArrowRight, GraduationCap, Quote, Star, Users } from 'lucide-react';
 import { useFirebaseStats } from '../hooks/useFirebaseStats';
 import { useAuthContext } from '../context/AuthContext';
+import { database } from '../firebase';
+import { ref, onValue } from 'firebase/database';
+import Footer from '../components/Footer';
 import './Home.css';
 
 // Simple Counter Component for the Stats
@@ -52,6 +55,19 @@ export default function Home() {
     const navigate = useNavigate();
     const { user, loginWithGoogle } = useAuthContext();
     const { stats, loading } = useFirebaseStats();
+    const [testimonials, setTestimonials] = useState([]);
+
+    useEffect(() => {
+        const testRef = ref(database, 'testimonials');
+        const unsub = onValue(testRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                const arr = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+                setTestimonials(arr.reverse().slice(0, 6)); // Show latest 6
+            }
+        });
+        return () => unsub();
+    }, []);
 
     return (
         <div className="home-container premium-home">
@@ -76,16 +92,60 @@ export default function Home() {
                     </button>
 
 
-                    {/* Live Stats Bar */}
-                    <div className="home-stats-bar">
-                        <AnimatedCounter value={stats.totalResources} label="TOTAL RESOURCES" />
-                        <div className="stat-divider" />
-                        <AnimatedCounter value={stats.totalViews} label="TOTAL VISITS" />
-                        <div className="stat-divider" />
-                        <AnimatedCounter value={stats.totalVerifiedUsers} label="VERIFIED USERS" />
-                    </div>
                 </div>
             </main>
+
+            {/* What People Say - Scrolling Marquee Section */}
+            {testimonials.length > 0 && (
+                <section className="testimonials-marquee-section">
+                    <div className="marquee-container">
+                        <div className="testimonials-header">
+                            <span className="prompt-arrow">&gt;</span>
+                            <h2 className="marquee-title">What People Say</h2>
+                        </div>
+
+                        {/* Row 1: Left Moving */}
+                        <div className="marquee-wrapper">
+                            <div className="marquee-track track-left">
+                                {[...testimonials, ...testimonials].map((test, i) => (
+                                    <div key={`row1-${i}`} className="marquee-card">
+                                        <div className="card-inner">
+                                            <div className="user-avatar-circle">
+                                                {test.photoUrl ? <img src={test.photoUrl} alt={test.name} /> : <Users size={14} />}
+                                            </div>
+                                            <div className="card-content-mini">
+                                                <p className="test-msg-mini">"{test.message}"</p>
+                                                <span className="test-handle-mini">@{test.name.toLowerCase().replace(/\s/g, '')}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Row 2: Right Moving */}
+                        <div className="marquee-wrapper">
+                            <div className="marquee-track track-right">
+                                {[...testimonials, ...testimonials].reverse().map((test, i) => (
+                                    <div key={`row2-${i}`} className="marquee-card">
+                                        <div className="card-inner">
+                                            <div className="user-avatar-circle">
+                                                {test.photoUrl ? <img src={test.photoUrl} alt={test.name} /> : <Users size={14} />}
+                                            </div>
+                                            <div className="card-content-mini">
+                                                <p className="test-msg-mini">"{test.message}"</p>
+                                                <span className="test-handle-mini">@{test.name.toLowerCase().replace(/\s/g, '')}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            <Footer />
         </div>
     );
 }

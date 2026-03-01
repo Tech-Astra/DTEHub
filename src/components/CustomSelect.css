@@ -120,10 +120,37 @@
     padding-left: 1rem;
 }
 
-.custom-select-no-options {
-    padding: 1rem;
-    color: var(--text-muted);
-    text-align: center;
-    font-size: 0.85rem;
-    font-style: italic;
+@media (max-width: 768px) {
+    .custom-select-dropdown {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        top: auto;
+        border-radius: 20px 20px 0 0;
+        max-height: 60vh;
+        z-index: 9999;
+        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+        animation: slideUpSheet 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    @keyframes slideUpSheet {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+    }
+
+    .custom-select-option {
+        padding: 1rem 1.25rem;
+        font-size: 1rem;
+    }
+    
+    .custom-select-container.is-open::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        z-index: 9998;
+    }
 }

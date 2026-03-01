@@ -1,19 +1,10 @@
 import { useState, useEffect } from 'react';
-import Search from 'lucide-react/dist/esm/icons/search';
-import Download from 'lucide-react/dist/esm/icons/download';
-import Folder from 'lucide-react/dist/esm/icons/folder';
-import FileText from 'lucide-react/dist/esm/icons/file-text';
-import FileSpreadsheet from 'lucide-react/dist/esm/icons/file-spreadsheet';
-import Eye from 'lucide-react/dist/esm/icons/eye';
-import Plus from 'lucide-react/dist/esm/icons/plus';
-import Heart from 'lucide-react/dist/esm/icons/heart';
-import FilterX from 'lucide-react/dist/esm/icons/filter-x';
-import ChevronDown from 'lucide-react/dist/esm/icons/chevron-down';
-import Filter from 'lucide-react/dist/esm/icons/filter';
+import { Search, Download, Folder, FileText, FileSpreadsheet, Eye, Plus, Heart, FilterX, ChevronDown, Filter } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext';
 import { ref, onValue } from 'firebase/database';
 import { database } from '../firebase';
 import CustomSelect from '../components/CustomSelect';
+import IframeModal from '../components/IframeModal';
 import './Notes.css';
 
 export default function Notes() {
@@ -131,6 +122,17 @@ export default function Notes() {
         window.open(downloadLink, '_blank');
     };
 
+    const handleFavorite = (note) => {
+        if (user) {
+            toggleFavorite({
+                itemId: note.id,
+                type: 'note',
+                title: note.title,
+                chapter: note.chapter,
+            });
+        }
+    };
+
     const handlePreferenceChange = (type, value) => {
         if (type === 'branch') setSelBranch(value);
         if (type === 'syllabus') setSelSyllabus(value);
@@ -176,86 +178,179 @@ export default function Notes() {
             return 0;
         });
 
+    const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+
     return (
         <div className="container notes-page">
-            <div className="workspace-selectors">
-                <div className="selector-group">
-                    <div className="selector-item">
-                        <label>Academic Branch</label>
-                        <CustomSelect 
-                            options={[
-                                { value: '', label: 'Select Branch' },
-                                { value: 'Common', label: 'Common to All' },
-                                ...branches.map(b => ({ value: b.title, label: b.title }))
-                            ]}
-                            value={selBranch}
-                            onChange={val => handlePreferenceChange('branch', val)}
-                            placeholder="Select Branch"
-                            icon={Filter}
-                        />
+            {/* Desktop View & Mobile Search Only */}
+            <div className="workspace-selectors search-only-global">
+                <div className="selectors-body">
+                    <div className="selector-group desktop-only-flex">
+                        <div className="selector-item">
+                            <label>Academic Branch</label>
+                            <CustomSelect 
+                                options={[
+                                    { value: '', label: 'Select Branch' },
+                                    { value: 'Common', label: 'Common to All' },
+                                    ...branches.map(b => ({ value: b.title, label: b.title }))
+                                ]}
+                                value={selBranch}
+                                onChange={val => handlePreferenceChange('branch', val)}
+                                placeholder="Select Branch"
+                                icon={Filter}
+                            />
+                        </div>
+
+                        <div className="selector-item">
+                            <label>Syllabus Scheme</label>
+                            <CustomSelect 
+                                options={[
+                                    { value: '', label: 'Select Scheme' },
+                                    ...syllabuses.map(s => ({ value: s.title, label: `${s.title} Scheme` }))
+                                ]}
+                                value={selSyllabus}
+                                onChange={val => handlePreferenceChange('syllabus', val)}
+                                placeholder="Select Scheme"
+                                icon={Filter}
+                            />
+                        </div>
+
+                        <div className="selector-item">
+                            <label>Target Semester</label>
+                            <CustomSelect 
+                                options={[
+                                    { value: '', label: 'Select Sem' },
+                                    { value: '1st Sem', label: '1st Semester' },
+                                    { value: '2nd Sem', label: '2nd Semester' },
+                                    { value: '3rd Sem', label: '3rd Semester' },
+                                    { value: '4th Sem', label: '4th Semester' },
+                                    { value: '5th Sem', label: '5th Semester' },
+                                    { value: '6th Sem', label: '6th Semester' }
+                                ]}
+                                value={selSemester}
+                                onChange={val => handlePreferenceChange('semester', val)}
+                                placeholder="Select Sem"
+                                icon={Filter}
+                            />
+                        </div>
+
+                        <div className="selector-item">
+                            <label>Sort By</label>
+                            <CustomSelect 
+                                options={[
+                                    { value: 'newest', label: 'Newest First' },
+                                    { value: 'oldest', label: 'Oldest First' },
+                                    { value: 'az', label: 'Alphabetical (A-Z)' },
+                                    { value: 'za', label: 'Alphabetical (Z-A)' }
+                                ]}
+                                value={sortBy}
+                                onChange={setSortBy}
+                                placeholder="Sort By"
+                                icon={ChevronDown}
+                            />
+                        </div>
                     </div>
 
-                    <div className="selector-item">
-                        <label>Syllabus Scheme</label>
-                        <CustomSelect 
-                            options={[
-                                { value: '', label: 'Select Scheme' },
-                                ...syllabuses.map(s => ({ value: s.title, label: `${s.title} Scheme` }))
-                            ]}
-                            value={selSyllabus}
-                            onChange={val => handlePreferenceChange('syllabus', val)}
-                            placeholder="Select Scheme"
-                            icon={Filter}
+                    <div className="search-bar-modern">
+                        <Search className="search-icon" size={18} />
+                        <input
+                            type="text"
+                            placeholder="Search resources by title or chapter..."
+                            value={searchQuery}
+                            onChange={handleSearch}
+                            onKeyDown={handleSearch}
                         />
                     </div>
-
-                    <div className="selector-item">
-                        <label>Target Semester</label>
-                        <CustomSelect 
-                            options={[
-                                { value: '', label: 'Select Sem' },
-                                { value: '1st Sem', label: '1st Semester' },
-                                { value: '2nd Sem', label: '2nd Semester' },
-                                { value: '3rd Sem', label: '3rd Semester' },
-                                { value: '4th Sem', label: '4th Semester' },
-                                { value: '5th Sem', label: '5th Semester' },
-                                { value: '6th Sem', label: '6th Semester' }
-                            ]}
-                            value={selSemester}
-                            onChange={val => handlePreferenceChange('semester', val)}
-                            placeholder="Select Sem"
-                            icon={Filter}
-                        />
-                    </div>
-
-                    <div className="selector-item">
-                        <label>Sort By</label>
-                        <CustomSelect 
-                            options={[
-                                { value: 'newest', label: 'Newest First' },
-                                { value: 'oldest', label: 'Oldest First' },
-                                { value: 'az', label: 'Alphabetical (A-Z)' },
-                                { value: 'za', label: 'Alphabetical (Z-A)' }
-                            ]}
-                            value={sortBy}
-                            onChange={setSortBy}
-                            placeholder="Sort By"
-                            icon={ChevronDown}
-                        />
-                    </div>
-                </div>
-
-                <div className="search-bar-modern">
-                    <Search className="search-icon" size={18} />
-                    <input
-                        type="text"
-                        placeholder="Search resources by title or chapter..."
-                        value={searchQuery}
-                        onChange={handleSearch}
-                        onKeyDown={handleSearch}
-                    />
                 </div>
             </div>
+
+            {/* Unified Filter FAB — sits above Workspace Dock */}
+            <div className="global-filter-dock">
+                <button 
+                    className="dock-btn filter-fab" 
+                    onClick={() => setIsFilterModalOpen(true)}
+                    title="Filters & Sorting"
+                >
+                    <Filter size={24} />
+                </button>
+            </div>
+
+            {/* Mobile Filter Popup Modal */}
+            {isFilterModalOpen && (
+                <div className="filter-modal-overlay" onClick={() => setIsFilterModalOpen(false)}>
+                    <div className="filter-modal-content card" onClick={e => e.stopPropagation()}>
+                        <div className="filter-modal-header">
+                            <h3><Filter size={18} /> Filters & Sorting</h3>
+                            <button className="close-btn" onClick={() => setIsFilterModalOpen(false)}>&times;</button>
+                        </div>
+                        <div className="filter-modal-body">
+                            <div className="selector-item">
+                                <label>Academic Branch</label>
+                                <CustomSelect 
+                                    options={[
+                                        { value: '', label: 'Select Branch' },
+                                        { value: 'Common', label: 'Common to All' },
+                                        ...branches.map(b => ({ value: b.title, label: b.title }))
+                                    ]}
+                                    value={selBranch}
+                                    onChange={val => handlePreferenceChange('branch', val)}
+                                    placeholder="Select Branch"
+                                />
+                            </div>
+
+                            <div className="selector-item">
+                                <label>Syllabus Scheme</label>
+                                <CustomSelect 
+                                    options={[
+                                        { value: '', label: 'Select Scheme' },
+                                        ...syllabuses.map(s => ({ value: s.title, label: `${s.title} Scheme` }))
+                                    ]}
+                                    value={selSyllabus}
+                                    onChange={val => handlePreferenceChange('syllabus', val)}
+                                    placeholder="Select Scheme"
+                                />
+                            </div>
+
+                            <div className="selector-item">
+                                <label>Target Semester</label>
+                                <CustomSelect 
+                                    options={[
+                                        { value: '', label: 'Select Sem' },
+                                        { value: '1st Sem', label: '1st Semester' },
+                                        { value: '2nd Sem', label: '2nd Semester' },
+                                        { value: '3rd Sem', label: '3rd Semester' },
+                                        { value: '4th Sem', label: '4th Semester' },
+                                        { value: '5th Sem', label: '5th Semester' },
+                                        { value: '6th Sem', label: '6th Semester' }
+                                    ]}
+                                    value={selSemester}
+                                    onChange={val => handlePreferenceChange('semester', val)}
+                                    placeholder="Select Sem"
+                                />
+                            </div>
+
+                            <div className="selector-item">
+                                <label>Sort By</label>
+                                <CustomSelect 
+                                    options={[
+                                        { value: 'newest', label: 'Newest First' },
+                                        { value: 'oldest', label: 'Oldest First' },
+                                        { value: 'az', label: 'Alphabetical (A-Z)' },
+                                        { value: 'za', label: 'Alphabetical (Z-A)' }
+                                    ]}
+                                    value={sortBy}
+                                    onChange={setSortBy}
+                                    placeholder="Sort By"
+                                />
+                            </div>
+
+                            <button className="btn-primary w-full" style={{ marginTop: '1.5rem' }} onClick={() => setIsFilterModalOpen(false)}>
+                                Apply Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Breadcrumbs */}
             <div className="breadcrumbs" style={{margin: '1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem'}}>
@@ -307,7 +402,7 @@ export default function Notes() {
                                         <button 
                                             className={`circle-action-btn btn-add ${isFavorited(note.id, 'note') ? 'active' : ''}`}
                                             onClick={(e) => { e.stopPropagation(); handleFavorite(note); }}
-                                            title="Add to Workspace"
+                                            title={isFavorited(note.id, 'note') ? "Remove from Favorites" : "Add to Favorites"}
                                         >
                                             {isFavorited(note.id, 'note') ? <Heart size={20} fill="white" /> : <Plus size={20} />}
                                         </button>

@@ -4,6 +4,7 @@ import { useAuthContext } from '../context/AuthContext';
 import { ref, onValue } from 'firebase/database';
 import { database } from '../firebase';
 import CustomSelect from '../components/CustomSelect';
+import IframeModal from '../components/IframeModal';
 import { Filter, ChevronDown } from 'lucide-react';
 import './Papers.css';
 
@@ -128,6 +129,8 @@ export default function Papers() {
         return matchesFolder && matchesYear && matchesBranch && matchesFilterYear && matchesFilterSubject;
     });
 
+    const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+
     return (
         <div className="container papers-page">
             <div className="papers-header">
@@ -140,49 +143,111 @@ export default function Papers() {
                     </p>
                 </div>
 
-                <div className="papers-filters">
-                    <div className="filter-select">
-                        <label>Exam Year</label>
-                        <CustomSelect 
-                            options={[
-                                { value: '', label: 'All Years' },
-                                { value: '2023', label: '2023' },
-                                { value: '2022', label: '2022' },
-                                { value: '2021', label: '2021' },
-                                { value: '2020', label: '2020' }
-                            ]}
-                            value={selYear}
-                            onChange={setSelYear}
-                            placeholder="All Years"
-                            icon={Filter}
-                        />
-                    </div>
-                    <div className="filter-select">
-                        <label>Select Subject</label>
-                        <CustomSelect 
-                            options={[
-                                { value: '', label: 'All Subjects' },
-                                { value: 'Computer Science', label: 'Computer Science' },
-                                { value: 'Mechanical', label: 'Mechanical' },
-                                { value: 'Electrical', label: 'Electrical' }
-                            ]}
-                            value={selSubject}
-                            onChange={setSelSubject}
-                            placeholder="All Subjects"
-                            icon={Filter}
-                        />
-                    </div>
+                <div className="workspace-selectors search-only-global">
+                    <div className="selectors-body">
+                        <div className="selector-group desktop-only-flex">
+                            <div className="selector-item">
+                                <label>Exam Year</label>
+                                <CustomSelect 
+                                    options={[
+                                        { value: '', label: 'All Years' },
+                                        { value: '2023', label: '2023' },
+                                        { value: '2022', label: '2022' },
+                                        { value: '2021', label: '2021' },
+                                        { value: '2020', label: '2020' }
+                                    ]}
+                                    value={selYear}
+                                    onChange={setSelYear}
+                                    placeholder="All Years"
+                                    icon={Filter}
+                                />
+                            </div>
+                            <div className="selector-item">
+                                <label>Select Subject</label>
+                                <CustomSelect 
+                                    options={[
+                                        { value: '', label: 'All Subjects' },
+                                        { value: 'Computer Science', label: 'Computer Science' },
+                                        { value: 'Mechanical', label: 'Mechanical' },
+                                        { value: 'Electrical', label: 'Electrical' }
+                                    ]}
+                                    value={selSubject}
+                                    onChange={setSelSubject}
+                                    placeholder="All Subjects"
+                                    icon={Filter}
+                                />
+                            </div>
+                        </div>
 
-                    <div className="search-bar-modern papers-search">
-                        <Search className="search-icon" size={18} />
-                        <input
-                            type="text"
-                            placeholder="Search papers..."
-                            onKeyDown={handleSearch}
-                        />
+                        <div className="search-bar-modern">
+                            <Search className="search-icon" size={18} />
+                            <input
+                                type="text"
+                                placeholder="Search papers..."
+                                onKeyDown={handleSearch}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
+
+            {/* Unified Filter FAB — sits above Workspace Dock */}
+            <div className="global-filter-dock">
+                <button 
+                    className="dock-btn filter-fab" 
+                    onClick={() => setIsFilterModalOpen(true)}
+                    title="Filters & Sorting"
+                >
+                    <Filter size={24} />
+                </button>
+            </div>
+
+            {/* Mobile Filter Popup Modal */}
+            {isFilterModalOpen && (
+                <div className="filter-modal-overlay" onClick={() => setIsFilterModalOpen(false)}>
+                    <div className="filter-modal-content card" onClick={e => e.stopPropagation()}>
+                        <div className="filter-modal-header">
+                            <h3><Filter size={18} /> Filters & Sorting</h3>
+                            <button className="close-btn" onClick={() => setIsFilterModalOpen(false)}>&times;</button>
+                        </div>
+                        <div className="filter-modal-body">
+                            <div className="selector-item">
+                                <label>Exam Year</label>
+                                <CustomSelect 
+                                    options={[
+                                        { value: '', label: 'All Years' },
+                                        { value: '2023', label: '2023' },
+                                        { value: '2022', label: '2022' },
+                                        { value: '2021', label: '2021' },
+                                        { value: '2020', label: '2020' }
+                                    ]}
+                                    value={selYear}
+                                    onChange={setSelYear}
+                                    placeholder="All Years"
+                                />
+                            </div>
+                            <div className="selector-item">
+                                <label>Select Subject</label>
+                                <CustomSelect 
+                                    options={[
+                                        { value: '', label: 'All Subjects' },
+                                        { value: 'Computer Science', label: 'Computer Science' },
+                                        { value: 'Mechanical', label: 'Mechanical' },
+                                        { value: 'Electrical', label: 'Electrical' }
+                                    ]}
+                                    value={selSubject}
+                                    onChange={setSelSubject}
+                                    placeholder="All Subjects"
+                                />
+                            </div>
+
+                            <button className="btn-primary w-full" style={{ marginTop: '1.5rem' }} onClick={() => setIsFilterModalOpen(false)}>
+                                Apply Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Breadcrumbs */}
             <div className="breadcrumbs" style={{margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem'}}>
@@ -233,7 +298,7 @@ export default function Papers() {
                                             <button 
                                                 className={`circle-action-btn btn-add ${isFavorited(paper.id, 'paper') ? 'active' : ''}`}
                                                 onClick={(e) => { e.stopPropagation(); handleFavorite(paper); }}
-                                                title="Add to Workspace"
+                                                title={isFavorited(paper.id, 'paper') ? "Remove from Favorites" : "Add to Favorites"}
                                             >
                                                 {isFavorited(paper.id, 'paper') ? <Heart size={16} fill="white" /> : <Plus size={16} />}
                                             </button>
