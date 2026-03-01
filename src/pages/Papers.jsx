@@ -298,7 +298,7 @@ export default function Papers() {
                                             <button 
                                                 className={`circle-action-btn btn-add ${isFavorited(paper.id, 'paper') ? 'active' : ''}`}
                                                 onClick={(e) => { e.stopPropagation(); handleFavorite(paper); }}
-                                                title="Add to Workspace"
+                                                title={isFavorited(paper.id, 'paper') ? "Remove from Favorites" : "Add to Favorites"}
                                             >
                                                 {isFavorited(paper.id, 'paper') ? <Heart size={16} fill="white" /> : <Plus size={16} />}
                                             </button>

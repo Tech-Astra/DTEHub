@@ -334,7 +334,7 @@ export default function DCET() {
                                         <button 
                                             className={`circle-action-btn btn-add ${isFavorited(item.id, 'dcet') ? 'active' : ''}`}
                                             onClick={(e) => { e.stopPropagation(); handleFavorite(item); }}
-                                            title="Add to Workspace"
+                                            title={isFavorited(item.id, 'dcet') ? "Remove from Favorites" : "Add to Favorites"}
                                         >
                                             {isFavorited(item.id, 'dcet') ? <Heart size={20} fill="white" /> : <Plus size={20} />}
                                         </button>

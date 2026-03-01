@@ -122,6 +122,17 @@ export default function Notes() {
         window.open(downloadLink, '_blank');
     };
 
+    const handleFavorite = (note) => {
+        if (user) {
+            toggleFavorite({
+                itemId: note.id,
+                type: 'note',
+                title: note.title,
+                chapter: note.chapter,
+            });
+        }
+    };
+
     const handlePreferenceChange = (type, value) => {
         if (type === 'branch') setSelBranch(value);
         if (type === 'syllabus') setSelSyllabus(value);
@@ -391,7 +402,7 @@ export default function Notes() {
                                         <button 
                                             className={`circle-action-btn btn-add ${isFavorited(note.id, 'note') ? 'active' : ''}`}
                                             onClick={(e) => { e.stopPropagation(); handleFavorite(note); }}
-                                            title="Add to Workspace"
+                                            title={isFavorited(note.id, 'note') ? "Remove from Favorites" : "Add to Favorites"}
                                         >
                                             {isFavorited(note.id, 'note') ? <Heart size={20} fill="white" /> : <Plus size={20} />}
                                         </button>
