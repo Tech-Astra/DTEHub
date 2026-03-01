@@ -185,18 +185,25 @@ export default function Papers() {
                         <div className="loader"></div>
                     </div>
                 ) : filteredPapers.length > 0 ? (
-                    <div className="notes-grid">
+                        <div className="notes-grid">
                         {filteredPapers.map(paper => (
                             <div key={paper.id} className="folder-card card" onClick={() => handleView(paper)}>
                                 <div className="folder-icon-wrapper">
                                     {paper.isFolder ? (
-                                        <Folder size={18} fill="var(--accent-color)" color="var(--accent-color)" />
+                                        <Folder size={20} color="#ffffff" strokeWidth={2.5} />
                                     ) : (
-                                        <FileText size={18} color="var(--text-muted)" />
+                                        <FileText size={20} color="#ffffff" strokeWidth={2} />
                                     )}
                                 </div>
                                 <div className="folder-info">
                                     <h3 className="folder-title" title={paper.title || paper.subject}>{paper.title || paper.subject}</h3>
+                                    {!paper.isFolder && (
+                                        <div className="res-card-meta" style={{ display: 'flex', gap: '0.5rem', marginTop: '0.2rem' }}>
+                                            <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>
+                                                {paper.academicYear} • {paper.branch}
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {!paper.isFolder && (

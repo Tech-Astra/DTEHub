@@ -25,24 +25,30 @@
         ".write": "auth != null && auth.uid === $uid"
       }
     },
-    "notes": {
-      ".read": true,
-      ".write": "auth != null && (auth.token.email == 'shivarajmani2005@gmail.com' || auth.token.email == 'vivekvernekar02@gmail.com' || auth.token.email == 'contactus.techastra@gmail.com' || root.child('admins').hasChild(auth.token.email.replace('.', ',')))",
-      ".indexOn": ["academicYear", "branch", "parentId"]
+    "resources": {
+        "notes": {
+          ".read": true,
+          ".write": "auth != null && (auth.token.email == 'shivarajmani2005@gmail.com' || auth.token.email == 'vivekvernekar02@gmail.com' || auth.token.email == 'contactus.techastra@gmail.com' || root.child('admins').hasChild(auth.token.email.replace('.', ',')))",
+          ".indexOn": ["academicYear", "branch", "parentId"]
+        },
+        "dcet": {
+          ".read": true,
+          ".write": "auth != null && (auth.token.email == 'shivarajmani2005@gmail.com' || auth.token.email == 'vivekvernekar02@gmail.com' || auth.token.email == 'contactus.techastra@gmail.com' || root.child('admins').hasChild(auth.token.email.replace('.', ',')))",
+          ".indexOn": ["academicYear", "branch", "parentId"]
+        }
     },
-    "papers": {
+    "syllabuses": {
       ".read": true,
-      ".write": "auth != null && (auth.token.email == 'shivarajmani2005@gmail.com' || auth.token.email == 'vivekvernekar02@gmail.com' || auth.token.email == 'contactus.techastra@gmail.com' || root.child('admins').hasChild(auth.token.email.replace('.', ',')))",
-      ".indexOn": ["academicYear", "branch", "parentId"]
-    },
-    "dcet": {
-      ".read": true,
-      ".write": "auth != null && (auth.token.email == 'shivarajmani2005@gmail.com' || auth.token.email == 'vivekvernekar02@gmail.com' || auth.token.email == 'contactus.techastra@gmail.com' || root.child('admins').hasChild(auth.token.email.replace('.', ',')))",
-      ".indexOn": ["academicYear", "branch", "parentId"]
+      ".write": "auth != null && (auth.token.email == 'shivarajmani2005@gmail.com' || auth.token.email == 'vivekvernekar02@gmail.com' || auth.token.email == 'contactus.techastra@gmail.com' || root.child('admins').hasChild(auth.token.email.replace('.', ',')))"
     },
     "branches": {
       ".read": true,
       ".write": "auth != null && (auth.token.email == 'shivarajmani2005@gmail.com' || auth.token.email == 'vivekvernekar02@gmail.com' || auth.token.email == 'contactus.techastra@gmail.com' || root.child('admins').hasChild(auth.token.email.replace('.', ',')))"
+    },
+    "system_logs": {
+      ".read": "auth != null && (auth.token.email == 'shivarajmani2005@gmail.com' || auth.token.email == 'vivekvernekar02@gmail.com' || auth.token.email == 'contactus.techastra@gmail.com')",
+      ".write": "auth != null && (auth.token.email == 'shivarajmani2005@gmail.com' || auth.token.email == 'vivekvernekar02@gmail.com' || auth.token.email == 'contactus.techastra@gmail.com')",
+      ".indexOn": ["timestamp"]
     },
     "admins": {
       ".read": true,
