@@ -287,3 +287,210 @@ html[data-theme='light'] .dte-text {
     background: #000;
     color: #fff;
 }
+
+/* Testimonials Marquee Section */
+.testimonials-marquee-section {
+    padding: 8rem 0;
+    overflow: hidden;
+    background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.5), transparent);
+    position: relative;
+    /* Edge Fade Effect */
+    mask-image: linear-gradient(to right, 
+        transparent, 
+        black 15%, 
+        black 85%, 
+        transparent
+    );
+    -webkit-mask-image: linear-gradient(to right, 
+        transparent, 
+        black 15%, 
+        black 85%, 
+        transparent
+    );
+}
+
+.marquee-container {
+    width: 100%;
+}
+
+.testimonials-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0 4rem;
+    margin-bottom: 4rem;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.prompt-arrow {
+    color: var(--accent-color);
+    font-size: 2.5rem;
+    font-weight: 900;
+    line-height: 1;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.marquee-title {
+    font-size: 3rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: white;
+}
+
+.marquee-wrapper {
+    display: flex;
+    width: 100%;
+    margin-bottom: 2rem;
+    position: relative;
+    user-select: none;
+}
+
+.marquee-track {
+    display: flex;
+    gap: 2rem;
+    padding-left: 2rem;
+    will-change: transform;
+}
+
+.track-left {
+    animation: scroll-left 50s linear infinite;
+}
+
+.track-right {
+    animation: scroll-right 50s linear infinite;
+}
+
+.marquee-card {
+    flex-shrink: 0;
+    width: 360px;
+    background: rgba(22, 22, 26, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 1.5rem;
+    transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.marquee-card:hover {
+    border-color: var(--accent-color);
+    background: rgba(30, 30, 35, 0.95);
+    transform: translateY(-8px) scale(1.05);
+    z-index: 20;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+.card-inner {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.user-avatar-circle {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-color), #facc15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.1);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.user-avatar-circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.card-content-mini {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    overflow: hidden;
+    flex: 1;
+}
+
+.test-msg-mini {
+    font-size: 1rem;
+    font-weight: 500;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-style: normal;
+}
+
+.test-handle-mini {
+    font-size: 0.85rem;
+    color: var(--accent-color);
+    font-weight: 700;
+    opacity: 0.9;
+    letter-spacing: 0.02em;
+}
+
+@keyframes scroll-left {
+    from { transform: translateX(0); }
+    to { transform: translateX(calc(-50% - 1rem)); }
+}
+
+@keyframes scroll-right {
+    from { transform: translateX(calc(-50% - 1rem)); }
+    to { transform: translateX(0); }
+}
+
+@media (max-width: 1024px) {
+    .marquee-card {
+        width: 300px;
+        padding: 1.25rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .testimonials-marquee-section {
+        padding: 4rem 0;
+        mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+        -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+    }
+    .testimonials-header {
+        padding: 0 1.5rem;
+        margin-bottom: 2rem;
+        gap: 0.5rem;
+    }
+    .marquee-title {
+        font-size: 1.75rem;
+    }
+    .prompt-arrow {
+        font-size: 1.75rem;
+    }
+    .marquee-card {
+        width: 220px;
+        padding: 1rem;
+        border-radius: 12px;
+    }
+    .user-avatar-circle {
+        width: 36px;
+        height: 36px;
+    }
+    .test-msg-mini {
+        font-size: 0.8rem;
+    }
+    .test-handle-mini {
+        font-size: 0.65rem;
+    }
+    .marquee-track {
+        gap: 1rem;
+    }
+    @keyframes scroll-left {
+        from { transform: translateX(0); }
+        to { transform: translateX(calc(-50% - 0.5rem)); }
+    }
+    @keyframes scroll-right {
+        from { transform: translateX(calc(-50% - 0.5rem)); }
+        to { transform: translateX(0); }
+    }
+}
