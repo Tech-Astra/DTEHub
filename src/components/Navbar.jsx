@@ -23,14 +23,7 @@ export default function Navbar() {
 
     const isActive = (path) => location.pathname === path ? 'active' : '';
 
-    const handleProtectedClick = (e, path) => {
-        if (!user) {
-            e.preventDefault();
-            loginWithGoogle()
-                .then(() => navigate(path))
-                .catch(err => console.error("Login failed", err));
-        }
-    };
+
 
     return (
         <>
@@ -44,9 +37,9 @@ export default function Navbar() {
                     {/* Desktop nav links */}
                     <div className="nav-links nav-desktop-only">
                         <Link to="/" className={`nav-item ${isActive('/')}`}>Home</Link>
-                        <Link to="/notes" className={`nav-item ${isActive('/notes')}`} onClick={(e) => handleProtectedClick(e, '/notes')}>Resources</Link>
-                        <Link to="/dcet" className={`nav-item ${isActive('/dcet')}`} onClick={(e) => handleProtectedClick(e, '/dcet')}>DCET</Link>
-                        <Link to="/contribute" className={`nav-item ${isActive('/contribute')}`} onClick={(e) => handleProtectedClick(e, '/contribute')}>Contribution</Link>
+                        <Link to="/notes" className={`nav-item ${isActive('/notes')}`}>Resources</Link>
+                        <Link to="/dcet" className={`nav-item ${isActive('/dcet')}`}>DCET</Link>
+                        <Link to="/contribute" className={`nav-item ${isActive('/contribute')}`}>Contribution</Link>
                     </div>
 
                     {/* Controls & Auth section */}
@@ -107,15 +100,15 @@ export default function Navbar() {
                     <Home size={20} />
                     <span>Home</span>
                 </Link>
-                <Link to="/notes" className={`mobile-nav-item ${isActive('/notes')}`} onClick={(e) => handleProtectedClick(e, '/notes')}>
+                <Link to="/notes" className={`mobile-nav-item ${isActive('/notes')}`}>
                     <FileText size={20} />
                     <span>Resources</span>
                 </Link>
-                <Link to="/dcet" className={`mobile-nav-item ${isActive('/dcet')}`} onClick={(e) => handleProtectedClick(e, '/dcet')}>
+                <Link to="/dcet" className={`mobile-nav-item ${isActive('/dcet')}`}>
                     <Zap size={20} />
                     <span>DCET</span>
                 </Link>
-                <Link to="/contribute" className={`mobile-nav-item ${isActive('/contribute')}`} onClick={(e) => handleProtectedClick(e, '/contribute')}>
+                <Link to="/contribute" className={`mobile-nav-item ${isActive('/contribute')}`}>
                     <Heart size={20} />
                     <span>Contribution</span>
                 </Link>

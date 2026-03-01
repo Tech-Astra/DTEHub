@@ -61,11 +61,20 @@ export function useFirebaseStats() {
         updateStats();
       });
 
-      // 5. Listen to users — count all verified users
+      // 5. Listen to users node for accurate count (requires auth)
+      //    Falls back to stats/totalVerifiedUsers for public visitors
+      let unsubUsersFallback = null;
       const unsubUsers = onValue(ref(database, 'users'), (snap) => {
         usersCount = snap.exists() ? Object.keys(snap.val()).length : 0;
         ready.users = true;
         updateStats();
+      }, (err) => {
+        // Fallback for unauthenticated users who cannot read /users
+        unsubUsersFallback = onValue(ref(database, 'stats/totalVerifiedUsers'), (snap) => {
+          usersCount = snap.val() || 0;
+          ready.users = true;
+          updateStats();
+        });
       });
 
       return () => {
@@ -73,6 +82,7 @@ export function useFirebaseStats() {
         unsubNotes();
         unsubDcet();
         unsubUsers();
+        if (unsubUsersFallback) unsubUsersFallback();
       };
     } catch (err) {
       console.error('Stats Sync Error:', err);

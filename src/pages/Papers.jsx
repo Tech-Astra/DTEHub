@@ -3,7 +3,8 @@ import { Search, Download, FileText, Heart, FilterX, Folder, Plus, Eye } from 'l
 import { useAuthContext } from '../context/AuthContext';
 import { ref, onValue } from 'firebase/database';
 import { database } from '../firebase';
-import IframeModal from '../components/IframeModal';
+import CustomSelect from '../components/CustomSelect';
+import { Filter, ChevronDown } from 'lucide-react';
 import './Papers.css';
 
 export default function Papers() {
@@ -14,6 +15,9 @@ export default function Papers() {
     const [loadingPapers, setLoadingPapers] = useState(true);
     const [viewUrl, setViewUrl] = useState(null);
     const [currentFolder, setCurrentFolder] = useState(null);
+
+    const [selYear, setSelYear] = useState('');
+    const [selSubject, setSelSubject] = useState('');
 
     useEffect(() => {
         if (user?.uid) {
@@ -117,8 +121,11 @@ export default function Papers() {
         // Contextual filters
         const matchesYear = !userYear || userYear === 'Alumni' || paper.academicYear === userYear || paper.academicYear === 'Common' || !paper.academicYear;
         const matchesBranch = !userBranch || paper.branch === userBranch || paper.branch === 'Common' || !paper.branch;
+        
+        const matchesFilterYear = !selYear || paper.academicYear === selYear;
+        const matchesFilterSubject = !selSubject || (paper.subject && paper.subject.toLowerCase().includes(selSubject.toLowerCase()));
 
-        return matchesFolder && matchesYear && matchesBranch;
+        return matchesFolder && matchesYear && matchesBranch && matchesFilterYear && matchesFilterSubject;
     });
 
     return (
@@ -136,27 +143,41 @@ export default function Papers() {
                 <div className="papers-filters">
                     <div className="filter-select">
                         <label>Exam Year</label>
-                        <select>
-                            <option>All Years</option>
-                            <option>2023</option>
-                            <option>2022</option>
-                            <option>2021</option>
-                        </select>
+                        <CustomSelect 
+                            options={[
+                                { value: '', label: 'All Years' },
+                                { value: '2023', label: '2023' },
+                                { value: '2022', label: '2022' },
+                                { value: '2021', label: '2021' },
+                                { value: '2020', label: '2020' }
+                            ]}
+                            value={selYear}
+                            onChange={setSelYear}
+                            placeholder="All Years"
+                            icon={Filter}
+                        />
                     </div>
                     <div className="filter-select">
                         <label>Select Subject</label>
-                        <select>
-                            <option>Computer Science</option>
-                            <option>Mechanical</option>
-                            <option>Electrical</option>
-                        </select>
+                        <CustomSelect 
+                            options={[
+                                { value: '', label: 'All Subjects' },
+                                { value: 'Computer Science', label: 'Computer Science' },
+                                { value: 'Mechanical', label: 'Mechanical' },
+                                { value: 'Electrical', label: 'Electrical' }
+                            ]}
+                            value={selSubject}
+                            onChange={setSelSubject}
+                            placeholder="All Subjects"
+                            icon={Filter}
+                        />
                     </div>
 
                     <div className="search-bar-modern papers-search">
                         <Search className="search-icon" size={18} />
                         <input
                             type="text"
-                            placeholder="Search papers by code..."
+                            placeholder="Search papers..."
                             onKeyDown={handleSearch}
                         />
                     </div>

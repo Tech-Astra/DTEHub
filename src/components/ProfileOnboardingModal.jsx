@@ -3,6 +3,7 @@ import { useAuthContext } from '../context/AuthContext';
 import { ref, onValue, set } from 'firebase/database';
 import { database } from '../firebase';
 import { Save, User, Building, Hash, GraduationCap } from 'lucide-react';
+import CustomSelect from './CustomSelect';
 import './ProfileOnboardingModal.css';
 
 export default function ProfileOnboardingModal() {
@@ -116,18 +117,19 @@ export default function ProfileOnboardingModal() {
                         </div>
                         
                         <div className="input-group select-group">
-                            <GraduationCap size={18} className="input-icon" />
-                            <select 
+                            <CustomSelect 
+                                options={[
+                                    { value: '1st Year', label: '1st Year' },
+                                    { value: '2nd Year', label: '2nd Year' },
+                                    { value: '3rd Year', label: '3rd Year' },
+                                    { value: 'Alumni', label: 'Alumni' }
+                                ]}
                                 value={profileData.year}
-                                onChange={e => setProfileData({...profileData, year: e.target.value})}
+                                onChange={val => setProfileData({...profileData, year: val})}
+                                placeholder="Select Year"
+                                icon={GraduationCap}
                                 required
-                            >
-                                <option value="" disabled>Select Year</option>
-                                <option value="1st Year">1st Year</option>
-                                <option value="2nd Year">2nd Year</option>
-                                <option value="3rd Year">3rd Year</option>
-                                <option value="Alumni">Alumni</option>
-                            </select>
+                            />
                         </div>
                     </div>
                     

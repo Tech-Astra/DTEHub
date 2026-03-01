@@ -13,7 +13,7 @@ import Filter from 'lucide-react/dist/esm/icons/filter';
 import { useAuthContext } from '../context/AuthContext';
 import { ref, onValue } from 'firebase/database';
 import { database } from '../firebase';
-import IframeModal from '../components/IframeModal';
+import CustomSelect from '../components/CustomSelect';
 import './Notes.css';
 
 export default function Notes() {
@@ -48,12 +48,24 @@ export default function Notes() {
         
         onValue(bRef, (snap) => {
             const data = snap.val();
-            if (data) setBranches(Object.entries(data).map(([id, val]) => ({ id, ...val })));
+            if (data) {
+                const arr = Object.keys(data).map(key => ({
+                    id: key,
+                    title: typeof data[key] === 'string' ? data[key] : data[key].title
+                }));
+                setBranches(arr);
+            }
         });
 
         onValue(sRef, (snap) => {
             const data = snap.val();
-            if (data) setSyllabuses(Object.entries(data).map(([id, val]) => ({ id, ...val })));
+            if (data) {
+                const arr = Object.keys(data).map(key => ({
+                    id: key,
+                    title: typeof data[key] === 'string' ? data[key] : data[key].title
+                }));
+                setSyllabuses(arr);
+            }
         });
     }, []);
 
@@ -154,44 +166,50 @@ export default function Notes() {
                 <div className="selector-group">
                     <div className="selector-item">
                         <label>Academic Branch</label>
-                        <div className="selector-box">
-                            <Filter size={14} className="selector-icon" />
-                            <select value={selBranch} onChange={e => handlePreferenceChange('branch', e.target.value)}>
-                                <option value="">Select Branch</option>
-                                <option value="Common">Common to All</option>
-                                {branches.map(b => <option key={b.id} value={b.title}>{b.title}</option>)}
-                            </select>
-                            <ChevronDown size={14} className="chevron-icon" />
-                        </div>
+                        <CustomSelect 
+                            options={[
+                                { value: '', label: 'Select Branch' },
+                                { value: 'Common', label: 'Common to All' },
+                                ...branches.map(b => ({ value: b.title, label: b.title }))
+                            ]}
+                            value={selBranch}
+                            onChange={val => handlePreferenceChange('branch', val)}
+                            placeholder="Select Branch"
+                            icon={Filter}
+                        />
                     </div>
 
                     <div className="selector-item">
                         <label>Syllabus Scheme</label>
-                        <div className="selector-box">
-                            <Filter size={14} className="selector-icon" />
-                            <select value={selSyllabus} onChange={e => handlePreferenceChange('syllabus', e.target.value)}>
-                                <option value="">Select Scheme</option>
-                                {syllabuses.map(s => <option key={s.id} value={s.title}>{s.title} Scheme</option>)}
-                            </select>
-                            <ChevronDown size={14} className="chevron-icon" />
-                        </div>
+                        <CustomSelect 
+                            options={[
+                                { value: '', label: 'Select Scheme' },
+                                ...syllabuses.map(s => ({ value: s.title, label: `${s.title} Scheme` }))
+                            ]}
+                            value={selSyllabus}
+                            onChange={val => handlePreferenceChange('syllabus', val)}
+                            placeholder="Select Scheme"
+                            icon={Filter}
+                        />
                     </div>
 
                     <div className="selector-item">
                         <label>Target Semester</label>
-                        <div className="selector-box">
-                            <Filter size={14} className="selector-icon" />
-                            <select value={selSemester} onChange={e => handlePreferenceChange('semester', e.target.value)}>
-                                <option value="">Select Sem</option>
-                                <option value="1st Sem">1st Semester</option>
-                                <option value="2nd Sem">2nd Semester</option>
-                                <option value="3rd Sem">3rd Semester</option>
-                                <option value="4th Sem">4th Semester</option>
-                                <option value="5th Sem">5th Semester</option>
-                                <option value="6th Sem">6th Semester</option>
-                            </select>
-                            <ChevronDown size={14} className="chevron-icon" />
-                        </div>
+                        <CustomSelect 
+                            options={[
+                                { value: '', label: 'Select Sem' },
+                                { value: '1st Sem', label: '1st Semester' },
+                                { value: '2nd Sem', label: '2nd Semester' },
+                                { value: '3rd Sem', label: '3rd Semester' },
+                                { value: '4th Sem', label: '4th Semester' },
+                                { value: '5th Sem', label: '5th Semester' },
+                                { value: '6th Sem', label: '6th Semester' }
+                            ]}
+                            value={selSemester}
+                            onChange={val => handlePreferenceChange('semester', val)}
+                            placeholder="Select Sem"
+                            icon={Filter}
+                        />
                     </div>
                 </div>
 

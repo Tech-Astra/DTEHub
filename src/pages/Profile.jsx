@@ -11,6 +11,7 @@ import {
     Save,
     X,
 } from 'lucide-react';
+import CustomSelect from '../components/CustomSelect';
 import './Profile.css';
 
 export default function Profile() {
@@ -107,17 +108,18 @@ export default function Profile() {
                                         onChange={e => setProfileData({...profileData, usn: e.target.value})}
                                         className="profile-input"
                                     />
-                                    <select 
+                                    <CustomSelect 
+                                        options={[
+                                            { value: '1st Year', label: '1st Year' },
+                                            { value: '2nd Year', label: '2nd Year' },
+                                            { value: '3rd Year', label: '3rd Year' },
+                                            { value: 'Alumni', label: 'Alumni' }
+                                        ]}
                                         value={profileData.year}
-                                        onChange={e => setProfileData({...profileData, year: e.target.value})}
-                                        className="profile-input"
-                                    >
-                                        <option value="">Select Year</option>
-                                        <option value="1st Year">1st Year</option>
-                                        <option value="2nd Year">2nd Year</option>
-                                        <option value="3rd Year">3rd Year</option>
-                                        <option value="Alumni">Alumni</option>
-                                    </select>
+                                        onChange={val => setProfileData({...profileData, year: val})}
+                                        placeholder="Select Year"
+                                        icon={GraduationCap}
+                                    />
                                 </div>
                                 <div className="profile-edit-actions">
                                     <button className="btn-save" onClick={handleSaveProfile} disabled={saving}>

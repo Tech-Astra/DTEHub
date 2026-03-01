@@ -33,7 +33,7 @@ function App() {
               <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
               <Route path="/papers" element={<ProtectedRoute><Papers /></ProtectedRoute>} />
               <Route path="/dcet" element={<ProtectedRoute><DCET /></ProtectedRoute>} />
-              <Route path="/contribute" element={<ProtectedRoute><Contribute /></ProtectedRoute>} />
+              <Route path="/contribute" element={<Contribute />} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />

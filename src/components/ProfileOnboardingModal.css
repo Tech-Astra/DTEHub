@@ -80,8 +80,7 @@
     gap: 1.25rem;
 }
 
-.input-group input,
-.input-group select {
+.input-group input {
     width: 100%;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border-color);
@@ -93,17 +92,15 @@
     transition: all 0.2s;
 }
 
-.input-group input:focus,
-.input-group select:focus {
+.input-group input:focus {
     outline: none;
     border-color: var(--accent-color);
     background: rgba(255, 255, 255, 0.06);
     box-shadow: 0 0 0 3px rgba(253, 224, 71, 0.1);
 }
 
-.input-group select {
-    appearance: none;
-    cursor: pointer;
+.input-group.select-group {
+    width: 100%;
 }
 
 .btn-onboarding-save {

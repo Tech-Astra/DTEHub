@@ -70,13 +70,7 @@ export default function Home() {
 
                     <button 
                         className="btn-explore" 
-                        onClick={() => {
-                            if (user) {
-                                navigate('/notes');
-                            } else {
-                                loginWithGoogle().then(() => navigate('/notes')).catch(err => console.error(err));
-                            }
-                        }}
+                        onClick={() => navigate('/notes')}
                     >
                         Explore All Resources <ArrowRight size={20} />
                     </button>
