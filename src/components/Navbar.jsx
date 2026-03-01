@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { GraduationCap, LogOut, Home, FileText, ScrollText, Zap, Heart, Github, Star } from 'lucide-react';
+import { GraduationCap, LogOut, Home, FileText, ScrollText, Zap, Heart, Github, Star, Calculator } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext';
 import '../App.css';
 
@@ -39,6 +39,7 @@ export default function Navbar() {
                         <Link to="/" className={`nav-item ${isActive('/')}`}>Home</Link>
                         <Link to="/notes" className={`nav-item ${isActive('/notes')}`}>Resources</Link>
                         <Link to="/dcet" className={`nav-item ${isActive('/dcet')}`}>DCET</Link>
+                        <Link to="/rank-predictor" className={`nav-item ${isActive('/rank-predictor')}`}>Rank Predictor</Link>
                         <Link to="/contribute" className={`nav-item ${isActive('/contribute')}`}>Contribution</Link>
                     </div>
 
@@ -107,6 +108,10 @@ export default function Navbar() {
                 <Link to="/dcet" className={`mobile-nav-item ${isActive('/dcet')}`}>
                     <Zap size={20} />
                     <span>DCET</span>
+                </Link>
+                <Link to="/rank-predictor" className={`mobile-nav-item ${isActive('/rank-predictor')}`}>
+                    <Calculator size={20} />
+                    <span>Predictor</span>
                 </Link>
                 <Link to="/contribute" className={`mobile-nav-item ${isActive('/contribute')}`}>
                     <Heart size={20} />

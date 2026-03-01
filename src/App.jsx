@@ -8,6 +8,7 @@ import Home from './pages/Home';
 import Notes from './pages/Notes';
 import Profile from './pages/Profile';
 import DCET from './pages/DCET';
+import RankPredictor from './pages/RankPredictor';
 import Contribute from './pages/Contribute';
 import Admin from './pages/Admin';
 import PrivacyPolicy from './pages/Legal';
@@ -33,6 +34,7 @@ function App() {
               <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
               <Route path="/papers" element={<ProtectedRoute><Papers /></ProtectedRoute>} />
               <Route path="/dcet" element={<ProtectedRoute><DCET /></ProtectedRoute>} />
+              <Route path="/rank-predictor" element={<ProtectedRoute><RankPredictor /></ProtectedRoute>} />
               <Route path="/contribute" element={<Contribute />} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/admin" element={<Admin />} />
