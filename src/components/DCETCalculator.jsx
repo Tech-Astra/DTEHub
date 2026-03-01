@@ -15,8 +15,8 @@ const DCETCalculator = () => {
         const cgpaVal = parseFloat(cgpa) || 0;
         const dcetVal = parseFloat(dcetMarks) || 0;
 
-        // Formula: CGPA * 10 = Diploma %
-        const percent = (cgpaVal * 10).toFixed(2);
+        // Formula: (CGPA - 0.75) * 10 = Diploma %
+        const percent = Math.max(0, (cgpaVal - 0.75) * 10).toFixed(2);
         setDiplomaPercent(percent);
 
         // Combined Marks = (Diploma % / 2) + (DCET Score / 2)
