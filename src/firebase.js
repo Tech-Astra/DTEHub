@@ -4,14 +4,14 @@ import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBU6ZehW1Je1bltxVyYIKyF5BPBzK7fEzw",
-  authDomain: "dte-hub.firebaseapp.com",
-  databaseURL: "https://dte-hub-default-rtdb.firebaseio.com/",
-  projectId: "dte-hub",
-  storageBucket: "dte-hub.firebasestorage.app",
-  messagingSenderId: "553851844913",
-  appId: "1:553851844913:web:855506917d04d5db271810",
-  measurementId: "G-KV4ERD7Z2S"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
