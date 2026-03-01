@@ -275,10 +275,10 @@ export default function Admin() {
                 return () => unsubscribe();
             }
 
-            // Log this session login once per mount
+            // Log this session sign in once per mount
             const lastLog = sessionStorage.getItem('admin_session_logged');
             if (!lastLog) {
-                logAdminAction('Session Login', 'auth', `Admin ${user.displayName || user.email} logged in`);
+                logAdminAction('Session Sign In', 'auth', `Admin ${user.displayName || user.email} signed in`);
                 sessionStorage.setItem('admin_session_logged', 'true');
             }
         }

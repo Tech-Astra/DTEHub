@@ -32,9 +32,9 @@ export default function ProtectedRoute({ children }) {
                 }}>
                     <ShieldCheck size={40} style={{ color: 'var(--accent-color)' }} />
                 </div>
-                <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Login Required</h2>
+                <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Sign In Required</h2>
                 <p style={{ color: 'var(--text-muted)', margin: 0, maxWidth: '400px' }}>
-                    You need to sign in to access this page. Please log in with your Google account to continue.
+                    You need to sign in to access this page. Please sign in with your Google account to continue.
                 </p>
                 <button
                     className="btn-primary"

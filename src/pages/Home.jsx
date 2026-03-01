@@ -57,11 +57,18 @@ export default function Home() {
     const { stats, loading } = useFirebaseStats();
     const [testimonials, setTestimonials] = useState([]);
     const [selectedTestimonial, setSelectedTestimonial] = useState(null);
-    const [isAddingFeedback, setIsAddingFeedback] = useState(false);
+    const [isAddingFeedback, setIsAddingFeedback] = useState(sessionStorage.getItem('open_feedback_post_login') === 'true');
     const [feedbackMsg, setFeedbackMsg] = useState('');
     const [college, setCollege] = useState('');
     const [rating, setRating] = useState(5);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Clear feedback persistence on mount/render if modal is shown
+    useEffect(() => {
+        if (isAddingFeedback && user) {
+            sessionStorage.removeItem('open_feedback_post_login');
+        }
+    }, [isAddingFeedback, user]);
 
     useEffect(() => {
         const testRef = ref(database, 'testimonials');
@@ -77,7 +84,8 @@ export default function Home() {
 
     const handleAddFeedback = async () => {
         if (!user) {
-            loginWithGoogle();
+            sessionStorage.setItem('open_feedback_post_login', 'true');
+            await loginWithGoogle();
             return;
         }
 
@@ -256,8 +264,11 @@ export default function Home() {
 
                         {!user ? (
                             <div className="login-prompt-feedback">
-                                <p>Please login to leave a testimonial about DTEHub.</p>
-                                <button className="btn-primary" onClick={loginWithGoogle}>Login with Google</button>
+                                 <p>Please sign in to leave a testimonial about DTEHub.</p>
+                                 <button className="btn-primary" onClick={async () => {
+                                     sessionStorage.setItem('open_feedback_post_login', 'true');
+                                     await loginWithGoogle();
+                                 }}>Sign In with Google</button>
                             </div>
                         ) : (
                             <div className="feedback-form-compact">

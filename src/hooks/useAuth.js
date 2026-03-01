@@ -57,8 +57,9 @@ export function useAuth() {
 
   const loginWithGoogle = async () => {
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      return result.user;
+      const { signInWithRedirect } = await import('firebase/auth');
+      await signInWithRedirect(auth, googleProvider);
+      // signInWithRedirect does not return anything, browser redirects away
     } catch (error) {
       console.error('Google login error:', error);
       throw error;
