@@ -47,7 +47,7 @@ export default function WorkspaceDock() {
                             <div className="ws-items-list">
                                 {wsData.favorites.length > 0 ? (
                                     wsData.favorites.slice(0, 5).map(item => (
-                                        <div key={item.id} className="ws-item" onClick={() => { navigate(item.type === 'note' ? '/notes' : '/papers'); setPanelOpen(false); }}>
+                                        <div key={item.id} className="ws-item" onClick={() => { navigate('/notes'); setPanelOpen(false); }}>
                                             <FileText size={14} />
                                             <span className="ws-item-title">{item.title}</span>
                                             <ChevronRight size={14} className="ws-item-arrow" />
@@ -69,7 +69,7 @@ export default function WorkspaceDock() {
                             <div className="ws-items-list">
                                 {wsData.recentlyViewed.length > 0 ? (
                                     wsData.recentlyViewed.slice(0, 5).map(item => (
-                                        <div key={item.id} className="ws-item" onClick={() => { navigate(item.type === 'note' ? '/notes' : '/papers'); setPanelOpen(false); }}>
+                                        <div key={item.id} className="ws-item" onClick={() => { navigate('/notes'); setPanelOpen(false); }}>
                                             <FileText size={14} />
                                             <span className="ws-item-title">{item.title}</span>
                                             <ChevronRight size={14} className="ws-item-arrow" />
@@ -91,7 +91,7 @@ export default function WorkspaceDock() {
                             <div className="ws-items-list">
                                 {wsData.downloads.length > 0 ? (
                                     wsData.downloads.slice(0, 5).map(item => (
-                                        <div key={item.id} className="ws-item" onClick={() => { navigate(item.type === 'note' ? '/notes' : '/papers'); setPanelOpen(false); }}>
+                                        <div key={item.id} className="ws-item" onClick={() => { navigate('/notes'); setPanelOpen(false); }}>
                                             <FileText size={14} />
                                             <span className="ws-item-title">{item.title}</span>
                                             <ChevronRight size={14} className="ws-item-arrow" />

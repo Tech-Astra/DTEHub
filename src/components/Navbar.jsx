@@ -24,8 +24,7 @@ export default function Navbar() {
                     {/* Desktop nav links */}
                     <div className="nav-links nav-desktop-only">
                         <Link to="/" className={`nav-item ${isActive('/')}`}>Home</Link>
-                        <Link to="/notes" className={`nav-item ${isActive('/notes')}`}>Notes</Link>
-                        <Link to="/papers" className={`nav-item ${isActive('/papers')}`}>Past Papers</Link>
+                        <Link to="/notes" className={`nav-item ${isActive('/notes')}`}>Notes & Papers</Link>
                         <Link to="/dcet" className={`nav-item ${isActive('/dcet')}`}>DCET</Link>
                         <Link to="/contribute" className={`nav-item ${isActive('/contribute')}`}>Contribution</Link>
                     </div>
@@ -73,11 +72,7 @@ export default function Navbar() {
                 </Link>
                 <Link to="/notes" className={`mobile-nav-item ${isActive('/notes')}`}>
                     <FileText size={20} />
-                    <span>Notes</span>
-                </Link>
-                <Link to="/papers" className={`mobile-nav-item ${isActive('/papers')}`}>
-                    <ScrollText size={20} />
-                    <span>Papers</span>
+                    <span>Notes & Papers</span>
                 </Link>
                 <Link to="/dcet" className={`mobile-nav-item ${isActive('/dcet')}`}>
                     <Zap size={20} />

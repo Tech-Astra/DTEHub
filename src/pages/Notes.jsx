@@ -1,5 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Search, Download, Folder, FileText, Eye, Plus, Heart, FilterX } from 'lucide-react';
+import Search from 'lucide-react/dist/esm/icons/search';
+import Download from 'lucide-react/dist/esm/icons/download';
+import Folder from 'lucide-react/dist/esm/icons/folder';
+import FileText from 'lucide-react/dist/esm/icons/file-text';
+import FileSpreadsheet from 'lucide-react/dist/esm/icons/file-spreadsheet';
+import Eye from 'lucide-react/dist/esm/icons/eye';
+import Plus from 'lucide-react/dist/esm/icons/plus';
+import Heart from 'lucide-react/dist/esm/icons/heart';
+import FilterX from 'lucide-react/dist/esm/icons/filter-x';
 import { useAuthContext } from '../context/AuthContext';
 import { ref, onValue } from 'firebase/database';
 import { database } from '../firebase';
@@ -129,11 +137,11 @@ export default function Notes() {
         <div className="container notes-page">
             <div className="page-header flex-between">
                 <div>
-                    <h1 className="page-title">Resource Folders</h1>
+                    <h1 className="page-title">Notes & Question Papers</h1>
                     <p className="page-subtitle">
                         {userYear && userYear !== 'Alumni' 
-                            ? `Showing filtered notes for your academic year (${userYear})` 
-                            : 'Your one-stop destination for all college resource'}
+                            ? `Showing filtered notes and papers for your academic year (${userYear})` 
+                            : 'Your one-stop destination for all college resources'}
                     </p>
                 </div>
                 <div className="search-bar-modern">
@@ -173,12 +181,26 @@ export default function Notes() {
                             <div className="folder-icon-wrapper">
                                 {note.isFolder ? (
                                     <Folder size={18} fill="var(--accent-color)" color="var(--accent-color)" />
+                                ) : note.type === 'Paper' ? (
+                                    <FileSpreadsheet size={18} color="#ef4444" />
                                 ) : (
                                     <FileText size={18} color="var(--text-muted)" />
                                 )}
                             </div>
-                            <div className="folder-info">
+                            <div className="folder-info" style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
                                 <h3 className="folder-title" title={note.title}>{note.title}</h3>
+                                {!note.isFolder && note.type && (
+                                    <span style={{
+                                        fontSize: '0.65rem',
+                                        padding: '0.1rem 0.4rem',
+                                        borderRadius: '4px',
+                                        width: 'max-content',
+                                        backgroundColor: note.type === 'Paper' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(234, 179, 8, 0.1)',
+                                        color: note.type === 'Paper' ? '#ef4444' : '#eab308'
+                                    }}>
+                                        {note.type} • {note.chapter}
+                                    </span>
+                                )}
                             </div>
 
                             {!note.isFolder && (
@@ -221,8 +243,8 @@ export default function Notes() {
             ) : (
                 <div style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-muted)' }}>
                     <FilterX size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-                    <h3>No notes found for {userYear}</h3>
-                    <p>We're continually adding new resources. Check back later!</p>
+                    <h3>No resources found for {userYear}</h3>
+                    <p>We're continually adding new notes and papers. Check back later!</p>
                 </div>
             )}
 

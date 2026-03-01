@@ -6,7 +6,6 @@ import WorkspaceDock from './components/WorkspaceDock';
 import ProfileOnboardingModal from './components/ProfileOnboardingModal';
 import Home from './pages/Home';
 import Notes from './pages/Notes';
-import Papers from './pages/Papers';
 import Profile from './pages/Profile';
 import DCET from './pages/DCET';
 import Contribute from './pages/Contribute';
@@ -29,7 +28,6 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/notes" element={<Notes />} />
-              <Route path="/papers" element={<Papers />} />
               <Route path="/dcet" element={<DCET />} />
               <Route path="/contribute" element={<Contribute />} />
               <Route path="/profile" element={<Profile />} />
