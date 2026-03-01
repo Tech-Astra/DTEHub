@@ -24,40 +24,64 @@ export function useFirebaseStats() {
           sessionStorage.setItem(SESSION_KEY, 'true');
         }
 
-        // 2. Automated Stats Sync on Refresh
-        // Fetch reality from all nodes
-        const [usersSnap, notesSnap, papersSnap, dcetSnap] = await Promise.all([
-          get(ref(database, 'users')),
-          get(ref(database, 'resources/notes')),
-          get(ref(database, 'resources/papers')),
-          get(ref(database, 'resources/dcet'))
-        ]);
+        // 2. Setup listeners for the users and resources lengths
 
-        const actualUsers = usersSnap.exists() ? Object.keys(usersSnap.val()).length : 0;
-        const actualResources = 
-          (notesSnap.exists() ? Object.keys(notesSnap.val()).length : 0) +
-          (papersSnap.exists() ? Object.keys(papersSnap.val()).length : 0) +
-          (dcetSnap.exists() ? Object.keys(dcetSnap.val()).length : 0);
+        const usersRef = ref(database, 'users');
+        const notesRef = ref(database, 'resources/notes');
+        const papersRef = ref(database, 'resources/papers');
+        const dcetRef = ref(database, 'resources/dcet');
+        const statsViewsRef = ref(database, 'stats/totalViews');
 
-        // Calibrate the stats node so previous and current data match perfectly
-        await Promise.all([
-          set(ref(database, 'stats/totalVerifiedUsers'), actualUsers),
-          set(ref(database, 'stats/totalResources'), actualResources)
-        ]);
+        // Note: For large DBs, sending full objects onValue is heavy, 
+        // but it fulfills the request of grabbing exact item count.
 
-        // 3. Setup listener for the calibrated stats
-        const statsRef = ref(database, 'stats');
-        const unsubscribe = onValue(statsRef, (snapshot) => {
-          const data = snapshot.val() || {};
+        let localUsers = 0;
+        let localNotes = 0;
+        let localPapers = 0;
+        let localDcet = 0;
+        let localViews = 0;
+
+        const updateStats = () => {
           setStats({
-            totalViews: data.totalViews || 0,
-            totalResources: data.totalResources || 0,
-            totalVerifiedUsers: data.totalVerifiedUsers || 0
+            totalViews: localViews,
+            totalResources: localNotes + localPapers + localDcet,
+            totalVerifiedUsers: localUsers
           });
           setLoading(false);
+        };
+
+        const unsubUsers = onValue(usersRef, (snap) => {
+          localUsers = snap.exists() ? Object.keys(snap.val()).length : 0;
+          updateStats();
         });
 
-        return unsubscribe;
+        const unsubNotes = onValue(notesRef, (snap) => {
+          localNotes = snap.exists() ? Object.keys(snap.val()).length : 0;
+          updateStats();
+        });
+
+        const unsubPapers = onValue(papersRef, (snap) => {
+          localPapers = snap.exists() ? Object.keys(snap.val()).length : 0;
+          updateStats();
+        });
+
+        const unsubDcet = onValue(dcetRef, (snap) => {
+          localDcet = snap.exists() ? Object.keys(snap.val()).length : 0;
+          updateStats();
+        });
+
+        const unsubViews = onValue(statsViewsRef, (snapshot) => {
+          localViews = snapshot.val() || 0;
+          updateStats();
+        });
+
+        return () => {
+          unsubUsers();
+          unsubNotes();
+          unsubPapers();
+          unsubDcet();
+          unsubViews();
+        };
 
       } catch (err) {
         console.error('Stats Sync Error:', err);
@@ -66,7 +90,7 @@ export function useFirebaseStats() {
       }
     };
 
-    let unsubscribeStats = () => {};
+    let unsubscribeStats = () => { };
     syncAndListen().then(cleanup => {
       if (typeof cleanup === 'function') unsubscribeStats = cleanup;
     });
