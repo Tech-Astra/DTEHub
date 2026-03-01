@@ -14,9 +14,7 @@
 }
 
 .footer-modal {
-    background: rgba(24, 24, 27, 0.7);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     width: 90%;
@@ -42,6 +40,10 @@
     background: rgba(255, 255, 255, 0.1);
     color: var(--text-main);
     transform: rotate(90deg);
+}
+
+html[data-theme='light'] .footer-modal-close:hover {
+    background: rgba(0, 0, 0, 0.05);
 }
 
 .footer-modal h2 {
@@ -78,6 +80,10 @@
     text-decoration: none;
 }
 
+html[data-theme='light'] .contact-link-item {
+    background: rgba(0, 0, 0, 0.02);
+}
+
 .contact-link-item:hover {
     border-color: var(--accent-color);
     background: rgba(253, 224, 71, 0.05);
@@ -95,6 +101,10 @@
     color: var(--accent-color);
 }
 
+html[data-theme='light'] .contact-icon-wrapper {
+    background: rgba(0, 0, 0, 0.05);
+}
+
 @keyframes slideUp {
     from {
         opacity: 0;
@@ -104,6 +114,8 @@
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
+    }
+}       transform: translateY(0) scale(1);
     }
 }
 

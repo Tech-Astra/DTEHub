@@ -5,21 +5,20 @@ const ThemeContext = createContext();
 export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }) => {
-    // Locked to dark theme permanently
     const [theme] = useState('dark');
 
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', 'dark');
         document.documentElement.classList.remove('light-theme');
+        localStorage.setItem('dte-theme', 'dark');
     }, []);
 
     const toggleTheme = () => {
-        // No-op: Light theme has been removed
-        console.log("Light theme is no longer available.");
+        // Theme is now permanently dark
     };
 
     return (
-        <ThemeContext.Provider value={{ theme, toggleTheme }}>
+        <ThemeContext.Provider value={{ theme: 'dark', toggleTheme }}>
             {children}
         </ThemeContext.Provider>
     );

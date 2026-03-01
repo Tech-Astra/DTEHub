@@ -65,6 +65,8 @@ export default function Navbar() {
                             {repoStars !== null && <span>{repoStars}</span>}
                         </a>
 
+
+
                         {loading ? (
                             <span className="nav-auth-skeleton" />
                         ) : user ? (

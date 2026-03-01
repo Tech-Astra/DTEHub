@@ -79,6 +79,8 @@
     transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
+
+
 .footer-link:hover {
     opacity: 0.8;
     transform: translateY(-2px);
