@@ -1608,3 +1608,94 @@
     font-size: 11px;
     border: 1px solid rgba(168, 85, 247, 0.2);
 }
+
+/* Resource Type Toggle Styles */
+.type-toggle-premium {
+    display: flex;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border-radius: 12px;
+    padding: 4px;
+    gap: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 0.5rem;
+}
+
+.type-toggle-premium button {
+    flex: 1;
+    border: none !important;
+    background: none !important;
+    color: var(--text-muted) !important;
+    padding: 0.6rem !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.type-toggle-premium button.active {
+    background: var(--accent-color) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(0, 243, 255, 0.3) !important;
+}
+
+.type-toggle-premium button:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: var(--text-main) !important;
+}
+
+/* Fix for Selectability in Modals */
+.modal-field {
+    position: relative;
+    z-index: 5;
+}
+
+.modal-form-row {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.modal-form-row .modal-field {
+    flex: 1;
+}
+
+/* Absolute Click Fix for Type Toggle */
+.type-toggle-premium {
+    display: flex !important;
+    position: relative;
+    z-index: 100 !important;
+    pointer-events: all !important;
+    background: rgba(0, 0, 0, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    padding: 2px !important;
+    margin-top: 5px !important;
+    width: 100% !important;
+}
+
+.type-toggle-premium button {
+    flex: 1 !important;
+    padding: 10px !important;
+    border: none !important;
+    background: transparent !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    font-weight: 700 !important;
+    font-size: 0.8rem !important;
+    cursor: pointer !important;
+    z-index: 101 !important;
+    pointer-events: auto !important;
+    transition: all 0.2s ease !important;
+    border-radius: 10px !important;
+}
+
+.type-toggle-premium button.active {
+    background: var(--accent-color) !important;
+    color: #000 !important;
+    opacity: 1 !important;
+}
+
+.type-toggle-premium button:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #fff !important;
+}
