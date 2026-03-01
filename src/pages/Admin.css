@@ -292,13 +292,71 @@
     }
 }
 
+.mobile-menu-btn {
+    display: none;
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    cursor: pointer;
+    padding: 0;
+}
+
+.mobile-close-btn {
+    display: none;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.mobile-overlay {
+    display: none;
+}
+
 @media (max-width: 768px) {
-    .admin-sidebar {
-        display: none; /* simple responsive handling, could add a hamburger */
+    .mobile-menu-btn {
+        display: block;
     }
+    
+    .mobile-close-btn {
+        display: block;
+    }
+
+    .sidebar-brand {
+        justify-content: space-between;
+    }
+    
+    .admin-sidebar {
+        position: fixed;
+        left: -300px; /* Hidden off-screen by default on mobile */
+        top: 0;
+        bottom: 0;
+        z-index: 2000;
+        transition: left 0.3s ease;
+        width: 260px;
+        background-color: #111114;
+    }
+    
+    .admin-sidebar.mobile-open {
+        left: 0; /* Slide in */
+    }
+    
+    .mobile-overlay {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 1500;
+        backdrop-filter: blur(2px);
+    }
+
     .admin-dashboard-layout {
         position: static;
         height: auto;
+    }
+
+    .admin-topbar {
+        padding: 1rem;
     }
 }
 
