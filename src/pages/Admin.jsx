@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
 import { database } from '../firebase';
-import { ref, push, set, onValue, remove, runTransaction, get } from 'firebase/database';
+import { ref, push, set, onValue, remove, runTransaction, get, query, orderByChild, limitToLast } from 'firebase/database';
 import { 
     Plus, Trash2, Edit2, Link as LinkIcon, FolderPlus, FileText, 
     Users, Zap, Database, RefreshCw, LayoutDashboard, LogOut, 
-    CheckCircle2, Eye, BarChart3, ShieldCheck, Menu, X
+    CheckCircle2, Eye, BarChart3, ShieldCheck, Menu, X, Home, History,
+    Search, Filter, ChevronDown, Folder
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import IframeModal from '../components/IframeModal';
 import './Admin.css';
 
 // Admin allowed list
@@ -43,6 +46,7 @@ const mockPieData = [
 ];
 
 export default function Admin() {
+    const navigate = useNavigate();
     const { user, loading, logout } = useAuthContext();
     const [activeTab, setActiveTab] = useState('dashboard');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -51,6 +55,9 @@ export default function Admin() {
     const [showBranchModal, setShowBranchModal] = useState(false);
     const [branchesList, setBranchesList] = useState([]);
     const [newBranchTitle, setNewBranchTitle] = useState('');
+    const [showSyllabusModal, setShowSyllabusModal] = useState(false);
+    const [syllabusesList, setSyllabusesList] = useState([]);
+    const [newSyllabusTitle, setNewSyllabusTitle] = useState('');
     
     // Form States
     const [title, setTitle] = useState('');
@@ -59,6 +66,8 @@ export default function Admin() {
     const [branch, setBranch] = useState('');
     const [chapter, setChapter] = useState('');
     const [resourceType, setResourceType] = useState('Note'); // For Notes/Papers toggle
+    const [syllabus, setSyllabus] = useState('C-20');
+    const [semester, setSemester] = useState('1st Sem');
     
     // Data list states
     const [resources, setResources] = useState([]);
@@ -74,22 +83,76 @@ export default function Admin() {
     const [isFolder, setIsFolder] = useState(false); 
     const [folderTitle, setFolderTitle] = useState('');
 
+    // Activity logs
+    const [activityLogs, setActivityLogs] = useState([]);
+    const [selectedLog, setSelectedLog] = useState(null);
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [userSearchTerm, setUserSearchTerm] = useState('');
+    const [userSortOrder, setUserSortOrder] = useState('name'); // 'name', 'college'
+    const [resourceSearchTerm, setResourceSearchTerm] = useState('');
+    const [resourceSortOrder, setResourceSortOrder] = useState('title'); // 'title', 'year'
+    const [peakedFolder, setPeakedFolder] = useState(null); // For "view inside" pop up
+    const [viewUrl, setViewUrl] = useState(null); // For viewer modal
+
     // Fetch dynamic charts stats
     const [catData, setCatData] = useState(mockCategoryData);
+
+    // Helper: log admin actions to Firebase
+    const logAdminAction = async (action, section, details = '') => {
+        try {
+            const logRef = push(ref(database, 'system_logs'));
+            await set(logRef, {
+                action,
+                section,
+                details,
+                adminName: user?.displayName || 'Unknown',
+                adminEmail: user?.email || '',
+                adminPhoto: user?.photoURL || '',
+                timestamp: Date.now()
+            });
+        } catch (err) {
+            console.error('Failed to log action:', err);
+        }
+    };
 
     useEffect(() => {
         let unsubscribeResources = () => {};
         let profilesUnsubscribe = () => {};
         let branchesUnsubscribe = () => {};
+        let syllabusesUnsubscribe = () => {};
+        let logsUnsubscribe = () => {};
 
         // Fetch Branches globally
         const branchesRef = ref(database, 'branches');
         branchesUnsubscribe = onValue(branchesRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                setBranchesList(Object.values(data));
+                const arr = Object.keys(data).map(key => ({ 
+                    id: key, 
+                    title: typeof data[key] === 'string' ? data[key] : data[key].title 
+                }));
+                setBranchesList(arr);
             } else {
-                setBranchesList(['Common', 'Computer Science', 'Mechanical', 'Civil', 'Electrical', 'Electronics']);
+                setBranchesList([]);
+            }
+        });
+
+        // Fetch Syllabuses globally
+        const syllabusRef = ref(database, 'syllabuses');
+        syllabusesUnsubscribe = onValue(syllabusRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                const arr = Object.keys(data).map(key => ({ 
+                    id: key, 
+                    title: typeof data[key] === 'string' ? data[key] : data[key].title 
+                }));
+                setSyllabusesList(arr);
+            } else {
+                setSyllabusesList([
+                    {id: 'c19', title: 'C-19'},
+                    {id: 'c20', title: 'C-20'},
+                    {id: 'c25', title: 'C-25'}
+                ]);
             }
         });
 
@@ -107,10 +170,16 @@ export default function Admin() {
             profilesUnsubscribe = onValue(profileRef, (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
-                    const arr = Object.keys(data).map(uid => ({
-                        uid,
-                        ...(data[uid].profile || {})
-                    }));
+                    const arr = Object.keys(data).map(uid => {
+                        const userData = data[uid];
+                        return {
+                            uid,
+                            email: userData.email || '',
+                            photoURL: userData.photoURL || '',
+                            name: userData.profile?.name || userData.displayName || '',
+                            ...(userData.profile || {})
+                        };
+                    });
                     setUsersList(arr);
                     setTotalUsers(arr.length);
                 } else {
@@ -121,7 +190,7 @@ export default function Admin() {
 
             if (['notes', 'dcet'].includes(activeTab)) {
                 // Fetch Resources for specific tab
-                const resourcesRef = ref(database, activeTab);
+                const resourcesRef = ref(database, `resources/${activeTab}`);
                 unsubscribeResources = onValue(resourcesRef, (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
@@ -136,21 +205,47 @@ export default function Admin() {
                         setFoldersList([]);
                     }
                 });
-            } else if (activeTab === 'dashboard') {
+            } else if (activeTab === 'dashboard' || activeTab === 'logs') {
                 // Approximate charts data logic
-                const computeCharts = async () => {
-                   let n = 0, d = 0;
-                   const snapN = await get(ref(database, 'notes'));
-                   if(snapN.exists()) n = Object.keys(snapN.val()).length;
-                   const snapD = await get(ref(database, 'dcet'));
-                   if(snapD.exists()) d = Object.keys(snapD.val()).length;
-                   setCatData([
-                       { name: 'Notes & Papers', val: n || 15 },
-                       { name: 'DCET', val: d || 8 },
-                       { name: 'Guides', val: 4 }
-                   ]);
-                };
-                computeCharts();
+                if (activeTab === 'dashboard') {
+                    const computeCharts = async () => {
+                       let n = 0, d = 0;
+                       const snapN = await get(ref(database, 'resources/notes'));
+                       if(snapN.exists()) n = Object.keys(snapN.val()).length;
+                       const snapD = await get(ref(database, 'resources/dcet'));
+                       if(snapD.exists()) d = Object.keys(snapD.val()).length;
+                       setCatData([
+                           { name: 'Resources', val: n || 15 },
+                           { name: 'DCET', val: d || 8 },
+                           { name: 'Guides', val: 4 }
+                       ]);
+                    };
+                    computeCharts();
+                }
+
+
+                // Fetch activity logs (shared between Dashboard and Logs Tab)
+                // For Dashboard tab we fetch 30, for Logs tab we fetch ALL (no limit)
+                const finalLogsQuery = activeTab === 'logs' 
+                    ? query(ref(database, 'system_logs'), orderByChild('timestamp')) 
+                    : query(ref(database, 'system_logs'), orderByChild('timestamp'), limitToLast(30));
+
+                logsUnsubscribe = onValue(finalLogsQuery, (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        const arr = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+                        setActivityLogs(arr.sort((a, b) => b.timestamp - a.timestamp));
+                    } else {
+                        setActivityLogs([]);
+                    }
+                });
+            }
+            
+            // Log this session login once per mount
+            const lastLog = sessionStorage.getItem('admin_session_logged');
+            if (!lastLog) {
+                logAdminAction('Session Login', 'auth', `Admin ${user.displayName || user.email} logged in`);
+                sessionStorage.setItem('admin_session_logged', 'true');
             }
         }
 
@@ -158,8 +253,50 @@ export default function Admin() {
             profilesUnsubscribe();
             unsubscribeResources();
             branchesUnsubscribe();
+            syllabusesUnsubscribe();
+            logsUnsubscribe();
         };
     }, [activeTab, user]);
+
+    // Computed: Filtered and Sorted Users
+    const filteredUsers = usersList
+        .filter(u => {
+            const query = userSearchTerm.toLowerCase();
+            return (
+                (u.name?.toLowerCase().includes(query)) ||
+                (u.email?.toLowerCase().includes(query)) ||
+                (u.usn?.toLowerCase().includes(query)) ||
+                (u.college?.toLowerCase().includes(query))
+            );
+        })
+        .sort((a, b) => {
+            if (userSortOrder === 'college') {
+                return (a.college || '').localeCompare(b.college || '');
+            }
+            return (a.name || '').localeCompare(b.name || '');
+        });
+
+    // Computed: Filtered and Sorted Resources
+    const filteredResources = resources
+        .filter(r => {
+            const query = resourceSearchTerm.toLowerCase();
+            return (
+                (r.title?.toLowerCase().includes(query)) ||
+                (r.branch?.toLowerCase().includes(query)) ||
+                (r.syllabus?.toLowerCase().includes(query)) ||
+                (r.semester?.toLowerCase().includes(query)) ||
+                (r.chapter?.toLowerCase().includes(query))
+            );
+        })
+        .sort((a, b) => {
+            if (resourceSortOrder === 'year') {
+                return (a.semester || '').localeCompare(b.semester || '');
+            }
+            return (a.title || '').localeCompare(b.title || '');
+        });
+
+    const displayFolders = filteredResources.filter(r => r.isFolder);
+    const displayFiles = filteredResources.filter(r => !r.isFolder);
 
     if (loading) return <div className="container flex-center" style={{minHeight: '50vh'}}><div className="loader"></div></div>;
 
@@ -177,12 +314,13 @@ export default function Admin() {
         if (!folderTitle.trim()) return;
         setIsSaving(true);
         try {
-            const folderRef = push(ref(database, activeTab));
+            const folderRef = push(ref(database, `resources/${activeTab}`));
             await set(folderRef, {
                 title: folderTitle,
                 isFolder: true,
                 parentId: 'root',
-                academicYear,
+                syllabus,
+                semester,
                 branch,
                 timestamp: Date.now()
             });
@@ -192,6 +330,7 @@ export default function Admin() {
 
             setFolderTitle('');
             setShowFolderModal(false);
+            logAdminAction('Created Folder', activeTab, folderTitle);
             alert("New folder created!");
         } catch (err) {
             console.error(err);
@@ -206,14 +345,57 @@ export default function Admin() {
         setIsSaving(true);
         try {
             const branchRef = push(ref(database, 'branches'));
-            await set(branchRef, newBranchTitle.trim());
+            await set(branchRef, { title: newBranchTitle.trim() });
+            logAdminAction('Added Branch', 'branches', newBranchTitle.trim());
             setNewBranchTitle('');
             setShowBranchModal(false);
-            alert("New branch added successfully!");
+            alert("New branch added!");
         } catch (err) {
             console.error(err);
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handleDeleteBranch = async (id, title) => {
+        if (window.confirm(`Delete branch "${title}"?`)) {
+            try {
+                await remove(ref(database, `branches/${id}`));
+                logAdminAction('Deleted Branch', 'branches', title);
+                alert("Branch removed.");
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    };
+
+    const handleAddSyllabus = async (e) => {
+        e.preventDefault();
+        if (!newSyllabusTitle.trim()) return;
+        setIsSaving(true);
+        try {
+            const sRef = push(ref(database, 'syllabuses'));
+            await set(sRef, { title: newSyllabusTitle.trim() });
+            logAdminAction('Added Syllabus', 'syllabuses', newSyllabusTitle.trim());
+            setNewSyllabusTitle('');
+            setShowSyllabusModal(false);
+            alert("New Syllabus Scheme added!");
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleDeleteSyllabus = async (id, title) => {
+        if (window.confirm(`Delete Syllabus scheme "${title}"?`)) {
+            try {
+                await remove(ref(database, `syllabuses/${id}`));
+                logAdminAction('Deleted Syllabus', 'syllabuses', title);
+                alert("Syllabus removed.");
+            } catch (err) {
+                console.error(err);
+            }
         }
     };
 
@@ -222,7 +404,7 @@ export default function Admin() {
         setIsSaving(true);
         try {
             const newResource = {
-                title, url, academicYear, branch,
+                title, url, syllabus, semester, branch,
                 isFolder: false, parentId: parentId || 'root',
                 timestamp: Date.now(),
             };
@@ -235,16 +417,19 @@ export default function Admin() {
             }
 
             if (editingId) {
-                await set(ref(database, `${activeTab}/${editingId}`), newResource);
+                await set(ref(database, `resources/${activeTab}/${editingId}`), newResource);
+                logAdminAction('Updated Resource', `resources/${activeTab}`, title);
                 alert(`${activeTab.slice(0, -1)} updated!`);
             } else {
-                const resourceRef = push(ref(database, activeTab));
+                const resourceRef = push(ref(database, `resources/${activeTab}`));
                 await set(resourceRef, newResource);
                 const statsRef = ref(database, 'stats/totalResources');
                 runTransaction(statsRef, (count) => (count || 0) + 1);
+                logAdminAction('Added Resource', activeTab, title);
                 alert(`New ${activeTab.slice(0, -1)} added!`);
             }
             setTitle(''); setUrl(''); setChapter(''); setEditingId(null); setResourceType('Note');
+            setSyllabus('C-20'); setSemester('1st Sem');
             setShowResourceModal(false);
         } catch (error) {
             alert("Failed to save.");
@@ -257,9 +442,10 @@ export default function Admin() {
         setEditingId(res.id);
         setTitle(res.title);
         setUrl(res.url || '');
-        setAcademicYear(res.academicYear);
+        setSyllabus(res.syllabus || 'C-20');
+        setSemester(res.semester || '1st Sem');
         setBranch(res.branch);
-        setChapter(activeTab === 'notes' ? res.chapter : res.chapter);
+        setChapter(res.chapter || '');
         setResourceType(res.type || 'Note');
         setIsFolder(res.isFolder || false);
         setParentId(res.parentId || 'root');
@@ -274,7 +460,7 @@ export default function Admin() {
 
             let resourceCount = 0;
             for (const cat of ['notes', 'dcet']) {
-                const snap = await get(ref(database, cat));
+                const snap = await get(ref(database, `resources/${cat}`));
                 if (snap.exists()) resourceCount += Object.keys(snap.val()).length;
             }
 
@@ -290,18 +476,21 @@ export default function Admin() {
 
     const handleMove = async (res, newParentId) => {
         try {
-            await set(ref(database, `${activeTab}/${res.id}/parentId`), newParentId);
+            await set(ref(database, `resources/${activeTab}/${res.id}/parentId`), newParentId);
+            logAdminAction('Moved Resource', `resources/${activeTab}`, `${res.title} moved to ${newParentId}`);
         } catch (err) {
             console.error("Move failed", err);
         }
     };
 
     const handleDelete = async (id) => {
+        const res = resources.find(r => r.id === id);
         if (window.confirm("Delete this resource?")) {
             try {
-                await remove(ref(database, `${activeTab}/${id}`));
+                await remove(ref(database, `resources/${activeTab}/${id}`));
                 const statsRef = ref(database, 'stats/totalResources');
                 runTransaction(statsRef, (count) => Math.max(0, (count || 0) - 1));
+                logAdminAction('Deleted Resource', activeTab, res?.title || id);
             } catch (err) {
                 console.error("Delete failed", err);
             }
@@ -332,13 +521,16 @@ export default function Admin() {
                         <LayoutDashboard size={18} /> Dashboard
                     </button>
                     <button className={`sidebar-btn ${activeTab === 'notes' ? 'active' : ''}`} onClick={() => setActiveTab('notes')}>
-                        <FolderPlus size={18} /> Notes & Papers
+                        <Database size={18} /> Resources
                     </button>
                     <button className={`sidebar-btn ${activeTab === 'dcet' ? 'active' : ''}`} onClick={() => setActiveTab('dcet')}>
                         <Zap size={18} /> DCET
                     </button>
                     <button className={`sidebar-btn ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
                         <Users size={18} /> Users
+                    </button>
+                    <button className={`sidebar-btn ${activeTab === 'logs' ? 'active' : ''}`} onClick={() => setActiveTab('logs')}>
+                        <History size={18} /> System Logs
                     </button>
                 </div>
                 
@@ -356,10 +548,22 @@ export default function Admin() {
                             <Menu size={24} />
                         </button>
                         <div className="topbar-breadcrumbs">
-                            <span>Dashboard</span> / {activeTab === 'dashboard' ? 'Overview' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                            <span>Admin</span> / {
+                                activeTab === 'dashboard' ? 'Overview' : 
+                                activeTab === 'notes' ? 'Resources' :
+                                activeTab === 'dcet' ? 'DCET Resources' :
+                                activeTab.charAt(0).toUpperCase() + activeTab.slice(1)
+                            }
                         </div>
                     </div>
                     <div className="topbar-user">
+                        <button
+                            onClick={() => navigate('/')}
+                            className="topbar-home-btn"
+                            title="Go to Home"
+                        >
+                            <Home size={18} />
+                        </button>
                         <div>
                             <span className="user-name">WEB ADMIN</span>
                             <span className="user-email">{user.email}</span>
@@ -432,8 +636,8 @@ export default function Admin() {
                                     <div className="chart-header">
                                         <BarChart3 size={18} /> Resource Categories
                                     </div>
-                                    <div className="chart-body">
-                                        <ResponsiveContainer width="100%" height="100%">
+                                    <div className="chart-body" style={{ height: '250px' }}>
+                                        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                             <BarChart data={catData} margin={{top: 10, right: 10, left: -20, bottom: 0}}>
                                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                                                 <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
@@ -453,8 +657,8 @@ export default function Admin() {
                                     <div className="chart-header">
                                         <Zap size={18} /> Top Branches Used
                                     </div>
-                                    <div className="chart-body">
-                                        <ResponsiveContainer width="100%" height="100%">
+                                    <div className="chart-body" style={{ height: '250px' }}>
+                                        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                             <BarChart data={mockTechData} layout="vertical" margin={{top: 10, right: 10, left: 0, bottom: 0}}>
                                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
                                                 <XAxis type="number" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
@@ -477,8 +681,8 @@ export default function Admin() {
                                     <div className="chart-header" style={{alignSelf: 'flex-start'}}>
                                         <Users size={18} /> Users Composition
                                     </div>
-                                    <div className="chart-body" style={{display: 'flex', justifyContent: 'center'}}>
-                                        <ResponsiveContainer width="100%" height="100%">
+                                    <div className="chart-body" style={{display: 'flex', justifyContent: 'center', height: '250px'}}>
+                                        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                             <PieChart>
                                                 <Pie
                                                     data={mockPieData}
@@ -504,8 +708,8 @@ export default function Admin() {
                                     <div className="chart-header" style={{alignSelf: 'flex-start'}}>
                                         <ShieldCheck size={18} /> Resource Status Pipeline
                                     </div>
-                                    <div className="chart-body" style={{display: 'flex', justifyContent: 'center'}}>
-                                        <ResponsiveContainer width="100%" height="100%">
+                                    <div className="chart-body" style={{display: 'flex', justifyContent: 'center', height: '250px'}}>
+                                        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                             <PieChart>
                                                 <Pie
                                                     data={[{name: 'Approved', val: 80}, {name: 'Pending', val: 20}]}
@@ -526,10 +730,61 @@ export default function Admin() {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Recent Activity Mini Log */}
+                            <div className="admin-card card recent-activity-dashboard">
+                                <div className="activity-header">
+                                    <div className="activity-header-left">
+                                        <History size={20} className="accent-text" />
+                                        <h3>System Audit Log</h3>
+                                    </div>
+                                    <button className="text-btn" onClick={() => setActiveTab('logs')}>View All Logs</button>
+                                </div>
+                                <div className="activity-mini-list">
+                                    {activityLogs.slice(0, 5).map(log => (
+                                        <div key={log.id} className="activity-row">
+                                            <div className={`activity-dot ${log.action.toLowerCase().includes('delete') ? 'delete' : log.action.toLowerCase().includes('create') ? 'create' : 'update'}`}></div>
+                                            <div className="activity-main">
+                                                <span className="activity-action">{log.action}</span>
+                                                <span className="activity-details">{log.details}</span>
+                                            </div>
+                                            <div className="activity-time">{new Date(log.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                                        </div>
+                                    ))}
+                                    {activityLogs.length === 0 && <p className="empty-text">No recent activity detected.</p>}
+                                </div>
+                            </div>
                         </div>
                     ) : activeTab === 'users' ? (
                         <div className="admin-card card users-full-card animate-fade">
-                            <h3>Registered Students List</h3>
+                            <div className="users-card-header">
+                                <div className="header-left">
+                                    <h3>Registered Students List</h3>
+                                    <p>{filteredUsers.length} students found</p>
+                                </div>
+                                <div className="users-controls">
+                                    <div className="search-box-premium">
+                                        <Search size={18} />
+                                        <input 
+                                            type="text" 
+                                            placeholder="Search by name, email, college or USN..." 
+                                            value={userSearchTerm}
+                                            onChange={(e) => setUserSearchTerm(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="sort-box-premium">
+                                        <Filter size={18} />
+                                        <select 
+                                            value={userSortOrder} 
+                                            onChange={(e) => setUserSortOrder(e.target.value)}
+                                        >
+                                            <option value="name">Sort by Name</option>
+                                            <option value="college">Sort by College</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div className="users-table-container">
                             <table className="admin-users-table">
                                 <thead>
@@ -541,51 +796,180 @@ export default function Admin() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {usersList.map((userProfile) => (
-                                        <tr key={userProfile.uid}>
-                                            <td>{userProfile.name || 'Anonymous Student'}</td>
-                                            <td>{userProfile.email}</td>
-                                            <td>{userProfile.college || 'Not set'} ({userProfile.usn || '-'})</td>
-                                            <td>{userProfile.branch || '-'} • {userProfile.year || '-'}</td>
+                                    {filteredUsers.length > 0 ? (
+                                        filteredUsers.map((userProfile) => (
+                                            <tr key={userProfile.uid} className="clickable-row" onClick={() => setSelectedUser(userProfile)}>
+                                                <td>{userProfile.name || 'Anonymous Student'}</td>
+                                                <td>{userProfile.email}</td>
+                                                <td>{userProfile.college || 'Not set'} ({userProfile.usn || '-'})</td>
+                                                <td>{userProfile.branch || '-'} • {userProfile.year || '-'}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="4" className="empty-search-cell">
+                                                <Search size={48} />
+                                                <p>No students found matching your search.</p>
+                                            </td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
                             </div>
                         </div>
+                    ) : activeTab === 'logs' ? (
+                        <div className="admin-logs-container animate-fade">
+                            <div className="admin-card card logs-card">
+                                <div className="logs-header">
+                                    <div className="logs-header-left">
+                                        <History size={24} className="accent-text" />
+                                        <div>
+                                            <h3>Real-time System Logs</h3>
+                                            <p>Automated tracking of system & admin operations</p>
+                                        </div>
+                                    </div>
+                                    <div className="logs-count">Showing last 50 actions</div>
+                                </div>
+                                
+                                <div className="logs-timeline">
+                                    {activityLogs.length > 0 ? (
+                                        activityLogs.map((log) => (
+                                            <div key={log.id} className="log-item clickable" onClick={() => setSelectedLog(log)}>
+                                                <div className="log-admin-avatar">
+                                                    {log.adminPhoto ? (
+                                                        <img src={log.adminPhoto} alt={log.adminName} />
+                                                    ) : (
+                                                        <div className="avatar-placeholder">{log.adminName?.charAt(0) || 'A'}</div>
+                                                    )}
+                                                </div>
+                                                <div className="log-details">
+                                                    <div className="log-top">
+                                                        <span className="log-admin-name">{log.adminName}</span>
+                                                        <span className="log-time">{new Date(log.timestamp).toLocaleString()}</span>
+                                                    </div>
+                                                    <div className="log-action-row">
+                                                        <span className={`log-badge ${log.action.toLowerCase().includes('delete') ? 'delete' : log.action.toLowerCase().includes('create') ? 'create' : 'update'}`}>
+                                                            {log.action}
+                                                        </span>
+                                                        <span className="log-section">in <span className="highlight">{log.section}</span></span>
+                                                    </div>
+                                                    <div className="log-resource">
+                                                        Resource: <strong>{log.details}</strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="empty-logs">
+                                            <History size={48} />
+                                            <p>No activity logs found yet.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
                     ) : (
                         <div className="animate-fade">
-                            <div className="admin-header-actions">
-                                <h3>Manage {activeTab.toUpperCase()}</h3>
-                                <div className="admin-action-buttons">
-                                    <button className="btn-outline" onClick={() => setShowBranchModal(true)}>
-                                        <Plus size={16} /> New Branch
-                                    </button>
-                                    <button className="btn-outline" onClick={() => setShowFolderModal(true)}>
-                                        <FolderPlus size={16} /> New Folder
-                                    </button>
-                                    <button className="btn-primary" onClick={() => {
-                                        setEditingId(null);
-                                        setTitle(''); setUrl(''); setChapter('');
-                                        setShowResourceModal(true);
-                                    }}>
-                                        <Plus size={16} /> New Resource
-                                    </button>
+                            <div className="resource-management-header">
+                                <div className="header-left">
+                                    <h3>Manage {activeTab === 'notes' ? 'Resources' : 'DCET Materials'}</h3>
+                                    <p>Organize academic content across branch, syllabus, and semester</p>
+                                </div>
+                                <div className="resource-controls">
+                                    <div className="search-box-premium">
+                                        <Search size={18} />
+                                        <input 
+                                            type="text" 
+                                            placeholder="Search by title, branch, year..." 
+                                            value={resourceSearchTerm}
+                                            onChange={(e) => setResourceSearchTerm(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="sort-box-premium">
+                                        <Filter size={18} />
+                                        <select 
+                                            value={resourceSortOrder} 
+                                            onChange={(e) => setResourceSortOrder(e.target.value)}
+                                        >
+                                            <option value="title">Sort by Title</option>
+                                            <option value="year">Sort by Year</option>
+                                        </select>
+                                    </div>
+                                    <div className="admin-action-buttons">
+                                        <button className="btn-outline" onClick={() => setShowSyllabusModal(true)}>
+                                            <Plus size={16} /> Syllabus
+                                        </button>
+                                        <button className="btn-outline" onClick={() => setShowBranchModal(true)}>
+                                            <Plus size={16} /> Branch
+                                        </button>
+                                        <button className="btn-outline" onClick={() => setShowFolderModal(true)}>
+                                            <FolderPlus size={16} /> Folder
+                                        </button>
+                                        <button className="btn-primary" onClick={() => {
+                                            setEditingId(null);
+                                            setTitle(''); setUrl(''); setChapter('');
+                                            setShowResourceModal(true);
+                                        }}>
+                                            <Plus size={16} /> Resource
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="admin-card card list-card" style={{ marginTop: '1.5rem' }}>
-                                <div className="resource-list" style={{ maxHeight: '70vh' }}>
-                                    {resources.length === 0 ? <div className="empty-state">No resources added.</div> : resources.map(res => (
+                            {/* Folder Grid Section */}
+                            <div className="resources-section-title">
+                                <FolderPlus size={18} /> Directories & Units
+                            </div>
+                            <div className="folder-grid">
+                                {displayFolders.length > 0 ? displayFolders.map(folder => (
+                                    <div key={folder.id} className="folder-card-premium" onClick={() => setPeakedFolder(folder)}>
+                                        <div className="folder-icon-wrapper">
+                                            <Folder size={24} />
+                                        </div>
+                                        <div className="folder-info">
+                                            <h4>{folder.title}</h4>
+                                            <p>{folder.branch} • {folder.syllabus || folder.academicYear || 'No Year'} {folder.semester ? `• ${folder.semester}` : ''}</p>
+                                        </div>
+                                        <div className="folder-actions-overlay">
+                                            <button className="mini-action-btn" onClick={(e) => { e.stopPropagation(); handleEdit(folder); }} title="Edit">
+                                                <Edit2 size={14} />
+                                            </button>
+                                            <button className="mini-action-btn delete" onClick={(e) => { e.stopPropagation(); handleDelete(folder.id); }} title="Delete">
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )) : (
+                                    <div className="empty-grid-state">
+                                        <p>No folders found matching your criteria</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Individual Files / Resources Section */}
+                            <div className="resources-section-title">
+                                <FileText size={18} /> Individual Files & Links
+                            </div>
+                            <div className="admin-card card list-card">
+                                <div className="resource-list" style={{ maxHeight: '60vh' }}>
+                                    {displayFiles.length === 0 ? (
+                                        <div className="empty-state">No individual resources found.</div>
+                                    ) : displayFiles.map(res => (
                                         <div key={res.id} className="resource-item">
                                             <div className="res-info">
                                                 <h4>{res.title}</h4>
                                                 <div className="res-meta">
-                                                    <span className="res-tag">{res.academicYear}</span>
+                                                    {res.syllabus ? <span className="res-tag">{res.syllabus}</span> : <span className="res-tag">{res.academicYear}</span>}
+                                                    {res.semester && <span className="res-tag">{res.semester}</span>}
                                                     <span className="res-tag">{res.branch}</span>
                                                     <span className="res-val">{res.chapter}</span>
-                                                    {!res.isFolder && activeTab === 'notes' && (
-                                                        <span className="res-tag" style={{backgroundColor: res.type === 'Paper' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(234, 179, 8, 0.1)', color: res.type === 'Paper' ? '#ef4444' : '#eab308'}}>{res.type || 'Note'}</span>
+                                                    {activeTab === 'notes' && (
+                                                        <span className="res-tag" style={{
+                                                            backgroundColor: res.type === 'Paper' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(234, 179, 8, 0.1)', 
+                                                            color: res.type === 'Paper' ? '#ef4444' : '#eab308'
+                                                        }}>
+                                                            {res.type || 'Note'}
+                                                        </span>
                                                     )}
                                                 </div>
                                             </div>
@@ -601,7 +985,7 @@ export default function Admin() {
                                                         <option key={folder.id} value={folder.id}>📁 {folder.title}</option>
                                                     ))}
                                                 </select>
-                                                {!res.isFolder && <a href={res.url} target="_blank" rel="noopener noreferrer" className="btn-outline btn-sm" style={{padding: '0.4rem 0.6rem'}}>Test</a>}
+                                                <button onClick={() => setViewUrl(res.url)} className="btn-outline btn-sm" style={{padding: '0.4rem 0.6rem'}}>View</button>
                                                 <button onClick={() => handleEdit(res)} className="btn-edit" title="Edit"><Edit2 size={16} /></button>
                                                 <button onClick={() => handleDelete(res.id)} className="btn-delete" title="Delete"><Trash2 size={16} /></button>
                                             </div>
@@ -609,8 +993,6 @@ export default function Admin() {
                                     ))}
                                 </div>
                             </div>
-
-                            {/* Modals moved outside the overflow-hidden layout */}
                         </div>
                     )}
                 </div>
@@ -644,20 +1026,32 @@ export default function Admin() {
                                 </div>
                                 <div className="modal-form-row">
                                     <div className="modal-field">
-                                        <label>Academic Year</label>
-                                        <select value={academicYear} onChange={e => setAcademicYear(e.target.value)}>
-                                            <option value="">All Years</option>
-                                            <option value="1st Year">1st Year</option>
-                                            <option value="2nd Year">2nd Year</option>
-                                            <option value="3rd Year">3rd Year</option>
+                                        <label>Syllabus</label>
+                                        <select value={syllabus} onChange={e => setSyllabus(e.target.value)}>
+                                            {syllabusesList.map(s => (
+                                                <option key={s.id} value={s.title}>{s.title} Scheme</option>
+                                            ))}
                                         </select>
                                     </div>
+                                    <div className="modal-field">
+                                        <label>Semester</label>
+                                        <select value={semester} onChange={e => setSemester(e.target.value)}>
+                                            <option value="1st Sem">1st Sem</option>
+                                            <option value="2nd Sem">2nd Sem</option>
+                                            <option value="3rd Sem">3rd Sem</option>
+                                            <option value="4th Sem">4th Sem</option>
+                                            <option value="5th Sem">5th Sem</option>
+                                            <option value="6th Sem">6th Sem</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="modal-form-row">
                                     <div className="modal-field">
                                         <label>Branch</label>
                                         <select value={branch} onChange={e => setBranch(e.target.value)}>
                                             <option value="">All Branches</option>
-                                            {branchesList.map((b, idx) => (
-                                                <option key={idx} value={b}>{b}</option>
+                                            {branchesList.map((b) => (
+                                                <option key={b.id} value={b.title}>{b.title}</option>
                                             ))}
                                         </select>
                                     </div>
@@ -713,20 +1107,31 @@ export default function Admin() {
                                 </div>
                                 <div className="modal-form-row">
                                     <div className="modal-field">
-                                        <label>Year</label>
-                                        <select required value={academicYear} onChange={e => setAcademicYear(e.target.value)}>
-                                            <option value="" disabled>Select Year</option>
-                                            <option value="1st Year">1st Year</option>
-                                            <option value="2nd Year">2nd Year</option>
-                                            <option value="3rd Year">3rd Year</option>
+                                        <label>Syllabus</label>
+                                        <select required value={syllabus} onChange={e => setSyllabus(e.target.value)}>
+                                            {syllabusesList.map(s => (
+                                                <option key={s.id} value={s.title}>{s.title} Scheme</option>
+                                            ))}
                                         </select>
                                     </div>
                                     <div className="modal-field">
+                                        <label>Semester</label>
+                                        <select required value={semester} onChange={e => setSemester(e.target.value)}>
+                                            <option value="1st Sem">1st Sem</option>
+                                            <option value="2nd Sem">2nd Sem</option>
+                                            <option value="3rd Sem">3rd Sem</option>
+                                            <option value="4th Sem">4th Sem</option>
+                                            <option value="5th Sem">5th Sem</option>
+                                            <option value="6th Sem">6th Sem</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="modal-form-row">
+                                    <div className="modal-field">
                                         <label>Branch</label>
                                         <select required value={branch} onChange={e => setBranch(e.target.value)}>
-                                            <option value="" disabled>Select Branch</option>
-                                            {branchesList.map((b, idx) => (
-                                                <option key={idx} value={b}>{b}</option>
+                                            {branchesList.map((b) => (
+                                                <option key={b.id} value={b.title}>{b.title}</option>
                                             ))}
                                         </select>
                                     </div>
@@ -766,8 +1171,8 @@ export default function Admin() {
                                 <Plus size={18} />
                             </div>
                             <div>
-                                <h3>Add New Branch</h3>
-                                <p>This will appear in all branch dropdowns</p>
+                                <h3>Manage Branches</h3>
+                                <p>Add or remove academic branches</p>
                             </div>
                         </div>
                         <button className="admin-modal-close" onClick={() => setShowBranchModal(false)}><X size={16} /></button>
@@ -776,20 +1181,254 @@ export default function Admin() {
                         <div className="admin-modal-body">
                             <div className="modal-form">
                                 <div className="modal-field">
-                                    <label>Branch Name</label>
-                                    <input type="text" placeholder="e.g. Chemical Engineering" value={newBranchTitle} onChange={e => setNewBranchTitle(e.target.value)} required />
+                                    <label>New Branch Name</label>
+                                    <div style={{display: 'flex', gap: '0.5rem'}}>
+                                        <input type="text" placeholder="e.g. Chemical" value={newBranchTitle} onChange={e => setNewBranchTitle(e.target.value)} required />
+                                        <button type="submit" className="btn-primary" style={{padding: '0 1rem'}} disabled={isSaving}>Add</button>
+                                    </div>
+                                </div>
+                                <div style={{marginTop: '1.5rem'}}>
+                                    <label style={{fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: '0.75rem'}}>Existing Branches</label>
+                                    <div className="manage-list" style={{display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
+                                        {branchesList.map(b => (
+                                            <div key={b.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '0.6rem 1rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)'}}>
+                                                <span style={{fontSize: '0.9rem'}}>{b.title}</span>
+                                                <button type="button" onClick={() => handleDeleteBranch(b.id, b.title)} style={{background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex'}}><Trash2 size={14} /></button>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div className="admin-modal-footer">
-                            <button type="submit" className="modal-submit-btn primary" disabled={isSaving}>
-                                <Plus size={16} /> {isSaving ? 'Adding...' : 'Add Branch'}
-                            </button>
                         </div>
                     </form>
                 </div>
             </div>
         )}
+
+        {/* Syllabus Modal */}
+        {showSyllabusModal && (
+            <div className="admin-modal-overlay" onClick={(e) => { if(e.target.className === 'admin-modal-overlay') setShowSyllabusModal(false); }}>
+                <div className="admin-modal-content" style={{maxWidth: '420px'}}>
+                    <div className="admin-modal-header">
+                        <div className="admin-modal-header-left">
+                            <div className="admin-modal-header-icon resource">
+                                <Database size={18} />
+                            </div>
+                            <div>
+                                <h3>Manage Syllabuses</h3>
+                                <p>Add or remove syllabus schemes</p>
+                            </div>
+                        </div>
+                        <button className="admin-modal-close" onClick={() => setShowSyllabusModal(false)}><X size={16} /></button>
+                    </div>
+                    <form onSubmit={handleAddSyllabus}>
+                        <div className="admin-modal-body">
+                            <div className="modal-form">
+                                <div className="modal-field">
+                                    <label>New Syllabus Name</label>
+                                    <div style={{display: 'flex', gap: '0.5rem'}}>
+                                        <input type="text" placeholder="e.g. C-30" value={newSyllabusTitle} onChange={e => setNewSyllabusTitle(e.target.value)} required />
+                                        <button type="submit" className="btn-primary" style={{padding: '0 1rem'}} disabled={isSaving}>Add</button>
+                                    </div>
+                                </div>
+                                <div style={{marginTop: '1.5rem'}}>
+                                    <label style={{fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: '0.75rem'}}>Existing Schemes</label>
+                                    <div className="manage-list" style={{display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
+                                        {syllabusesList.map(s => (
+                                            <div key={s.id} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '0.6rem 1rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)'}}>
+                                                <span style={{fontSize: '0.9rem'}}>{s.title} Scheme</span>
+                                                <button type="button" onClick={() => handleDeleteSyllabus(s.id, s.title)} style={{background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex'}}><Trash2 size={14} /></button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        )}
+
+        {/* System Log Detail Modal */}
+        {selectedLog && (
+            <div className="admin-modal-overlay" onClick={() => setSelectedLog(null)}>
+                <div className="admin-modal-content" onClick={e => e.stopPropagation()} style={{maxWidth: '480px'}}>
+                    <div className="admin-modal-header">
+                        <div className="admin-modal-header-left">
+                            <div className={`admin-modal-header-icon ${selectedLog.action.toLowerCase().includes('delete') ? 'delete-action' : 'update-action'}`} 
+                                 style={{ background: selectedLog.action.toLowerCase().includes('delete') ? 'rgba(239, 68, 68, 0.15)' : 'rgba(0, 243, 255, 0.15)', color: selectedLog.action.toLowerCase().includes('delete') ? '#ef4444' : '#00f3ff' }}>
+                                <History size={18} />
+                            </div>
+                            <div>
+                                <h3>System Log Detail</h3>
+                                <p>Detailed metadata for this operation</p>
+                            </div>
+                        </div>
+                        <button className="admin-modal-close" onClick={() => setSelectedLog(null)}><X size={16} /></button>
+                    </div>
+                    <div className="admin-modal-body">
+                        <div className="log-detail-grid">
+                            <div className="log-detail-section">
+                                <label>Action & Scope</label>
+                                <div className="log-detail-card">
+                                    <div className="log-detail-row">
+                                        <span className="label">Operation:</span>
+                                        <span className={`log-badge ${selectedLog.action.toLowerCase().includes('delete') ? 'delete' : selectedLog.action.toLowerCase().includes('create') ? 'create' : 'update'}`}>
+                                            {selectedLog.action}
+                                        </span>
+                                    </div>
+                                    <div className="log-detail-row">
+                                        <span className="label">Target Section:</span>
+                                        <span className="value highlight">{selectedLog.section}</span>
+                                    </div>
+                                    <div className="log-detail-row">
+                                        <span className="label">Timestamp:</span>
+                                        <span className="value">{new Date(selectedLog.timestamp).toLocaleString()}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="log-detail-section">
+                                <label>Administrator Details</label>
+                                <div className="log-detail-card admin-info">
+                                    <div className="log-admin-avatar-lg">
+                                        {selectedLog.adminPhoto ? (
+                                            <img src={selectedLog.adminPhoto} alt={selectedLog.adminName} />
+                                        ) : (
+                                            <div className="avatar-placeholder">{selectedLog.adminName?.charAt(0) || 'A'}</div>
+                                        )}
+                                    </div>
+                                    <div className="admin-text">
+                                        <h4>{selectedLog.adminName}</h4>
+                                        <p>{selectedLog.adminEmail}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="log-detail-section" style={{marginBottom: 0}}>
+                                <label>Contextual Details</label>
+                                <div className="log-detail-context">
+                                    {selectedLog.details}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="admin-modal-footer">
+                        <button className="modal-submit-btn" onClick={() => setSelectedLog(null)}>
+                            Close Audit Detail
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* User Detail Modal */}
+        {selectedUser && (
+            <div className="admin-modal-overlay" onClick={() => setSelectedUser(null)}>
+                <div className="admin-modal-content" onClick={e => e.stopPropagation()} style={{maxWidth: '480px'}}>
+                    <div className="admin-modal-header">
+                        <div className="admin-modal-header-left">
+                            <div className="admin-modal-header-icon" style={{ background: 'rgba(253, 224, 71, 0.1)', color: 'var(--accent-color)' }}>
+                                <Users size={18} />
+                            </div>
+                            <div>
+                                <h3>Student Profile</h3>
+                                <p>Full digital identity details</p>
+                            </div>
+                        </div>
+                        <button className="admin-modal-close" onClick={() => setSelectedUser(null)}><X size={16} /></button>
+                    </div>
+                    <div className="admin-modal-body">
+                        <div className="user-profile-detail">
+                            <div className="profile-hero">
+                                <div className="profile-avatar-xl">
+                                    {selectedUser.photoURL ? (
+                                        <img src={selectedUser.photoURL} alt={selectedUser.name} />
+                                    ) : (
+                                        <div className="avatar-placeholder-xl">{selectedUser.name?.charAt(0) || 'S'}</div>
+                                    )}
+                                </div>
+                                <h2>{selectedUser.name || 'Anonymous Student'}</h2>
+                                <p>{selectedUser.email}</p>
+                            </div>
+
+                            <div className="detail-grid">
+                                <div className="detail-item">
+                                    <label>University (USN)</label>
+                                    <div className="value">{selectedUser.usn || 'Not provided'}</div>
+                                </div>
+                                <div className="detail-item">
+                                    <label>College Name</label>
+                                    <div className="value">{selectedUser.college || 'Not provided'}</div>
+                                </div>
+                                <div className="detail-item">
+                                    <label>Academic Branch</label>
+                                    <div className="value highlight">{selectedUser.branch || 'General'}</div>
+                                </div>
+                                <div className="detail-item">
+                                    <label>Current Year</label>
+                                    <div className="value">{selectedUser.year || 'N/A'}</div>
+                                </div>
+                                <div className="detail-item">
+                                    <label>Account Created</label>
+                                    <div className="value">{selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString() : 'Initial Setup'}</div>
+                                </div>
+                                <div className="detail-item">
+                                    <label>Last Updated</label>
+                                    <div className="value">{selectedUser.updatedAt ? new Date(selectedUser.updatedAt).toLocaleDateString() : 'Never'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="admin-modal-footer">
+                        <button className="modal-submit-btn primary" onClick={() => setSelectedUser(null)}>
+                            Done Reviewing
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* Peaked Folder Modal */}
+        {peakedFolder && (
+            <div className="admin-modal-overlay" onClick={() => setPeakedFolder(null)}>
+                <div className="admin-modal-content" onClick={e => e.stopPropagation()} style={{maxWidth: '600px'}}>
+                    <div className="peak-modal-header">
+                        <div className="peak-modal-title">
+                            <Folder size={24} color="var(--accent-color)" />
+                            <h3>Peaking inside: {peakedFolder.title}</h3>
+                        </div>
+                        <button className="admin-modal-close" onClick={() => setPeakedFolder(null)}><X size={18} /></button>
+                    </div>
+                    <div className="peak-modal-grid">
+                        {resources.filter(r => r.parentId === peakedFolder.id).length > 0 ? (
+                            resources.filter(r => r.parentId === peakedFolder.id).map(res => (
+                                <div key={res.id} className="peek-resource-item">
+                                    <div className="peek-res-info">
+                                        <h5>{res.title}</h5>
+                                        <p>{res.chapter || 'No chapter info'}</p>
+                                    </div>
+                                    <div className="res-actions">
+                                        <button onClick={() => setViewUrl(res.url)} className="btn-outline btn-sm">View</button>
+                                        <button onClick={() => { setPeakedFolder(null); handleEdit(res); }} className="btn-edit" style={{padding: '0.4rem'}}><Edit2 size={14} /></button>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div style={{textAlign: 'center', padding: '3rem', color: 'var(--text-muted)'}}>
+                                <p>This folder is currently empty.</p>
+                            </div>
+                        )}
+                    </div>
+                    <div className="admin-modal-footer">
+                        <button className="modal-submit-btn" style={{width: '100%', background: 'rgba(255,255,255,0.05)', color: 'white'}} onClick={() => setPeakedFolder(null)}>Close View</button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* View Document Modal */}
+        {viewUrl && <IframeModal url={viewUrl} onClose={() => setViewUrl(null)} />}
     </>
     );
 }

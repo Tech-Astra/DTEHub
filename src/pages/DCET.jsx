@@ -134,13 +134,20 @@ export default function DCET() {
                         <div key={item.id} className="folder-card card" onClick={() => handleView(item)}>
                             <div className="folder-icon-wrapper">
                                 {item.isFolder ? (
-                                    <Folder size={18} fill="var(--accent-color)" color="var(--accent-color)" />
+                                    <Folder size={20} color="#ffffff" strokeWidth={2.5} />
                                 ) : (
-                                    <FileText size={18} color="var(--text-muted)" />
+                                    <FileText size={20} color="#ffffff" strokeWidth={2} />
                                 )}
                             </div>
                             <div className="folder-info">
                                 <h3 className="folder-title" title={item.title}>{item.title}</h3>
+                                {!item.isFolder && (
+                                    <div className="res-card-meta" style={{ display: 'flex', gap: '0.5rem', marginTop: '0.2rem' }}>
+                                        <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>
+                                            Resources • Materials
+                                        </span>
+                                    </div>
+                                )}
                             </div>
 
                             {!item.isFolder && (

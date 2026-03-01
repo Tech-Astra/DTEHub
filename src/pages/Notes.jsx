@@ -180,26 +180,21 @@ export default function Notes() {
                         <div key={note.id} className="folder-card card" onClick={() => handleView(note)}>
                             <div className="folder-icon-wrapper">
                                 {note.isFolder ? (
-                                    <Folder size={18} fill="var(--accent-color)" color="var(--accent-color)" />
+                                    <Folder size={20} color="#ffffff" strokeWidth={2.5} />
                                 ) : note.type === 'Paper' ? (
-                                    <FileSpreadsheet size={18} color="#ef4444" />
+                                    <FileSpreadsheet size={20} color="#ffffff" strokeWidth={2} />
                                 ) : (
-                                    <FileText size={18} color="var(--text-muted)" />
+                                    <FileText size={20} color="#ffffff" strokeWidth={2} />
                                 )}
                             </div>
-                            <div className="folder-info" style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                            <div className="folder-info">
                                 <h3 className="folder-title" title={note.title}>{note.title}</h3>
-                                {!note.isFolder && note.type && (
-                                    <span style={{
-                                        fontSize: '0.65rem',
-                                        padding: '0.1rem 0.4rem',
-                                        borderRadius: '4px',
-                                        width: 'max-content',
-                                        backgroundColor: note.type === 'Paper' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(234, 179, 8, 0.1)',
-                                        color: note.type === 'Paper' ? '#ef4444' : '#eab308'
-                                    }}>
-                                        {note.type} • {note.chapter}
-                                    </span>
+                                {!note.isFolder && (
+                                    <div className="res-card-meta" style={{ display: 'flex', gap: '0.5rem', marginTop: '0.2rem' }}>
+                                        <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>
+                                            {note.academicYear} • {note.branch}
+                                        </span>
+                                    </div>
                                 )}
                             </div>
 
