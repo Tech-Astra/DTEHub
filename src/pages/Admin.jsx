@@ -314,16 +314,21 @@ export default function Admin() {
         if (!folderTitle.trim()) return;
         setIsSaving(true);
         try {
-            const folderRef = push(ref(database, `resources/${activeTab}`));
-            await set(folderRef, {
+            const folderData = {
                 title: folderTitle,
                 isFolder: true,
                 parentId: 'root',
-                syllabus,
-                semester,
                 branch,
                 timestamp: Date.now()
-            });
+            };
+
+            if (activeTab === 'notes') {
+                folderData.syllabus = syllabus;
+                folderData.semester = semester;
+            }
+
+            const folderRef = push(ref(database, `resources/${activeTab}`));
+            await set(folderRef, folderData);
 
             const statsRef = ref(database, 'stats/totalResources');
             runTransaction(statsRef, (count) => (count || 0) + 1);
@@ -404,16 +409,19 @@ export default function Admin() {
         setIsSaving(true);
         try {
             const newResource = {
-                title, url, syllabus, semester, branch,
+                title, url, branch,
                 isFolder: false, parentId: parentId || 'root',
                 timestamp: Date.now(),
             };
 
             if (activeTab === 'notes') {
+                newResource.syllabus = syllabus;
+                newResource.semester = semester;
                 newResource.chapter = chapter || 'General';
                 newResource.type = resourceType; // 'Note' or 'Paper'
             } else if (activeTab === 'dcet') {
                 newResource.chapter = chapter || 'Preparation';
+                newResource.type = resourceType; // Added as per user request
             }
 
             if (editingId) {
@@ -963,7 +971,7 @@ export default function Admin() {
                                                     {res.semester && <span className="res-tag">{res.semester}</span>}
                                                     <span className="res-tag">{res.branch}</span>
                                                     <span className="res-val">{res.chapter}</span>
-                                                    {activeTab === 'notes' && (
+                                                    {['notes', 'dcet'].includes(activeTab) && (
                                                         <span className="res-tag" style={{
                                                             backgroundColor: res.type === 'Paper' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(234, 179, 8, 0.1)', 
                                                             color: res.type === 'Paper' ? '#ef4444' : '#eab308'
@@ -1021,30 +1029,32 @@ export default function Admin() {
                         <div className="admin-modal-body">
                             <div className="modal-form">
                                 <div className="modal-field">
-                                    <label>Folder Name</label>
-                                    <input type="text" placeholder="e.g. Unit 1: OS Basics" value={folderTitle} onChange={e => setFolderTitle(e.target.value)} required />
+                                    <label>Folder Name (e.g. Subject or Unit Name)</label>
+                                    <input type="text" placeholder="e.g. Mathematics" value={folderTitle} onChange={e => setFolderTitle(e.target.value)} required />
                                 </div>
-                                <div className="modal-form-row">
-                                    <div className="modal-field">
-                                        <label>Syllabus</label>
-                                        <select value={syllabus} onChange={e => setSyllabus(e.target.value)}>
-                                            {syllabusesList.map(s => (
-                                                <option key={s.id} value={s.title}>{s.title} Scheme</option>
-                                            ))}
-                                        </select>
+                                {activeTab === 'notes' && (
+                                    <div className="modal-form-row">
+                                        <div className="modal-field">
+                                            <label>Syllabus</label>
+                                            <select value={syllabus} onChange={e => setSyllabus(e.target.value)}>
+                                                {syllabusesList.map(s => (
+                                                    <option key={s.id} value={s.title}>{s.title} Scheme</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="modal-field">
+                                            <label>Semester</label>
+                                            <select value={semester} onChange={e => setSemester(e.target.value)}>
+                                                <option value="1st Sem">1st Sem</option>
+                                                <option value="2nd Sem">2nd Sem</option>
+                                                <option value="3rd Sem">3rd Sem</option>
+                                                <option value="4th Sem">4th Sem</option>
+                                                <option value="5th Sem">5th Sem</option>
+                                                <option value="6th Sem">6th Sem</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                    <div className="modal-field">
-                                        <label>Semester</label>
-                                        <select value={semester} onChange={e => setSemester(e.target.value)}>
-                                            <option value="1st Sem">1st Sem</option>
-                                            <option value="2nd Sem">2nd Sem</option>
-                                            <option value="3rd Sem">3rd Sem</option>
-                                            <option value="4th Sem">4th Sem</option>
-                                            <option value="5th Sem">5th Sem</option>
-                                            <option value="6th Sem">6th Sem</option>
-                                        </select>
-                                    </div>
-                                </div>
+                                )}
                                 <div className="modal-form-row">
                                     <div className="modal-field">
                                         <label>Branch</label>
@@ -1099,55 +1109,55 @@ export default function Admin() {
                                     <input type="text" placeholder="Resource title" required value={title} onChange={e => setTitle(e.target.value)} />
                                 </div>
                                 <div className="modal-field">
-                                    <label>Drive URL</label>
-                                    <div className="input-icon-wrap">
-                                        <LinkIcon size={15} />
-                                        <input type="url" placeholder="https://drive.google.com/..." required value={url} onChange={e => setUrl(e.target.value)} />
-                                    </div>
+                                    <label>URL / Direct Link</label>
+                                    <input type="url" placeholder="Paste link here" required value={url} onChange={e => setUrl(e.target.value)} />
                                 </div>
                                 <div className="modal-form-row">
                                     <div className="modal-field">
-                                        <label>Syllabus</label>
-                                        <select required value={syllabus} onChange={e => setSyllabus(e.target.value)}>
-                                            {syllabusesList.map(s => (
-                                                <option key={s.id} value={s.title}>{s.title} Scheme</option>
-                                            ))}
-                                        </select>
+                                        <label>Resource Type</label>
+                                        <div className="type-toggle-premium">
+                                            <button type="button" className={resourceType === 'Note' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setResourceType('Note'); }}>Notes</button>
+                                            <button type="button" className={resourceType === 'Paper' ? 'active' : ''} onClick={(e) => { e.preventDefault(); setResourceType('Paper'); }}>Question Paper</button>
+                                        </div>
                                     </div>
                                     <div className="modal-field">
-                                        <label>Semester</label>
-                                        <select required value={semester} onChange={e => setSemester(e.target.value)}>
-                                            <option value="1st Sem">1st Sem</option>
-                                            <option value="2nd Sem">2nd Sem</option>
-                                            <option value="3rd Sem">3rd Sem</option>
-                                            <option value="4th Sem">4th Sem</option>
-                                            <option value="5th Sem">5th Sem</option>
-                                            <option value="6th Sem">6th Sem</option>
-                                        </select>
+                                        <label>Chapter / Year (Optional)</label>
+                                        <input type="text" placeholder="e.g. 2024 Exam" value={chapter} onChange={e => setChapter(e.target.value)} />
                                     </div>
                                 </div>
+                                {activeTab === 'notes' && (
+                                    <div className="modal-form-row">
+                                        <div className="modal-field">
+                                            <label>Syllabus</label>
+                                            <select required value={syllabus} onChange={e => setSyllabus(e.target.value)}>
+                                                {syllabusesList.map(s => (
+                                                    <option key={s.id} value={s.title}>{s.title} Scheme</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="modal-field">
+                                            <label>Semester</label>
+                                            <select required value={semester} onChange={e => setSemester(e.target.value)}>
+                                                <option value="1st Sem">1st Sem</option>
+                                                <option value="2nd Sem">2nd Sem</option>
+                                                <option value="3rd Sem">3rd Sem</option>
+                                                <option value="4th Sem">4th Sem</option>
+                                                <option value="5th Sem">5th Sem</option>
+                                                <option value="6th Sem">6th Sem</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                )}
                                 <div className="modal-form-row">
                                     <div className="modal-field">
-                                        <label>Branch</label>
+                                        <label>Branch Linkage</label>
                                         <select required value={branch} onChange={e => setBranch(e.target.value)}>
+                                            <option value="Common">Common to All</option>
                                             {branchesList.map((b) => (
                                                 <option key={b.id} value={b.title}>{b.title}</option>
                                             ))}
                                         </select>
                                     </div>
-                                </div>
-                                {activeTab === 'notes' && (
-                                    <div className="modal-field">
-                                        <label>Resource Type</label>
-                                        <select required value={resourceType} onChange={e => setResourceType(e.target.value)}>
-                                            <option value="Note">Notes</option>
-                                            <option value="Paper">Question Paper</option>
-                                        </select>
-                                    </div>
-                                )}
-                                <div className="modal-field">
-                                    <label>{activeTab === 'notes' ? 'Chapter / Module Name' : 'Topic'}</label>
-                                    <input type="text" placeholder={activeTab === 'notes' ? 'e.g. Unit 3: Deadlocks' : 'e.g. Mathematics'} required value={chapter} onChange={e => setChapter(e.target.value)} />
                                 </div>
                             </div>
                         </div>
