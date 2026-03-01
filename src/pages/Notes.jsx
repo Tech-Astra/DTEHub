@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Download, Folder, FileText, FileSpreadsheet, Eye, Plus, Heart, FilterX, ChevronDown, Filter } from 'lucide-react';
+import { Search, Download, Folder, FileText, FileSpreadsheet, Eye, Plus, Heart, FilterX, ChevronDown, Filter, ChevronLeft } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext';
 import { ref, onValue } from 'firebase/database';
 import { database } from '../firebase';
@@ -14,6 +14,7 @@ export default function Notes() {
     const [openWindows, setOpenWindows] = useState(() => loadWorkspace());
     const [nextZ, setNextZ] = useState(10);
     const [currentFolder, setCurrentFolder] = useState(null);
+    const [activeCardId, setActiveCardId] = useState(null);
 
     // Dynamic Filter Lists
     const [branches, setBranches] = useState([]);
@@ -38,6 +39,15 @@ export default function Notes() {
 
     // Persist workspace to localStorage on every change
     useEffect(() => { saveWorkspace(openWindows); }, [openWindows]);
+
+    // Handle click outside to clear active card on mobile
+    useEffect(() => {
+        const handleClickOutside = () => {
+            if (activeCardId) setActiveCardId(null);
+        };
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, [activeCardId]);
 
     // Fetch master data for filters
     useEffect(() => {
@@ -88,7 +98,6 @@ export default function Notes() {
             if (existing) {
                 return prev.map(w => w.id === note.id ? { ...w, state: 'normal', zOrder: nextZ } : w);
             }
-            // Stagger: 1st left, 2nd right, 3rd+ cascade from top-left
             const idx = prev.length % 5;
             const vw = window.innerWidth;
             const ww = Math.min(640, vw * 0.48);
@@ -316,6 +325,23 @@ export default function Notes() {
 
                 {/* Breadcrumbs */}
                 <div className="breadcrumbs" style={{ margin: '1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                    {currentFolder && (
+                        <button
+                            onClick={() => {
+                                const parent = notesData.find(n => n.id === currentFolder.parentId);
+                                setCurrentFolder(parent || null);
+                            }}
+                            className="btn-back-nav"
+                            style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)',
+                                border: '1px solid rgba(255,255,255,0.1)', color: 'var(--accent-color)', cursor: 'pointer', marginRight: '0.5rem'
+                            }}
+                            title="Go Back"
+                        >
+                            <ChevronLeft size={20} strokeWidth={3} />
+                        </button>
+                    )}
                     <span onClick={() => setCurrentFolder(null)} style={{ cursor: 'pointer', color: !currentFolder ? 'var(--accent-color)' : 'inherit', fontWeight: !currentFolder ? '600' : '400' }}>
                         All Resources
                     </span>
@@ -333,54 +359,71 @@ export default function Notes() {
                     </div>
                 ) : filteredNotes.length > 0 ? (
                     <div className="notes-grid">
-                        {filteredNotes.map(note => (
-                            <div key={note.id} className="folder-card card" onClick={() => handleView(note)}>
-                                <div className="folder-icon-wrapper">
-                                    {note.isFolder ? (
-                                        <Folder size={20} color="#ffffff" strokeWidth={2.5} />
-                                    ) : note.type === 'Paper' ? (
-                                        <FileSpreadsheet size={20} color="#ffffff" strokeWidth={2} />
-                                    ) : (
-                                        <FileText size={20} color="#ffffff" strokeWidth={2} />
-                                    )}
-                                </div>
-                                <div className="folder-info">
-                                    <h3 className="folder-title" title={note.title}>{note.title}</h3>
-                                    {!note.isFolder && (
-                                        <div className="res-card-meta" style={{ display: 'flex', gap: '0.5rem', marginTop: '0.2rem' }}>
-                                            <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>
-                                                {note.syllabus || note.academicYear} • {note.semester} • {note.branch}
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
-                                {!note.isFolder && (
-                                    <div className="folder-actions-overlay">
-                                        <div className="action-button-group">
-                                            <button
-                                                className={`circle-action-btn btn-add ${isFavorited(note.id, 'note') ? 'active' : ''}`}
-                                                onClick={(e) => { e.stopPropagation(); handleFavorite(note); }}
-                                                title={isFavorited(note.id, 'note') ? "Remove from Favorites" : "Add to Favorites"}
-                                            >
-                                                {isFavorited(note.id, 'note') ? <Heart size={20} fill="white" /> : <Plus size={20} />}
-                                            </button>
-                                            <button className="circle-action-btn btn-view"
-                                                onClick={(e) => { e.stopPropagation(); handleView(note); }}
-                                                title="Quick View"
-                                            >
-                                                <Eye size={20} />
-                                            </button>
-                                            <button className="circle-action-btn btn-download"
-                                                onClick={(e) => { e.stopPropagation(); handleDownload(note); }}
-                                                title="Download"
-                                            >
-                                                <Download size={20} />
-                                            </button>
-                                        </div>
+                        {filteredNotes.map(note => {
+                            const isActive = activeCardId === note.id;
+
+                            return (
+                                <div
+                                    key={note.id}
+                                    className={`folder-card card ${isActive ? 'active-mobile' : ''}`}
+                                    onClick={(e) => {
+                                        if (window.innerWidth <= 768 && !note.isFolder) {
+                                            if (!isActive) {
+                                                e.stopPropagation();
+                                                setActiveCardId(note.id);
+                                                return;
+                                            }
+                                        }
+                                        handleView(note);
+                                    }}
+                                >
+                                    <div className="folder-icon-wrapper">
+                                        {note.isFolder ? (
+                                            <Folder size={20} color="#ffffff" strokeWidth={2.5} />
+                                        ) : note.type === 'Paper' ? (
+                                            <FileSpreadsheet size={20} color="#ffffff" strokeWidth={2} />
+                                        ) : (
+                                            <FileText size={20} color="#ffffff" strokeWidth={2} />
+                                        )}
                                     </div>
-                                )}
-                            </div>
-                        ))}
+                                    <div className="folder-info">
+                                        <h3 className="folder-title" title={note.title}>{note.title}</h3>
+                                        {!note.isFolder && (
+                                            <div className="res-card-meta" style={{ display: 'flex', gap: '0.5rem', marginTop: '0.2rem' }}>
+                                                <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>
+                                                    {note.syllabus || note.academicYear} • {note.semester} • {note.branch}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    {!note.isFolder && (
+                                        <div className="folder-actions-overlay">
+                                            <div className="action-button-group">
+                                                <button
+                                                    className={`circle-action-btn btn-add ${isFavorited(note.id, 'note') ? 'active' : ''}`}
+                                                    onClick={(e) => { e.stopPropagation(); handleFavorite(note); }}
+                                                    title={isFavorited(note.id, 'note') ? "Remove from Favorites" : "Add to Favorites"}
+                                                >
+                                                    {isFavorited(note.id, 'note') ? <Heart size={20} fill="white" /> : <Plus size={20} />}
+                                                </button>
+                                                <button className="circle-action-btn btn-view"
+                                                    onClick={(e) => { e.stopPropagation(); handleView(note); }}
+                                                    title="Quick View"
+                                                >
+                                                    <Eye size={20} />
+                                                </button>
+                                                <button className="circle-action-btn btn-download"
+                                                    onClick={(e) => { e.stopPropagation(); handleDownload(note); }}
+                                                    title="Download"
+                                                >
+                                                    <Download size={20} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                 ) : (
                     <div style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-muted)' }}>

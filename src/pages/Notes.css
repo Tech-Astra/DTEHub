@@ -117,7 +117,8 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.folder-card:hover .folder-actions-overlay {
+.folder-card:hover .folder-actions-overlay,
+.folder-card.active-mobile .folder-actions-overlay {
     opacity: 1;
     pointer-events: auto;
 }
