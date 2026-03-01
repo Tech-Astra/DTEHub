@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuthContext } from '../context/AuthContext';
-import { ref, onValue, set } from 'firebase/database';
+import { ref, onValue, set, runTransaction } from 'firebase/database';
 import { database } from '../firebase';
 import { Save, User, Building, Hash, GraduationCap } from 'lucide-react';
 import CustomSelect from './CustomSelect';
@@ -64,6 +64,8 @@ export default function ProfileOnboardingModal() {
                 ...profileData,
                 updatedAt: Date.now()
             });
+            // Atomically increment the verified users count for the public stats bar
+            runTransaction(ref(database, 'stats/totalVerifiedUsers'), (current) => (current || 0) + 1);
             setNeedsProfile(false);
         } catch (error) {
             console.error("Error saving profile details:", error);

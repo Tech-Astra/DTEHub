@@ -129,8 +129,13 @@ export default function Home() {
                         Explore All Resources <ArrowRight size={20} />
                     </button>
 
-
-                </div>
+                    <div className="home-stats-bar">
+                        <AnimatedCounter value={stats.visits} label="Total Visits" />
+                        <div className="stat-divider"></div>
+                        <AnimatedCounter value={stats.users} label="Verified Users" />
+                        <div className="stat-divider"></div>
+                        <AnimatedCounter value={stats.resources} label="Available Resources" />
+                    </div>                </div>
             </main>
 
             {/* What People Say - Scrolling Marquee Section */}
