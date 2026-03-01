@@ -339,24 +339,47 @@ body.workspace-active .floating-dock-left {
 .ws-section-header {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    font-size: 0.85rem;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    padding: 0 0.5rem;
+}
+
+.ws-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: white;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-muted);
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    font-size: 0.95rem;
+}
+
+.ws-view-full-link {
+    background: none;
+    border: none;
+    color: var(--accent-color);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: all 0.2s;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.ws-view-full-link:hover {
+    opacity: 1;
+    background: rgba(253, 224, 71, 0.1);
 }
 
 .ws-count {
-    margin-left: auto;
     background: var(--accent-color);
     color: #000;
-    font-size: 0.7rem;
-    font-weight: 800;
-    padding: 0.1rem 0.5rem;
+    font-size: 0.65rem;
+    font-weight: 900;
+    padding: 0.1rem 0.45rem;
     border-radius: var(--radius-full);
+    min-width: 1.2rem;
+    text-align: center;
 }
 
 .ws-icon-red {
@@ -417,25 +440,8 @@ body.workspace-active .floating-dock-left {
     padding: 0.5rem 0.75rem;
 }
 
-.ws-view-all {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.9rem;
-    border-radius: var(--radius-md);
-    background: rgba(253, 224, 71, 0.08);
-    color: var(--accent-color);
-    font-weight: 700;
-    font-size: 0.9rem;
-    border: 1px solid rgba(253, 224, 71, 0.15);
-    margin-top: auto;
-    transition: all 0.2s;
-}
-
-.ws-view-all:hover {
-    background: rgba(253, 224, 71, 0.15);
-    transform: translateY(-2px);
+.ws-icon-purple {
+    color: #a855f7;
 }
 
 @keyframes gold-pulse {

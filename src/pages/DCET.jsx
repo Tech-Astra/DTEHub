@@ -91,6 +91,7 @@ export default function DCET() {
     const handleDownload = (item) => {
         if (!item.url) return;
         
+        // Convert to download link if it's a direct file
         let downloadLink = item.url;
         if (item.url.includes('drive.google.com/file/d/')) {
             const fileId = item.url.split('/d/')[1]?.split('/')[0];

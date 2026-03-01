@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ref, onValue, push, set, serverTimestamp } from 'firebase/database';
+import { ref, onValue, push, set, serverTimestamp, remove, get } from 'firebase/database';
 import { database } from '../firebase';
 
 /**
@@ -21,8 +21,27 @@ export function useUserWorkspace(user) {
     preferences: { branch: '', syllabus: '', semester: '' }
   });
   const [loading, setLoading] = useState(true);
+  const [resourceKeys, setResourceKeys] = useState(new Set());
 
   const basePath = user ? `users/${user.uid}/workspace` : null;
+
+  // Listen for ALL valid resource IDs to handle cleanup of deleted files
+  useEffect(() => {
+    const resRef = ref(database, 'resources');
+    const unsub = onValue(resRef, (snap) => {
+      const data = snap.val() || {};
+      const keys = new Set();
+      Object.keys(data).forEach(cat => {
+        if (data[cat] && typeof data[cat] === 'object') {
+          Object.keys(data[cat]).forEach(id => {
+            keys.add(`${cat}_${id}`);
+          });
+        }
+      });
+      setResourceKeys(keys);
+    });
+    return () => unsub();
+  }, []);
 
   // Listen for workspace data in real-time
   useEffect(() => {
@@ -38,20 +57,40 @@ export function useUserWorkspace(user) {
         const data = snapshot.val() || {};
 
         // Convert Firebase objects to sorted arrays (newest first)
-        const toArray = (obj) =>
-          obj
-            ? Object.entries(obj)
-                .map(([key, val]) => ({ id: key, ...val }))
-                .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
-            : [];
+        const toArray = (obj) => {
+          if (!obj) return [];
+          const entries = Object.entries(obj).map(([key, val]) => ({ id: key, ...val }));
+          
+          // Secondary deduplication & cleanup of deleted resources
+          const seen = new Set();
+          const uniqueEntries = entries.filter(item => {
+            // Keep searches (they don't have itemId)
+            if (!item.itemId || !item.type) return true;
 
-        setWorkspace({
+            // Check if resource still exists
+            const typeId = `${item.type}_${item.itemId}`;
+            if (resourceKeys.size > 0 && !resourceKeys.has(typeId)) {
+                return false; 
+            }
+
+            const deDupKey = `${item.type}_${item.itemId}`;
+            if (seen.has(deDupKey)) return false;
+            seen.add(deDupKey);
+            return true;
+          });
+
+          return uniqueEntries.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        };
+
+        const workspaceData = {
           recentlyViewed: toArray(data.recentlyViewed),
           downloads: toArray(data.downloads),
           searchHistory: toArray(data.searchHistory),
           favorites: toArray(data.favorites),
           preferences: data.preferences || { branch: '', syllabus: '', semester: '' }
-        });
+        };
+
+        setWorkspace(workspaceData);
         setLoading(false);
       },
       (err) => {
@@ -67,8 +106,12 @@ export function useUserWorkspace(user) {
 
   const addRecentlyViewed = useCallback(
     async (item) => {
-      if (!basePath) return;
-      const itemRef = push(ref(database, `${basePath}/recentlyViewed`));
+      if (!basePath || !item.itemId) return;
+      
+      // Use deterministic ID to prevent duplicates at DB level
+      const recordId = `${item.type}_${item.itemId}`;
+      const itemRef = ref(database, `${basePath}/recentlyViewed/${recordId}`);
+      
       await set(itemRef, {
         ...item,
         timestamp: serverTimestamp(),
@@ -79,8 +122,12 @@ export function useUserWorkspace(user) {
 
   const addDownload = useCallback(
     async (item) => {
-      if (!basePath) return;
-      const itemRef = push(ref(database, `${basePath}/downloads`));
+      if (!basePath || !item.itemId) return;
+
+      // Use deterministic ID to prevent duplicates at DB level
+      const recordId = `${item.type}_${item.itemId}`;
+      const itemRef = ref(database, `${basePath}/downloads/${recordId}`);
+      
       await set(itemRef, {
         ...item,
         timestamp: serverTimestamp(),
@@ -92,9 +139,12 @@ export function useUserWorkspace(user) {
   const addSearchQuery = useCallback(
     async (query) => {
       if (!basePath || !query.trim()) return;
-      const queryRef = push(ref(database, `${basePath}/searchHistory`));
+      const trimmedQuery = query.trim();
+      const queryId = btoa(trimmedQuery.toLowerCase()).replace(/[/+=]/g, '_'); // Safe ID
+
+      const queryRef = ref(database, `${basePath}/searchHistory/${queryId}`);
       await set(queryRef, {
-        query: query.trim(),
+        query: trimmedQuery,
         timestamp: serverTimestamp(),
       });
     },
@@ -104,24 +154,22 @@ export function useUserWorkspace(user) {
   const toggleFavorite = useCallback(
     async (item) => {
       if (!basePath) return;
-      // Check if already favorited
-      const existing = workspace.favorites.find(
-        (f) => f.itemId === item.itemId && f.type === item.type
-      );
-      if (existing) {
-        // Remove favorite
-        const favRef = ref(database, `${basePath}/favorites/${existing.id}`);
-        await set(favRef, null);
+      
+      // Use deterministic ID for favorites too
+      const recordId = `${item.type}_${item.itemId}`;
+      const favRef = ref(database, `${basePath}/favorites/${recordId}`);
+      
+      const snapshot = await get(favRef);
+      if (snapshot.exists()) {
+        await remove(favRef);
       } else {
-        // Add favorite
-        const favRef = push(ref(database, `${basePath}/favorites`));
         await set(favRef, {
           ...item,
           timestamp: serverTimestamp(),
         });
       }
     },
-    [basePath, workspace.favorites]
+    [basePath]
   );
 
   const isFavorited = useCallback(
