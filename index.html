@@ -5,12 +5,67 @@
   <meta charset="UTF-8" />
   <link rel="icon" type="image/png" href="/favicon.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DTEHub</title>
+  <meta name="theme-color" content="#181c22" />
+  
+  <!-- Manifest & Mobile Tags -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DTEHub" />
+  <link rel="apple-touch-icon" href="/favicon.png" />
+
+  <!-- SEO Meta Tags -->
+  <title>DTEHub | Premium Diploma Study Resources & DCET Rank Predictor</title>
+  <meta name="description" content="DTEHub is the ultimate study platform for Diploma students. Access high-quality notes, DCET question papers, previous year papers, and predict your rank with our accurate DCET Rank Predictor tool." />
+  <meta name="keywords" content="DTE Karnataka, Diploma Notes, DCET 2026, DCET Rank Predictor, Diploma Semester Results, Diploma Study Materials, Karnataka DTEHub, Tech-Astra" />
+  <meta name="author" content="Tech-Astra" />
+  
+  <link rel="canonical" href="https://dte-hub.web.app/" />
+
+  <!-- Open Graph / Social Sharing -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://dte-hub.web.app/" />
+  <meta property="og:title" content="DTEHub | Premium Diploma Study Resources" />
+  <meta property="og:description" content="Centralized hub for Diploma students. Get premium notes, DCET resources, and rank predictions. Free for all students." />
+  <meta property="og:image" content="https://dte-hub.web.app/favicon.png" />
+
+  <!-- Twitter Card -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://dte-hub.web.app/" />
+  <meta property="twitter:title" content="DTEHub | Premium Diploma Study Resources" />
+  <meta property="twitter:description" content="Centralized hub for Diploma students. Access premium notes and DCET tools." />
+  <meta property="twitter:image" content="https://dte-hub.web.app/favicon.png" />
+
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "EducationalOrganization",
+      "name": "DTEHub",
+      "url": "https://dte-hub.web.app/",
+      "logo": "https://dte-hub.web.app/favicon.png",
+      "description": "Premium study resource platform for Diploma students in Karnataka.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://dte-hub.web.app/notes?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+  </script>
 </head>
 
 <body>
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then((reg) => console.log('Service Worker Registered!', reg))
+          .catch((err) => console.log('Service Worker Error!', err));
+      });
+    }
+  </script>
 </body>
 
 </html>
