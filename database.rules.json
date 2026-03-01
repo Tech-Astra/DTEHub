@@ -15,7 +15,7 @@
     "users": {
       ".read": "auth != null",
       "$uid": {
-        ".read": "auth != null && (auth.uid === $uid || root.child('admins').hasChild(auth.email.replace('.', ',')))",
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'shivarajmani2005@gmail.com' || auth.token.email === 'vivekvernekar02@gmail.com' || auth.token.email === 'contactus.techastra@gmail.com')",
         ".write": "auth != null && auth.uid === $uid"
       }
     },
@@ -27,17 +27,17 @@
     },
     "notes": {
       ".read": true,
-      ".write": "auth != null && root.child('admins').hasChild(auth.email.replace('.', ','))",
+      ".write": "auth != null && (auth.token.email == 'shivarajmani2005@gmail.com' || auth.token.email == 'vivekvernekar02@gmail.com' || auth.token.email == 'contactus.techastra@gmail.com' || root.child('admins').hasChild(auth.token.email.replace('.', ',')))",
       ".indexOn": ["academicYear", "branch", "parentId"]
     },
     "papers": {
       ".read": true,
-      ".write": "auth != null && root.child('admins').hasChild(auth.email.replace('.', ','))",
+      ".write": "auth != null && (auth.token.email == 'shivarajmani2005@gmail.com' || auth.token.email == 'vivekvernekar02@gmail.com' || auth.token.email == 'contactus.techastra@gmail.com' || root.child('admins').hasChild(auth.token.email.replace('.', ',')))",
       ".indexOn": ["academicYear", "branch", "parentId"]
     },
     "dcet": {
       ".read": true,
-      ".write": "auth != null && root.child('admins').hasChild(auth.email.replace('.', ','))",
+      ".write": "auth != null && (auth.token.email == 'shivarajmani2005@gmail.com' || auth.token.email == 'vivekvernekar02@gmail.com' || auth.token.email == 'contactus.techastra@gmail.com' || root.child('admins').hasChild(auth.token.email.replace('.', ',')))",
       ".indexOn": ["academicYear", "branch", "parentId"]
     },
     "admins": {

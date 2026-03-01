@@ -46,6 +46,8 @@ export default function Admin() {
     const { user, loading, logout } = useAuthContext();
     const [activeTab, setActiveTab] = useState('dashboard');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [showFolderModal, setShowFolderModal] = useState(false);
+    const [showResourceModal, setShowResourceModal] = useState(false);
     
     // Form States
     const [title, setTitle] = useState('');
@@ -103,7 +105,7 @@ export default function Admin() {
 
             if (['notes', 'papers', 'dcet'].includes(activeTab)) {
                 // Fetch Resources for specific tab
-                const resourcesRef = ref(database, `resources/${activeTab}`);
+                const resourcesRef = ref(database, activeTab);
                 unsubscribeResources = onValue(resourcesRef, (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
@@ -122,11 +124,11 @@ export default function Admin() {
                 // Approximate charts data logic
                 const computeCharts = async () => {
                    let n = 0, p = 0, d = 0;
-                   const snapN = await get(ref(database, 'resources/notes'));
+                   const snapN = await get(ref(database, 'notes'));
                    if(snapN.exists()) n = Object.keys(snapN.val()).length;
-                   const snapP = await get(ref(database, 'resources/papers'));
+                   const snapP = await get(ref(database, 'papers'));
                    if(snapP.exists()) p = Object.keys(snapP.val()).length;
-                   const snapD = await get(ref(database, 'resources/dcet'));
+                   const snapD = await get(ref(database, 'dcet'));
                    if(snapD.exists()) d = Object.keys(snapD.val()).length;
                    setCatData([
                        { name: 'Notes', val: n || 10 },
@@ -161,7 +163,7 @@ export default function Admin() {
         if (!folderTitle.trim()) return;
         setIsSaving(true);
         try {
-            const folderRef = push(ref(database, `resources/${activeTab}`));
+            const folderRef = push(ref(database, activeTab));
             await set(folderRef, {
                 title: folderTitle,
                 isFolder: true,
@@ -175,6 +177,7 @@ export default function Admin() {
             runTransaction(statsRef, (count) => (count || 0) + 1);
 
             setFolderTitle('');
+            setShowFolderModal(false);
             alert("New folder created!");
         } catch (err) {
             console.error(err);
@@ -198,16 +201,17 @@ export default function Admin() {
             else if (activeTab === 'dcet') newResource.chapter = chapter || 'Preparation';
 
             if (editingId) {
-                await set(ref(database, `resources/${activeTab}/${editingId}`), newResource);
+                await set(ref(database, `${activeTab}/${editingId}`), newResource);
                 alert(`${activeTab.slice(0, -1)} updated!`);
             } else {
-                const resourceRef = push(ref(database, `resources/${activeTab}`));
+                const resourceRef = push(ref(database, activeTab));
                 await set(resourceRef, newResource);
                 const statsRef = ref(database, 'stats/totalResources');
                 runTransaction(statsRef, (count) => (count || 0) + 1);
                 alert(`New ${activeTab.slice(0, -1)} added!`);
             }
             setTitle(''); setUrl(''); setChapter(''); setEditingId(null);
+            setShowResourceModal(false);
         } catch (error) {
             alert("Failed to save.");
         } finally {
@@ -224,6 +228,7 @@ export default function Admin() {
         setChapter(activeTab === 'notes' ? res.chapter : res.year);
         setIsFolder(res.isFolder || false);
         setParentId(res.parentId || 'root');
+        setShowResourceModal(true);
     };
 
     const handleSyncStats = async () => {
@@ -234,7 +239,7 @@ export default function Admin() {
 
             let resourceCount = 0;
             for (const cat of ['notes', 'papers', 'dcet']) {
-                const snap = await get(ref(database, `resources/${cat}`));
+                const snap = await get(ref(database, cat));
                 if (snap.exists()) resourceCount += Object.keys(snap.val()).length;
             }
 
@@ -250,7 +255,7 @@ export default function Admin() {
 
     const handleMove = async (res, newParentId) => {
         try {
-            await set(ref(database, `resources/${activeTab}/${res.id}/parentId`), newParentId);
+            await set(ref(database, `${activeTab}/${res.id}/parentId`), newParentId);
         } catch (err) {
             console.error("Move failed", err);
         }
@@ -259,7 +264,7 @@ export default function Admin() {
     const handleDelete = async (id) => {
         if (window.confirm("Delete this resource?")) {
             try {
-                await remove(ref(database, `resources/${activeTab}/${id}`));
+                await remove(ref(database, `${activeTab}/${id}`));
                 const statsRef = ref(database, 'stats/totalResources');
                 runTransaction(statsRef, (count) => Math.max(0, (count || 0) - 1));
             } catch (err) {
@@ -302,9 +307,6 @@ export default function Admin() {
                     <button className={`sidebar-btn ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
                         <Users size={18} /> Users
                     </button>
-                    <button className="sidebar-btn" onClick={handleSyncStats}>
-                        <RefreshCw size={18} className={isSaving ? 'spin' : ''} /> Sync Database
-                    </button>
                 </div>
                 
                 <div className="sidebar-bottom">
@@ -329,8 +331,12 @@ export default function Admin() {
                             <span className="user-name">WEB ADMIN</span>
                             <span className="user-email">{user.email}</span>
                         </div>
-                        <div className="user-avatar">
-                            <span role="img" aria-label="user">👨‍💻</span>
+                        <div className="user-avatar" style={{ overflow: 'hidden' }}>
+                            {user?.photoURL ? (
+                                <img src={user.photoURL} alt="Admin" style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
+                            ) : (
+                                <span role="img" aria-label="user">👨‍💻</span>
+                            )}
                         </div>
                     </div>
                 </header>
@@ -515,97 +521,25 @@ export default function Admin() {
                             </div>
                         </div>
                     ) : (
-                        <div className="admin-content-grid animate-fade">
-                            <div className="admin-sidebar-forms">
-                                <div className="admin-card card folder-create-card">
-                                    <div className="card-header-with-icon">
-                                        <FolderPlus size={20} color="var(--accent-color)" />
-                                        <h3>Create New Folder</h3>
-                                    </div>
-                                    <form onSubmit={handleAddFolder} className="admin-form-mini" style={{flexDirection: 'column', gap: '0.75rem'}}>
-                                        <input type="text" placeholder="e.g. Unit 1: OS Basics" value={folderTitle} onChange={e => setFolderTitle(e.target.value)} required />
-                                        <div className="form-row" style={{gap: '0.5rem'}}>
-                                            <select value={academicYear} onChange={e => setAcademicYear(e.target.value)} style={{fontSize: '0.8rem', padding: '0.4rem'}}>
-                                                <option value="">Year (All)</option>
-                                                <option value="1st Year">1st Year</option>
-                                                <option value="2nd Year">2nd Year</option>
-                                                <option value="3rd Year">3rd Year</option>
-                                            </select>
-                                            <select value={branch} onChange={e => setBranch(e.target.value)} style={{fontSize: '0.8rem', padding: '0.4rem'}}>
-                                                <option value="">Branch (All)</option>
-                                                <option value="Common">Common</option>
-                                                <option value="Computer Science">CS</option>
-                                                <option value="Mechanical">Mechanical</option>
-                                            </select>
-                                        </div>
-                                        <button type="submit" className="btn-primary" disabled={isSaving} style={{width: '100%', marginTop: '0.5rem'}}>
-                                            <Plus size={16} /> Create Folder
-                                        </button>
-                                    </form>
-                                </div>
-
-                                <div className="admin-card card form-card">
-                                    <h3>{editingId ? 'Edit' : 'Add'} {activeTab === 'notes' ? 'Note' : activeTab === 'papers' ? 'Paper' : 'DCET Resource'}</h3>
-                                    <form className="admin-form" onSubmit={handleAddResource}>
-                                        {editingId && (
-                                            <div className="editing-banner">
-                                                <span>Editing: <strong>{title}</strong></span>
-                                                <button type="button" onClick={() => {setEditingId(null); setTitle('');}} className="btn-text">Cancel</button>
-                                            </div>
-                                        )}
-                                        <div className="form-group">
-                                            <label>Inside Folder:</label>
-                                            <select value={parentId} onChange={e => setParentId(e.target.value)}>
-                                                <option value="root">Main Directory (Root)</option>
-                                                {foldersList.map(f => <option key={f.id} value={f.id}>📁 {f.title}</option>)}
-                                            </select>
-                                        </div>
-                                        <div className="form-group">
-                                            <label>Title</label>
-                                            <input type="text" required value={title} onChange={e => setTitle(e.target.value)} />
-                                        </div>
-                                        <div className="form-group">
-                                            <label>Drive URL</label>
-                                            <div className="input-with-icon">
-                                                <LinkIcon size={16} />
-                                                <input type="url" required value={url} onChange={e => setUrl(e.target.value)} />
-                                            </div>
-                                        </div>
-                                        <div className="form-row">
-                                            <div className="form-group">
-                                                <label>Year</label>
-                                                <select required value={academicYear} onChange={e => setAcademicYear(e.target.value)}>
-                                                    <option value="" disabled>Select</option>
-                                                    <option value="1st Year">1st Year</option>
-                                                    <option value="2nd Year">2nd Year</option>
-                                                    <option value="3rd Year">3rd Year</option>
-                                                </select>
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Branch</label>
-                                                <select required value={branch} onChange={e => setBranch(e.target.value)}>
-                                                    <option value="" disabled>Select</option>
-                                                    <option value="Common">Common</option>
-                                                    <option value="Computer Science">CS</option>
-                                                    <option value="Mechanical">Mechanical</option>
-                                                    <option value="Civil">Civil</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div className="form-group">
-                                            <label>{activeTab === 'notes' ? 'Chapter/Module' : activeTab === 'papers' ? 'Exam Year' : 'Topic'}</label>
-                                            <input type="text" required value={chapter} onChange={e => setChapter(e.target.value)} />
-                                        </div>
-                                        <button type="submit" className="btn-primary w-full" disabled={isSaving}>
-                                            {isSaving ? 'Saving...' : <>{editingId ? <Edit2 size={18} /> : <Plus size={18} />} {editingId ? 'Update' : 'Add'} Resource</>}
-                                        </button>
-                                    </form>
+                        <div className="animate-fade">
+                            <div className="admin-header-actions">
+                                <h3>Manage {activeTab.toUpperCase()}</h3>
+                                <div className="admin-action-buttons">
+                                    <button className="btn-outline" onClick={() => setShowFolderModal(true)}>
+                                        <FolderPlus size={16} /> New Folder
+                                    </button>
+                                    <button className="btn-primary" onClick={() => {
+                                        setEditingId(null);
+                                        setTitle(''); setUrl(''); setChapter('');
+                                        setShowResourceModal(true);
+                                    }}>
+                                        <Plus size={16} /> New Resource
+                                    </button>
                                 </div>
                             </div>
 
-                            <div className="admin-card card list-card">
-                                <h3>Current {activeTab.toUpperCase()}</h3>
-                                <div className="resource-list">
+                            <div className="admin-card card list-card" style={{ marginTop: '1.5rem' }}>
+                                <div className="resource-list" style={{ maxHeight: '70vh' }}>
                                     {resources.length === 0 ? <div className="empty-state">No resources added.</div> : resources.map(res => (
                                         <div key={res.id} className="resource-item">
                                             <div className="res-info">
@@ -636,6 +570,97 @@ export default function Admin() {
                                     ))}
                                 </div>
                             </div>
+
+                            {/* Folder Modal */}
+                            {showFolderModal && (
+                                <div className="admin-modal-overlay" onClick={(e) => { if(e.target.className === 'admin-modal-overlay') setShowFolderModal(false); }}>
+                                    <div className="admin-modal-content">
+                                        <button className="admin-modal-close" onClick={() => setShowFolderModal(false)}><X size={20} /></button>
+                                        <div className="card-header-with-icon">
+                                            <FolderPlus size={20} color="var(--accent-color)" />
+                                            <h3>Create New Folder</h3>
+                                        </div>
+                                        <form onSubmit={handleAddFolder} className="admin-form-mini" style={{flexDirection: 'column', gap: '1rem', marginTop: '1rem'}}>
+                                            <input type="text" placeholder="e.g. Unit 1: OS Basics" value={folderTitle} onChange={e => setFolderTitle(e.target.value)} required />
+                                            <div className="form-row" style={{gap: '0.5rem'}}>
+                                                <select className="form-select" value={academicYear} onChange={e => setAcademicYear(e.target.value)} style={{fontSize: '0.9rem', padding: '0.6rem', flex: 1}}>
+                                                    <option value="">Year (All)</option>
+                                                    <option value="1st Year">1st Year</option>
+                                                    <option value="2nd Year">2nd Year</option>
+                                                    <option value="3rd Year">3rd Year</option>
+                                                </select>
+                                                <select className="form-select" value={branch} onChange={e => setBranch(e.target.value)} style={{fontSize: '0.9rem', padding: '0.6rem', flex: 1}}>
+                                                    <option value="">Branch (All)</option>
+                                                    <option value="Common">Common</option>
+                                                    <option value="Computer Science">CS</option>
+                                                    <option value="Mechanical">Mechanical</option>
+                                                </select>
+                                            </div>
+                                            <button type="submit" className="btn-primary" disabled={isSaving} style={{width: '100%', marginTop: '0.5rem'}}>
+                                                <Plus size={16} /> Create Folder
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Resource Modal */}
+                            {showResourceModal && (
+                                <div className="admin-modal-overlay" onClick={(e) => { if(e.target.className === 'admin-modal-overlay') {setShowResourceModal(false); setEditingId(null); setTitle('');} }}>
+                                    <div className="admin-modal-content">
+                                        <button className="admin-modal-close" onClick={() => {setShowResourceModal(false); setEditingId(null); setTitle('');}}><X size={20} /></button>
+                                        <h3>{editingId ? 'Edit' : 'Add'} {activeTab === 'notes' ? 'Note' : activeTab === 'papers' ? 'Paper' : 'DCET Resource'}</h3>
+                                        <form className="admin-form" onSubmit={handleAddResource} style={{marginTop: '1.5rem'}}>
+                                            <div className="form-group">
+                                                <label>Inside Folder:</label>
+                                                <select value={parentId} onChange={e => setParentId(e.target.value)}>
+                                                    <option value="root">Main Directory (Root)</option>
+                                                    {foldersList.map(f => <option key={f.id} value={f.id}>📁 {f.title}</option>)}
+                                                </select>
+                                            </div>
+                                            <div className="form-group">
+                                                <label>Title</label>
+                                                <input type="text" required value={title} onChange={e => setTitle(e.target.value)} />
+                                            </div>
+                                            <div className="form-group">
+                                                <label>Drive URL</label>
+                                                <div className="input-with-icon">
+                                                    <LinkIcon size={16} />
+                                                    <input type="url" required value={url} onChange={e => setUrl(e.target.value)} />
+                                                </div>
+                                            </div>
+                                            <div className="form-row">
+                                                <div className="form-group">
+                                                    <label>Year</label>
+                                                    <select required value={academicYear} onChange={e => setAcademicYear(e.target.value)}>
+                                                        <option value="" disabled>Select</option>
+                                                        <option value="1st Year">1st Year</option>
+                                                        <option value="2nd Year">2nd Year</option>
+                                                        <option value="3rd Year">3rd Year</option>
+                                                    </select>
+                                                </div>
+                                                <div className="form-group">
+                                                    <label>Branch</label>
+                                                    <select required value={branch} onChange={e => setBranch(e.target.value)}>
+                                                        <option value="" disabled>Select</option>
+                                                        <option value="Common">Common</option>
+                                                        <option value="Computer Science">CS</option>
+                                                        <option value="Mechanical">Mechanical</option>
+                                                        <option value="Civil">Civil</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div className="form-group">
+                                                <label>{activeTab === 'notes' ? 'Chapter/Module' : activeTab === 'papers' ? 'Exam Year' : 'Topic'}</label>
+                                                <input type="text" required value={chapter} onChange={e => setChapter(e.target.value)} />
+                                            </div>
+                                            <button type="submit" className="btn-primary w-full" disabled={isSaving} style={{marginTop: '1rem'}}>
+                                                {isSaving ? 'Saving...' : <>{editingId ? <Edit2 size={18} /> : <Plus size={18} />} {editingId ? 'Update' : 'Add'} Resource</>}
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
