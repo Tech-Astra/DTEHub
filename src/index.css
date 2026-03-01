@@ -38,6 +38,14 @@
   padding: 0;
 }
 
+html, 
+body, 
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 body {
   font-family: var(--font-family);
   background: radial-gradient(circle at top right, var(--card-bg) 0%, var(--bg-color) 80%);
@@ -45,7 +53,8 @@ body {
   line-height: 1.5;
   min-height: 100vh;
   overflow-x: hidden;
-  /* Prevent horizontal scrollbars */
+  display: flex;
+  flex-direction: column;
   -webkit-font-smoothing: antialiased;
 }
 

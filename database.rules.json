@@ -56,7 +56,7 @@
     },
     "testimonials": {
       ".read": true,
-      ".write": "auth != null && (auth.token.email == 'shivarajmani2005@gmail.com' || auth.token.email == 'vivekvernekar02@gmail.com' || auth.token.email == 'contactus.techastra@gmail.com')"
+      ".write": "auth != null"
     }
   }
 }

@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, GraduationCap, Quote, Star, Users } from 'lucide-react';
+import { ArrowRight, GraduationCap, Quote, Star, Users, X, MessageSquarePlus } from 'lucide-react';
 import { useFirebaseStats } from '../hooks/useFirebaseStats';
 import { useAuthContext } from '../context/AuthContext';
 import { database } from '../firebase';
-import { ref, onValue } from 'firebase/database';
+import { ref, onValue, push, set } from 'firebase/database';
 import Footer from '../components/Footer';
 import './Home.css';
 
@@ -56,6 +56,12 @@ export default function Home() {
     const { user, loginWithGoogle } = useAuthContext();
     const { stats, loading } = useFirebaseStats();
     const [testimonials, setTestimonials] = useState([]);
+    const [selectedTestimonial, setSelectedTestimonial] = useState(null);
+    const [isAddingFeedback, setIsAddingFeedback] = useState(false);
+    const [feedbackMsg, setFeedbackMsg] = useState('');
+    const [college, setCollege] = useState('');
+    const [rating, setRating] = useState(5);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         const testRef = ref(database, 'testimonials');
@@ -63,11 +69,43 @@ export default function Home() {
             const data = snapshot.val();
             if (data) {
                 const arr = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-                setTestimonials(arr.reverse().slice(0, 6)); // Show latest 6
+                setTestimonials(arr.reverse().slice(0, 10)); // Show latest 10
             }
         });
         return () => unsub();
     }, []);
+
+    const handleAddFeedback = async () => {
+        if (!user) {
+            loginWithGoogle();
+            return;
+        }
+
+        if (!feedbackMsg.trim()) return;
+        setIsSubmitting(true);
+
+        try {
+            const testRef = ref(database, 'testimonials');
+            const newEntryRef = push(testRef);
+            await set(newEntryRef, {
+                name: user.displayName || 'Anonymous student',
+                role: 'DTEHub Student',
+                college: college.trim() || 'DTEHub Community',
+                message: feedbackMsg,
+                photoUrl: user.photoURL || '',
+                rating: rating,
+                timestamp: Date.now()
+            });
+            setFeedbackMsg('');
+            setCollege('');
+            setRating(5);
+            setIsAddingFeedback(false);
+        } catch (err) {
+            console.error("Error adding feedback:", err);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     return (
         <div className="home-container premium-home">
@@ -100,22 +138,35 @@ export default function Home() {
                 <section className="testimonials-marquee-section">
                     <div className="marquee-container">
                         <div className="testimonials-header">
-                            <span className="prompt-arrow">&gt;</span>
-                            <h2 className="marquee-title">What People Say</h2>
+                            <div className="header-left-marquee">
+                                <span className="prompt-arrow">&gt;</span>
+                                <h2 className="marquee-title">What People Say</h2>
+                            </div>
+                            <button 
+                                className="btn-add-testimonial"
+                                onClick={() => setIsAddingFeedback(true)}
+                            >
+                                <MessageSquarePlus size={18} />
+                                <span>Give Feedback</span>
+                            </button>
                         </div>
 
                         {/* Row 1: Left Moving */}
                         <div className="marquee-wrapper">
                             <div className="marquee-track track-left">
                                 {[...testimonials, ...testimonials].map((test, i) => (
-                                    <div key={`row1-${i}`} className="marquee-card">
+                                    <div 
+                                        key={`row1-${i}`} 
+                                        className="marquee-card"
+                                        onClick={() => setSelectedTestimonial(test)}
+                                    >
                                         <div className="card-inner">
                                             <div className="user-avatar-circle">
                                                 {test.photoUrl ? <img src={test.photoUrl} alt={test.name} /> : <Users size={14} />}
                                             </div>
                                             <div className="card-content-mini">
                                                 <p className="test-msg-mini">"{test.message}"</p>
-                                                <span className="test-handle-mini">@{test.name.toLowerCase().replace(/\s/g, '')}</span>
+                                                <span className="test-name-mini">{test.name}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -127,14 +178,18 @@ export default function Home() {
                         <div className="marquee-wrapper">
                             <div className="marquee-track track-right">
                                 {[...testimonials, ...testimonials].reverse().map((test, i) => (
-                                    <div key={`row2-${i}`} className="marquee-card">
+                                    <div 
+                                        key={`row2-${i}`} 
+                                        className="marquee-card"
+                                        onClick={() => setSelectedTestimonial(test)}
+                                    >
                                         <div className="card-inner">
                                             <div className="user-avatar-circle">
                                                 {test.photoUrl ? <img src={test.photoUrl} alt={test.name} /> : <Users size={14} />}
                                             </div>
                                             <div className="card-content-mini">
                                                 <p className="test-msg-mini">"{test.message}"</p>
-                                                <span className="test-handle-mini">@{test.name.toLowerCase().replace(/\s/g, '')}</span>
+                                                <span className="test-name-mini">{test.name}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -143,6 +198,125 @@ export default function Home() {
                         </div>
                     </div>
                 </section>
+            )}
+
+            {/* Testimonial Pop-up Modal */}
+            {selectedTestimonial && (
+                <div className="test-modal-overlay" onClick={() => setSelectedTestimonial(null)}>
+                    <div className="test-modal-content" onClick={e => e.stopPropagation()}>
+                        <button className="test-modal-close" onClick={() => setSelectedTestimonial(null)}><X size={20} /></button>
+                        <div className="test-modal-header">
+                            <div className="test-modal-avatar">
+                                {selectedTestimonial.photoUrl ? (
+                                    <img src={selectedTestimonial.photoUrl} alt={selectedTestimonial.name} />
+                                ) : (
+                                    <Users size={32} />
+                                )}
+                            </div>
+                            <div className="test-modal-info">
+                                <h3>{selectedTestimonial.name}</h3>
+                                <p className="test-modal-role">{selectedTestimonial.role}</p>
+                                {selectedTestimonial.college && (
+                                    <p className="test-modal-college">
+                                        <GraduationCap size={14} />
+                                        {selectedTestimonial.college}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                        <div className="test-modal-body">
+                            <Quote className="quote-icon-modal" size={32} />
+                            <p className="full-test-message">{selectedTestimonial.message}</p>
+                            <div className="test-modal-footer">
+                                <div className="test-modal-stars">
+                                    {[...Array(5)].map((_, i) => (
+                                        <Star key={i} size={14} fill="var(--accent-color)" color="var(--accent-color)" />
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Feedback Modal */}
+            {isAddingFeedback && (
+                <div className="test-modal-overlay" onClick={() => setIsAddingFeedback(false)}>
+                    <div className="test-modal-content feedback-modal" onClick={e => e.stopPropagation()}>
+                        <button className="test-modal-close" onClick={() => setIsAddingFeedback(false)}><X size={20} /></button>
+                        <div className="section-header-left">
+                            <span className="premium-badge">COMMUNITY HUB</span>
+                            <h2 className="modal-title-premium">Share your journey</h2>
+                        </div>
+
+                        {!user ? (
+                            <div className="login-prompt-feedback">
+                                <p>Please login to leave a testimonial about DTEHub.</p>
+                                <button className="btn-primary" onClick={loginWithGoogle}>Login with Google</button>
+                            </div>
+                        ) : (
+                            <div className="feedback-form-compact">
+                                <div className="user-indicator-feedback">
+                                    <div className="test-modal-avatar">
+                                        <img src={user.photoURL} alt={user.displayName} />
+                                    </div>
+                                    <div>
+                                        <strong>{user.displayName}</strong>
+                                        <p>Contribution from DTEHub Alumnus</p>
+                                    </div>
+                                </div>
+
+                                <div className="feedback-input-group">
+                                    <label className="rating-label-feedback">Your College Name</label>
+                                    <input 
+                                        type="text" 
+                                        className="feedback-input-text"
+                                        placeholder="e.g. Government Polytechnic, Bangalore"
+                                        value={college}
+                                        onChange={(e) => setCollege(e.target.value)}
+                                    />
+                                </div>
+                                
+                                <div>
+                                    <p className="rating-label-feedback">Rate your experience</p>
+                                    <div className="star-rating-selector">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                            <button
+                                                key={star}
+                                                type="button"
+                                                onClick={() => setRating(star)}
+                                                className={`star-select-btn ${star <= rating ? 'active' : ''}`}
+                                            >
+                                                <Star 
+                                                    size={24} 
+                                                    fill={star <= rating ? "var(--accent-color)" : "transparent"} 
+                                                    color={star <= rating ? "var(--accent-color)" : "rgba(255,255,255,0.2)"}
+                                                />
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                
+                                <textarea 
+                                    className="feedback-textarea"
+                                    placeholder="Tell others how DTEHub helped you in your academics..."
+                                    value={feedbackMsg}
+                                    onChange={(e) => setFeedbackMsg(e.target.value)}
+                                    maxLength={200}
+                                />
+                                <div className="char-count">{feedbackMsg.length}/200</div>
+
+                                <button 
+                                    className="btn-submit-feedback"
+                                    disabled={!feedbackMsg.trim() || !college.trim() || isSubmitting}
+                                    onClick={handleAddFeedback}
+                                >
+                                    {isSubmitting ? 'Posting student voice...' : 'Publish Feedback'}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
             )}
 
             <Footer />
