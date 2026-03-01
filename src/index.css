@@ -30,21 +30,6 @@
   --bg-watermark-opacity: 0.08;
 }
 
-:root[data-theme='light'],
-.light-theme {
-  --bg-color: #f8fafc;
-  --card-bg: #ffffff;
-  --text-main: #000000;
-  --text-muted: #334155;
-
-  --border-color: rgba(0, 0, 0, 0.08);
-  --accent-glow: rgba(253, 224, 71, 0.4);
-
-  --btn-view: #000000;
-
-  --bg-watermark-opacity: 0.50;
-}
-
 * {
   box-sizing: border-box;
   margin: 0;

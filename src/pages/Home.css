@@ -89,16 +89,6 @@
     color: var(--text-main);
 }
 
-html[data-theme='light'] .welcome-text {
-    color: #0c0c0e;
-    /* Dark black for "Welcome to" */
-}
-
-html[data-theme='light'] .dte-text {
-    color: var(--accent-color);
-    /* Yellow for "DTE" */
-}
-
 .hub-text {
     color: var(--accent-color);
     font-weight: 900;

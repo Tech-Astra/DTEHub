@@ -37,10 +37,6 @@
     transform: rotate(90deg);
 }
 
-html[data-theme='light'] .privacy-close-btn:hover {
-    background: rgba(0, 0, 0, 0.05);
-}
-
 .privacy-content h1 {
     font-size: 2.5rem;
     color: var(--accent-color);

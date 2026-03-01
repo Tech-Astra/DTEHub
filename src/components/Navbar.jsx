@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { GraduationCap, LogOut, Home, FileText, ScrollText, Zap, Heart, Sun, Moon, Github, Star } from 'lucide-react';
+import { GraduationCap, LogOut, Home, FileText, ScrollText, Zap, Heart, Github, Star } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
 import '../App.css';
 
 export default function Navbar() {
     const location = useLocation();
     const { user, loading, loginWithGoogle, logout } = useAuthContext();
-    const { theme, toggleTheme } = useTheme();
     const [repoStars, setRepoStars] = useState(null);
 
     useEffect(() => {
@@ -59,22 +57,13 @@ export default function Navbar() {
                                 textDecoration: 'none',
                                 fontWeight: '700',
                                 fontSize: '0.9rem',
-                                border: theme === 'light' ? '1.5px solid #000000' : '1px solid rgba(255,255,255,0.1)'
+                                border: '1px solid rgba(255,255,255,0.1)'
                             }}
                             title="View on GitHub"
                         >
                             <Github size={18} />
                             {repoStars !== null && <span>{repoStars}</span>}
                         </a>
-
-                        <button
-                            onClick={toggleTheme}
-                            className="btn-outline"
-                            style={{ padding: '0.4rem', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}
-                            title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-                        >
-                            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-                        </button>
 
                         {loading ? (
                             <span className="nav-auth-skeleton" />

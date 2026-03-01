@@ -44,10 +44,6 @@
     transform: rotate(90deg);
 }
 
-html[data-theme='light'] .footer-modal-close:hover {
-    background: rgba(0, 0, 0, 0.05);
-}
-
 .footer-modal h2 {
     font-size: 1.5rem;
     color: var(--text-main);
@@ -82,10 +78,6 @@ html[data-theme='light'] .footer-modal-close:hover {
     text-decoration: none;
 }
 
-html[data-theme='light'] .contact-link-item {
-    background: rgba(0, 0, 0, 0.02);
-}
-
 .contact-link-item:hover {
     border-color: var(--accent-color);
     background: rgba(253, 224, 71, 0.05);
@@ -101,10 +93,6 @@ html[data-theme='light'] .contact-link-item {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 8px;
     color: var(--accent-color);
-}
-
-html[data-theme='light'] .contact-icon-wrapper {
-    background: rgba(0, 0, 0, 0.05);
 }
 
 @keyframes slideUp {
