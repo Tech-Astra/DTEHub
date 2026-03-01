@@ -906,11 +906,11 @@ export default function Admin() {
                                                     <p>{item.role} • {item.college || 'DTEHub Community'}</p>
                                                     <div className="test-stars-admin" style={{ display: 'flex', gap: '2px', marginTop: '4px' }}>
                                                         {[...Array(5)].map((_, i) => (
-                                                            <Star 
-                                                                key={i} 
-                                                                size={10} 
-                                                                fill={i < (item.rating || 5) ? "var(--accent-color)" : "transparent"} 
-                                                                color={i < (item.rating || 5) ? "var(--accent-color)" : "rgba(255,255,255,0.2)"} 
+                                                            <Star
+                                                                key={i}
+                                                                size={10}
+                                                                fill={i < (item.rating || 5) ? "var(--accent-color)" : "transparent"}
+                                                                color={i < (item.rating || 5) ? "var(--accent-color)" : "rgba(255,255,255,0.2)"}
                                                             />
                                                         ))}
                                                     </div>
@@ -1147,34 +1147,43 @@ export default function Admin() {
                                         <div className="modal-form-row">
                                             <div className="modal-field">
                                                 <label>Syllabus</label>
-                                                <select value={syllabus} onChange={e => setSyllabus(e.target.value)}>
-                                                    {syllabusesList.map(s => (
-                                                        <option key={s.id} value={s.title}>{s.title} Scheme</option>
-                                                    ))}
-                                                </select>
+                                                <CustomSelect
+                                                    options={syllabusesList.map(s => ({ value: s.title, label: `${s.title} Scheme` }))}
+                                                    value={syllabus}
+                                                    onChange={setSyllabus}
+                                                    placeholder="Select Scheme"
+                                                />
                                             </div>
                                             <div className="modal-field">
                                                 <label>Semester</label>
-                                                <select value={semester} onChange={e => setSemester(e.target.value)}>
-                                                    <option value="1st Sem">1st Sem</option>
-                                                    <option value="2nd Sem">2nd Sem</option>
-                                                    <option value="3rd Sem">3rd Sem</option>
-                                                    <option value="4th Sem">4th Sem</option>
-                                                    <option value="5th Sem">5th Sem</option>
-                                                    <option value="6th Sem">6th Sem</option>
-                                                </select>
+                                                <CustomSelect
+                                                    options={[
+                                                        { value: '1st Sem', label: '1st Sem' },
+                                                        { value: '2nd Sem', label: '2nd Sem' },
+                                                        { value: '3rd Sem', label: '3rd Sem' },
+                                                        { value: '4th Sem', label: '4th Sem' },
+                                                        { value: '5th Sem', label: '5th Sem' },
+                                                        { value: '6th Sem', label: '6th Sem' },
+                                                    ]}
+                                                    value={semester}
+                                                    onChange={setSemester}
+                                                    placeholder="Select Semester"
+                                                />
                                             </div>
                                         </div>
                                     )}
                                     <div className="modal-form-row">
                                         <div className="modal-field">
                                             <label>Branch</label>
-                                            <select value={branch} onChange={e => setBranch(e.target.value)}>
-                                                <option value="">All Branches</option>
-                                                {branchesList.map((b) => (
-                                                    <option key={b.id} value={b.title}>{b.title}</option>
-                                                ))}
-                                            </select>
+                                            <CustomSelect
+                                                options={[
+                                                    { value: '', label: 'All Branches' },
+                                                    ...branchesList.map(b => ({ value: b.title, label: b.title }))
+                                                ]}
+                                                value={branch}
+                                                onChange={setBranch}
+                                                placeholder="All Branches"
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -1210,7 +1219,7 @@ export default function Admin() {
                                 <div className="modal-form">
                                     <div className="modal-field">
                                         <label>Inside Folder</label>
-                                        <CustomSelect 
+                                        <CustomSelect
                                             options={[
                                                 { value: 'root', label: 'Main Directory (Root)' },
                                                 ...foldersList.map(f => ({ value: f.id, label: f.title }))
@@ -1246,7 +1255,7 @@ export default function Admin() {
                                         <div className="modal-form-row">
                                             <div className="modal-field">
                                                 <label>Syllabus</label>
-                                                <CustomSelect 
+                                                <CustomSelect
                                                     options={syllabusesList.map(s => ({ value: s.title, label: `${s.title} Scheme` }))}
                                                     value={syllabus}
                                                     onChange={setSyllabus}
@@ -1256,7 +1265,7 @@ export default function Admin() {
                                             </div>
                                             <div className="modal-field">
                                                 <label>Semester</label>
-                                                <CustomSelect 
+                                                <CustomSelect
                                                     options={[
                                                         { value: '1st Sem', label: '1st Sem' },
                                                         { value: '2nd Sem', label: '2nd Sem' },
@@ -1276,7 +1285,7 @@ export default function Admin() {
                                     <div className="modal-form-row">
                                         <div className="modal-field">
                                             <label>Branch Linkage</label>
-                                            <CustomSelect 
+                                            <CustomSelect
                                                 options={[
                                                     { value: 'Common', label: 'Common to All' },
                                                     ...branchesList.map(b => ({ value: b.title, label: b.title }))
@@ -1621,16 +1630,16 @@ export default function Admin() {
                                         <label>Rating (Stars)</label>
                                         <div className="admin-star-selector" style={{ display: 'flex', gap: '8px' }}>
                                             {[1, 2, 3, 4, 5].map((s) => (
-                                                <button 
+                                                <button
                                                     key={s}
                                                     type="button"
                                                     onClick={() => setTestimonialForm({ ...testimonialForm, rating: s })}
                                                     style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 0 }}
                                                 >
-                                                    <Star 
-                                                        size={24} 
-                                                        fill={s <= (testimonialForm.rating || 5) ? "var(--accent-color)" : "transparent"} 
-                                                        color={s <= (testimonialForm.rating || 5) ? "var(--accent-color)" : "rgba(255,255,255,0.2)"} 
+                                                    <Star
+                                                        size={24}
+                                                        fill={s <= (testimonialForm.rating || 5) ? "var(--accent-color)" : "transparent"}
+                                                        color={s <= (testimonialForm.rating || 5) ? "var(--accent-color)" : "rgba(255,255,255,0.2)"}
                                                     />
                                                 </button>
                                             ))}
@@ -1638,7 +1647,7 @@ export default function Admin() {
                                     </div>
                                     <div className="modal-field">
                                         <label>Message</label>
-                                        <textarea rows="4" value={testimonialForm.message} onChange={e => setTestimonialForm({ ...testimonialForm, message: e.target.value })} required style={{width: '100%', padding: '0.75rem', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white'}} />
+                                        <textarea rows="4" value={testimonialForm.message} onChange={e => setTestimonialForm({ ...testimonialForm, message: e.target.value })} required style={{ width: '100%', padding: '0.75rem', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
                                     </div>
                                     <div className="modal-field">
                                         <label>Student Photo URL (Optional)</label>
