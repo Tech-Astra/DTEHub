@@ -155,21 +155,26 @@ export function useUserWorkspace(user) {
     async (item) => {
       if (!basePath) return;
       
-      // Use deterministic ID for favorites too
-      const recordId = `${item.type}_${item.itemId}`;
-      const favRef = ref(database, `${basePath}/favorites/${recordId}`);
-      
-      const snapshot = await get(favRef);
-      if (snapshot.exists()) {
+      // Look for existing favorite in local state to handle both new (deterministic) and legacy (push) IDs
+      const existing = workspace.favorites.find(
+        (f) => f.itemId === item.itemId && f.type === item.type
+      );
+
+      if (existing) {
+        // Remove existing favorite using its actual ID in the database
+        const favRef = ref(database, `${basePath}/favorites/${existing.id}`);
         await remove(favRef);
       } else {
+        // Add new favorite using deterministic ID (type_itemId) for modern consistency
+        const recordId = `${item.type}_${item.itemId}`;
+        const favRef = ref(database, `${basePath}/favorites/${recordId}`);
         await set(favRef, {
           ...item,
           timestamp: serverTimestamp(),
         });
       }
     },
-    [basePath]
+    [basePath, workspace.favorites]
   );
 
   const isFavorited = useCallback(
