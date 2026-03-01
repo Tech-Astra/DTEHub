@@ -56,15 +56,14 @@ export default function Home() {
             {/* Central Hero Branding */}
             <main className="home-hero-center">
                 <div className="branding-container">
-                    <div className="main-logo-flex">
-                        <div className="hero-logo-wrapper">
-                            <img src="/favicon.png" alt="DTE Hub" className="hero-main-logo" />
-                        </div>
-                        <div className="rv-divider" />
-                        <h1 className="hub-title">DTE<span style={{ color: 'var(--accent-color)' }}>Hub</span></h1>
+                    <div className="main-text-branding">
+                        <h1 className="hub-title-welcome">
+                            <span className="welcome-text">Welcome to </span>
+                            <span className="dte-text">DTE</span><span className="hub-text">Hub</span>
+                        </h1>
                     </div>
                     <p className="hero-tagline">
-                        The ultimate study hub for DTE students. Access premium notes, past question papers, and trusted academic resources—all centralized for your success.
+                        The ultimate study hub for Diploma students. Access premium notes, past question papers, and DCET Question papers from trusted academic resources—all centralized for your success.
                     </p>
 
                     <button className="btn-explore" onClick={() => navigate('/notes')}>

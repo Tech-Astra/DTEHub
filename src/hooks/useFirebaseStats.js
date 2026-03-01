@@ -24,64 +24,20 @@ export function useFirebaseStats() {
           sessionStorage.setItem(SESSION_KEY, 'true');
         }
 
-        // 2. Setup listeners for the users and resources lengths
+        // 2. Setup listener for the stats node
 
-        const usersRef = ref(database, 'users');
-        const notesRef = ref(database, 'resources/notes');
-        const papersRef = ref(database, 'resources/papers');
-        const dcetRef = ref(database, 'resources/dcet');
-        const statsViewsRef = ref(database, 'stats/totalViews');
-
-        // Note: For large DBs, sending full objects onValue is heavy, 
-        // but it fulfills the request of grabbing exact item count.
-
-        let localUsers = 0;
-        let localNotes = 0;
-        let localPapers = 0;
-        let localDcet = 0;
-        let localViews = 0;
-
-        const updateStats = () => {
+        const statsRef = ref(database, 'stats');
+        const unsubscribe = onValue(statsRef, (snapshot) => {
+          const data = snapshot.val() || {};
           setStats({
-            totalViews: localViews,
-            totalResources: localNotes + localPapers + localDcet,
-            totalVerifiedUsers: localUsers
+            totalViews: data.totalViews || 0,
+            totalResources: data.totalResources || 0,
+            totalVerifiedUsers: data.totalVerifiedUsers || 0
           });
           setLoading(false);
-        };
-
-        const unsubUsers = onValue(usersRef, (snap) => {
-          localUsers = snap.exists() ? Object.keys(snap.val()).length : 0;
-          updateStats();
         });
 
-        const unsubNotes = onValue(notesRef, (snap) => {
-          localNotes = snap.exists() ? Object.keys(snap.val()).length : 0;
-          updateStats();
-        });
-
-        const unsubPapers = onValue(papersRef, (snap) => {
-          localPapers = snap.exists() ? Object.keys(snap.val()).length : 0;
-          updateStats();
-        });
-
-        const unsubDcet = onValue(dcetRef, (snap) => {
-          localDcet = snap.exists() ? Object.keys(snap.val()).length : 0;
-          updateStats();
-        });
-
-        const unsubViews = onValue(statsViewsRef, (snapshot) => {
-          localViews = snapshot.val() || 0;
-          updateStats();
-        });
-
-        return () => {
-          unsubUsers();
-          unsubNotes();
-          unsubPapers();
-          unsubDcet();
-          unsubViews();
-        };
+        return unsubscribe;
 
       } catch (err) {
         console.error('Stats Sync Error:', err);
