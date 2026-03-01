@@ -115,12 +115,12 @@ export default function Contribute() {
 
                         {formStatus === 'success' && (
                             <div className="success-message">
-                                <p>🎉 Received! Thank you for contributing.</p>
+                                <p>Received! Thank you for contributing.</p>
                             </div>
                         )}
                         {formStatus === 'error' && (
                             <div className="error-message" style={{ color: '#ef4444', marginTop: '1rem', textAlign: 'center', fontSize: '0.875rem' }}>
-                                <p>❌ Failed to send. Please try again later.</p>
+                                <p>Failed to send. Please try again later.</p>
                             </div>
                         )}
                     </form>
@@ -190,12 +190,12 @@ export default function Contribute() {
 
                             {devFormStatus === 'success' && (
                                 <div className="success-message" style={{ marginTop: '1rem' }}>
-                                    <p>🎉 Application sent successfully! We'll be in touch.</p>
+                                    <p>Application sent successfully! We'll be in touch.</p>
                                 </div>
                             )}
                             {devFormStatus === 'error' && (
                                 <div className="error-message" style={{ color: '#ef4444', marginTop: '1rem', textAlign: 'center', fontSize: '0.875rem' }}>
-                                    <p>❌ Failed to send application. Please try again later.</p>
+                                    <p>Failed to send application. Please try again later.</p>
                                 </div>
                             )}
                         </form>

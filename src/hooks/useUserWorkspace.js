@@ -55,7 +55,7 @@ export function useUserWorkspace(user) {
         setLoading(false);
       },
       (err) => {
-        console.error('❌ Error reading workspace:', err.message);
+        console.error('Error reading workspace:', err.message);
         setLoading(false);
       }
     );

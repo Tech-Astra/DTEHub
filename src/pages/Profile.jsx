@@ -4,23 +4,17 @@ import { useNavigate } from 'react-router-dom';
 import { ref, onValue, set } from 'firebase/database';
 import { database } from '../firebase';
 import { 
-    History, 
-    Heart, 
-    Download, 
-    FileText, 
-    Calendar,
-    ExternalLink,
+    Building, 
+    Hash, 
+    GraduationCap,
     Edit2,
     Save,
     X,
-    Building,
-    Hash,
-    GraduationCap
 } from 'lucide-react';
 import './Profile.css';
 
 export default function Profile() {
-    const { user, workspace, loading } = useAuthContext();
+    const { user, loading } = useAuthContext();
     const navigate = useNavigate();
 
     // Profile state
@@ -154,107 +148,12 @@ export default function Profile() {
                                     {profileData.year && (
                                         <span className="profile-tag"><GraduationCap size={14}/> {profileData.year}</span>
                                     )}
-                                    <span className="profile-badge">Student Workspace</span>
                                 </div>
                             </div>
                         )}
                     </div>
                 </div>
             </header>
-
-            <main className="profile-workspace-content">
-                <div className="workspace-grid-premium">
-                    {/* Favorites Section */}
-                    <section className="ws-card-premium">
-                        <div className="ws-card-header">
-                            <div className="ws-header-title">
-                                <Heart size={20} className="ws-icon-red" fill="currentColor" />
-                                <h3>Favorites</h3>
-                            </div>
-                            <span className="ws-badge-count">{workspace.favorites.length}</span>
-                        </div>
-                        <div className="ws-card-list">
-                            {workspace.favorites.length > 0 ? (
-                                workspace.favorites.map(item => (
-                                    <div key={item.id} className="ws-item-row" onClick={() => navigate(item.type === 'dcet' ? '/dcet' : '/notes')}>
-                                        <div className="ws-item-icon"><FileText size={18} /></div>
-                                        <div className="ws-item-info">
-                                            <h4>{item.title}</h4>
-                                            <span>{item.chapter || 'Saved Resource'}</span>
-                                        </div>
-                                        <ExternalLink size={14} className="ws-arrow" />
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="ws-empty-state">
-                                    <Heart size={32} opacity={0.2} />
-                                    <p>Your favorite resources will appear here.</p>
-                                </div>
-                            )}
-                        </div>
-                    </section>
-
-                    {/* Recently Viewed */}
-                    <section className="ws-card-premium">
-                        <div className="ws-card-header">
-                            <div className="ws-header-title">
-                                <History size={20} className="ws-icon-yellow" />
-                                <h3>Recently Viewed</h3>
-                            </div>
-                            <span className="ws-badge-count">{workspace.recentlyViewed.length}</span>
-                        </div>
-                        <div className="ws-card-list">
-                            {workspace.recentlyViewed.length > 0 ? (
-                                workspace.recentlyViewed.map(item => (
-                                    <div key={item.id} className="ws-item-row" onClick={() => navigate(item.type === 'dcet' ? '/dcet' : '/notes')}>
-                                        <div className="ws-item-icon"><FileText size={18} /></div>
-                                        <div className="ws-item-info">
-                                            <h4>{item.title}</h4>
-                                            <span>{item.chapter || 'Viewed recently'}</span>
-                                        </div>
-                                        <ExternalLink size={14} className="ws-arrow" />
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="ws-empty-state">
-                                    <History size={32} opacity={0.2} />
-                                    <p>Items you view will be tracked here.</p>
-                                </div>
-                            )}
-                        </div>
-                    </section>
-
-                    {/* Downloads History */}
-                    <section className="ws-card-premium">
-                        <div className="ws-card-header">
-                            <div className="ws-header-title">
-                                <Download size={20} className="ws-icon-green" />
-                                <h3>Downloads</h3>
-                            </div>
-                            <span className="ws-badge-count">{workspace.downloads.length}</span>
-                        </div>
-                        <div className="ws-card-list">
-                            {workspace.downloads.length > 0 ? (
-                                workspace.downloads.map(item => (
-                                    <div key={item.id} className="ws-item-row" onClick={() => navigate(item.type === 'dcet' ? '/dcet' : '/notes')}>
-                                        <div className="ws-item-icon"><FileText size={18} /></div>
-                                        <div className="ws-item-info">
-                                            <h4>{item.title}</h4>
-                                            <span>{new Date(item.timestamp).toLocaleDateString()}</span>
-                                        </div>
-                                        <ExternalLink size={14} className="ws-arrow" />
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="ws-empty-state">
-                                    <Download size={32} opacity={0.2} />
-                                    <p>Resources you download will be listed here.</p>
-                                </div>
-                            )}
-                        </div>
-                    </section>
-                </div>
-            </main>
         </div>
     );
 }
