@@ -1,11 +1,13 @@
 import { Link, useLocation } from 'react-router-dom';
-import { GraduationCap, LogOut, Home, FileText, ScrollText, Zap, Heart } from 'lucide-react';
+import { GraduationCap, LogOut, Home, FileText, ScrollText, Zap, Heart, Sun, Moon } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import '../App.css';
 
 export default function Navbar() {
     const location = useLocation();
     const { user, loading, loginWithGoogle, logout } = useAuthContext();
+    const { theme, toggleTheme } = useTheme();
 
     const isActive = (path) => location.pathname === path ? 'active' : '';
 
@@ -28,8 +30,17 @@ export default function Navbar() {
                         <Link to="/contribute" className={`nav-item ${isActive('/contribute')}`}>Contribution</Link>
                     </div>
 
-                    {/* Auth section — always visible */}
-                    <div className="nav-auth-area">
+                    {/* Controls & Auth section */}
+                    <div className="nav-auth-area" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <button
+                            onClick={toggleTheme}
+                            className="btn-outline"
+                            style={{ padding: '0.4rem', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}
+                            title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+                        >
+                            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+                        </button>
+
                         {loading ? (
                             <span className="nav-auth-skeleton" />
                         ) : user ? (
