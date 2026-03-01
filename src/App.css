@@ -73,8 +73,21 @@
     gap: 1.5rem;
 }
 
-.footer-link:hover {
+.footer-link {
     color: var(--accent-color);
+    text-decoration: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+html[data-theme='light'] .footer-link {
+    color: #0c0c0e;
+    /* Elegant black for light mode */
+    font-weight: 600;
+}
+
+.footer-link:hover {
+    opacity: 0.8;
+    transform: translateY(-2px);
 }
 
 /* ───────────── Navbar Auth Styles ───────────── */
