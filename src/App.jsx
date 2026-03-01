@@ -10,7 +10,7 @@ import Profile from './pages/Profile';
 import DCET from './pages/DCET';
 import Contribute from './pages/Contribute';
 import Admin from './pages/Admin';
-import PrivacyPolicy from './pages/PrivacyPolicy';
+import PrivacyPolicy from './pages/Legal';
 import './App.css';
 
 function App() {
