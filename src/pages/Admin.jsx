@@ -474,7 +474,7 @@ export default function Admin() {
 
             await set(ref(database, 'stats/totalVerifiedUsers'), userCount);
             await set(ref(database, 'stats/totalResources'), resourceCount);
-            alert(`✅ Stats Synced!\nUsers: ${userCount}\nResources: ${resourceCount}`);
+            alert("Stats Synced!\nUsers: " + userCount + "\nResources: " + resourceCount);
         } catch (err) {
             console.error("Sync failed:", err);
         } finally {
@@ -583,7 +583,7 @@ export default function Admin() {
                             {user?.photoURL ? (
                                 <img src={user.photoURL} alt="Admin" style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
                             ) : (
-                                <span role="img" aria-label="user">👨‍💻</span>
+                                <Users size={20} />
                             )}
                         </div>
                     </div>
@@ -993,7 +993,7 @@ export default function Admin() {
                                                 >
                                                     <option value="root">Root</option>
                                                     {foldersList.filter(f => f.id !== res.id).map(folder => (
-                                                        <option key={folder.id} value={folder.id}>📁 {folder.title}</option>
+                                                        <option key={folder.id} value={folder.id}>{folder.title}</option>
                                                     ))}
                                                 </select>
                                                 <button onClick={() => setViewUrl(res.url)} className="btn-outline btn-sm" style={{padding: '0.4rem 0.6rem'}}>View</button>
@@ -1104,7 +1104,7 @@ export default function Admin() {
                                     <label>Inside Folder</label>
                                     <select value={parentId} onChange={e => setParentId(e.target.value)}>
                                         <option value="root">Main Directory (Root)</option>
-                                        {foldersList.map(f => <option key={f.id} value={f.id}>📁 {f.title}</option>)}
+                                        {foldersList.map(f => <option key={f.id} value={f.id}>{f.title}</option>)}
                                     </select>
                                 </div>
                                 <div className="modal-field">

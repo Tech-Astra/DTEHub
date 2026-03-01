@@ -1,11 +1,11 @@
-# DTEHub 🚀
+# DTEHub
 
 **DTEHub** is a premium, open-source academic resource platform designed specifically for Diploma students. It serves as a centralized hub for accessing study materials, previous year question papers, and DCET preparation resources.
 
 [![GitHub stars](https://img.shields.io/github/stars/Tech-Astra/DTEHub?style=social)](https://github.com/Tech-Astra/DTEHub)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## ✨ Key Features
+## Key Features
 
 - **Universal Resource Access**: Browse notes and papers across all branches and syllabus schemes (C-19, C-20, C-25, etc.).
 - **Smart Workspace**: A personalized dashboard that tracks your favorites, downloads, and recently viewed materials.
@@ -14,7 +14,7 @@
 - **Advanced Admin Dashboard**: Robust management system for organizers to upload, categorize, and track system logs.
 - **Modern UI/UX**: Premium aesthetic with glassmorphism, dynamic animations, and full dark/light mode support.
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 - **Frontend**: React 19 + Vite
 - **Styling**: Vanilla CSS (Premium Custom Design System)
@@ -23,7 +23,7 @@
 - **Icons**: Lucide React
 - **Analytics**: Firebase Analytics & System Activity Logs
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -62,7 +62,7 @@
    npm run dev
    ```
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 src/
@@ -73,7 +73,7 @@ src/
 └── firebase.js     # Firebase configuration and initialization
 ```
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Please feel free to submit a Pull Request or open an issue.
 
@@ -83,9 +83,9 @@ We welcome contributions! Please feel free to submit a Pull Request or open an i
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📄 License
+## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
-Built with ❤️ by [Tech-Astra](https://github.com/Tech-Astra)
+Built with passion by [Tech-Astra](https://github.com/Tech-Astra)
