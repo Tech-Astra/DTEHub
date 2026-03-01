@@ -1,5 +1,6 @@
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { GraduationCap, LogOut, Home, FileText, ScrollText, Zap, Heart, Sun, Moon } from 'lucide-react';
+import { GraduationCap, LogOut, Home, FileText, ScrollText, Zap, Heart, Sun, Moon, Github, Star } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import '../App.css';
@@ -8,6 +9,18 @@ export default function Navbar() {
     const location = useLocation();
     const { user, loading, loginWithGoogle, logout } = useAuthContext();
     const { theme, toggleTheme } = useTheme();
+    const [repoStars, setRepoStars] = useState(null);
+
+    useEffect(() => {
+        fetch('https://api.github.com/repos/Tech-Astra/DTEHub')
+            .then(res => res.json())
+            .then(data => {
+                if (data.stargazers_count !== undefined) {
+                    setRepoStars(data.stargazers_count);
+                }
+            })
+            .catch(err => console.error("Error fetching stars:", err));
+    }, []);
 
     const isActive = (path) => location.pathname === path ? 'active' : '';
 
@@ -23,13 +36,37 @@ export default function Navbar() {
                     {/* Desktop nav links */}
                     <div className="nav-links nav-desktop-only">
                         <Link to="/" className={`nav-item ${isActive('/')}`}>Home</Link>
-                        <Link to="/notes" className={`nav-item ${isActive('/notes')}`}>Notes & Papers</Link>
+                        <Link to="/notes" className={`nav-item ${isActive('/notes')}`}>Resources</Link>
                         <Link to="/dcet" className={`nav-item ${isActive('/dcet')}`}>DCET</Link>
                         <Link to="/contribute" className={`nav-item ${isActive('/contribute')}`}>Contribution</Link>
                     </div>
 
                     {/* Controls & Auth section */}
                     <div className="nav-auth-area" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <a 
+                            href="https://github.com/Tech-Astra/DTEHub" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="repo-stars-pill"
+                            style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: '0.5rem', 
+                                padding: '0.4rem 0.8rem', 
+                                borderRadius: '100px', 
+                                background: '#ffffff',
+                                color: '#000000',
+                                textDecoration: 'none',
+                                fontWeight: '700',
+                                fontSize: '0.9rem',
+                                border: theme === 'light' ? '1.5px solid #000000' : '1px solid rgba(255,255,255,0.1)'
+                            }}
+                            title="View on GitHub"
+                        >
+                            <Github size={18} />
+                            {repoStars !== null && <span>{repoStars}</span>}
+                        </a>
+
                         <button
                             onClick={toggleTheme}
                             className="btn-outline"
