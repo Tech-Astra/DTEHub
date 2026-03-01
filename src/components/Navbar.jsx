@@ -17,8 +17,7 @@ export default function Navbar() {
             <nav className="navbar">
                 <div className="container nav-container">
                     <Link to="/" className="logo-link">
-                        <GraduationCap size={28} color="var(--accent-hover)" />
-                        <span>DTEHub</span>
+                        <span>DTE<span style={{ color: 'var(--accent-color)' }}>Hub</span></span>
                     </Link>
 
                     {/* Desktop nav links */}

@@ -69,10 +69,7 @@ export default function Home() {
                     <button className="btn-explore" onClick={() => navigate('/notes')}>
                         Explore All Resources <ArrowRight size={20} />
                     </button>
-                    <p style={{ marginTop: '1.5rem', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '500', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                        <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#22c55e' }}></span>
-                        Continuously updated for the current semester
-                    </p>
+
 
                     {/* Live Stats Bar */}
                     <div className="home-stats-bar">

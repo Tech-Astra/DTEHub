@@ -11,6 +11,7 @@ import Profile from './pages/Profile';
 import DCET from './pages/DCET';
 import Contribute from './pages/Contribute';
 import Admin from './pages/Admin';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 import './App.css';
 
 function App() {
@@ -34,12 +35,13 @@ function App() {
               <Route path="/contribute" element={<Contribute />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
             </Routes>
           </main>
           <Footer />
           {/* Global Workspace Dock — visible on every page */}
           <WorkspaceDock />
-          
+
           {/* Profile Onboarding Modal for first-time sign-ins */}
           <ProfileOnboardingModal />
         </div>
