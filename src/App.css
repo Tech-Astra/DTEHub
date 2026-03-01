@@ -221,7 +221,8 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     backface-visibility: hidden;
-    transform: translateZ(0); /* Hardware acceleration for sharpness */
+    transform: translateZ(0);
+    /* Hardware acceleration for sharpness */
 }
 
 .dock-btn:hover {
@@ -260,7 +261,8 @@
     transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     box-shadow: 20px 0 60px rgba(0, 0, 0, 0.5);
     backface-visibility: hidden;
-    transform: translateZ(0); /* Fix blurry transition */
+    transform: translateZ(0);
+    /* Fix blurry transition */
 }
 
 .workspace-panel.panel-open {
@@ -559,8 +561,15 @@ body.workspace-active .floating-dock-left {
     }
 
     @keyframes activeDotFade {
-        from { opacity: 0; transform: scale(0); }
-        to { opacity: 1; transform: scale(1); }
+        from {
+            opacity: 0;
+            transform: scale(0);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
     }
 
     /* ── Navbar ── */
@@ -584,7 +593,8 @@ body.workspace-active .floating-dock-left {
     /* ── Footer ── */
     .footer {
         padding: 1.5rem 0;
-        margin-bottom: 0 !important; /* Forces 0 bottom margin */
+        margin-bottom: 0 !important;
+        /* Forces 0 bottom margin */
     }
 
     .footer-content {
@@ -669,7 +679,8 @@ body.workspace-active .floating-dock-left {
 .global-filter-dock {
     display: flex;
     position: fixed;
-    bottom: 8.5rem; /* Adjusted for desktop workspace dock height */
+    bottom: 8.5rem;
+    /* Adjusted for desktop workspace dock height */
     left: 2.5rem;
     z-index: 2200;
     flex-direction: row;
@@ -687,7 +698,8 @@ body.workspace-active .floating-dock-left {
 @media (max-width: 1024px) {
     .global-filter-dock {
         left: 1.25rem;
-        bottom: 10rem; /* Adjusted for mobile bottom nav + dock */
+        bottom: 10rem;
+        /* Adjusted for mobile bottom nav + dock */
         flex-direction: column-reverse;
         align-items: flex-start;
         gap: 0.85rem;
@@ -709,12 +721,17 @@ body.workspace-active .floating-dock-left {
     padding: 0 !important;
     margin-bottom: 1rem !important;
     width: 100%;
+    align-self: stretch;
 }
 
 .search-only-global .selectors-body {
     max-height: unset !important;
     opacity: 1 !important;
     padding: 0 !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
 }
 
 .search-only-global .search-bar-modern {
@@ -753,8 +770,15 @@ body.workspace-active .floating-dock-left {
 }
 
 @keyframes slideUpModal {
-    from { transform: translateY(40px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from {
+        transform: translateY(40px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 .filter-modal-header {
