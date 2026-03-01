@@ -10,18 +10,28 @@ const DCETCalculator = () => {
     const [predictedRank, setPredictedRank] = useState(null);
     const [showResult, setShowResult] = useState(false);
 
+    // States for intermediate steps
+    const [dipScore50, setDipScore50] = useState('0.00');
+    const [dcetScore50, setDcetScore50] = useState('0.00');
+
     // Calculate Diploma % and Combined Marks whenever inputs change
     useEffect(() => {
         const cgpaVal = parseFloat(cgpa) || 0;
         const dcetVal = parseFloat(dcetMarks) || 0;
 
-        // Formula: (CGPA - 0.75) * 10 = Diploma %
+        // Step 1: Converted CGPA = (CGPA - 0.75) * 10
         const percent = Math.max(0, (cgpaVal - 0.75) * 10).toFixed(2);
         setDiplomaPercent(percent);
 
-        // Combined Marks = (Diploma % / 2) + (DCET Score / 2)
-        // This assumes Max DCET Score is 100.
-        const combined = ((parseFloat(percent) / 2) + (dcetVal / 2)).toFixed(2);
+        // Step 2: Weightage split (50/50)
+        const dip50 = (parseFloat(percent) / 2).toFixed(2);
+        const dcet50 = (dcetVal / 2).toFixed(2);
+        
+        setDipScore50(dip50);
+        setDcetScore50(dcet50);
+
+        // Final Score = Sum of both
+        const combined = (parseFloat(dip50) + parseFloat(dcet50)).toFixed(2);
         setCombinedMarks(combined);
     }, [cgpa, dcetMarks]);
 
@@ -29,6 +39,7 @@ const DCETCalculator = () => {
         const score = parseFloat(combinedMarks);
         let rankRange = "";
 
+        // Standard Rank Thresholds (Based on 100 Max Score)
         if (score >= 96) rankRange = "1 - 10";
         else if (score >= 94) rankRange = "11 - 50";
         else if (score >= 92) rankRange = "51 - 100";
@@ -64,7 +75,7 @@ const DCETCalculator = () => {
                         id="cgpa-input"
                         type="number"
                         className="calc-input-field"
-                        placeholder="Eg: 9.83 (Cumulative)"
+                        placeholder="Eg: 9.83"
                         value={cgpa}
                         onChange={(e) => setCgpa(e.target.value)}
                         max="10"
@@ -74,12 +85,12 @@ const DCETCalculator = () => {
                 </div>
 
                 <div className="calc-input-group">
-                    <label htmlFor="dcet-input">DCET Marks</label>
+                    <label htmlFor="dcet-input">DCET Marks (0-100)</label>
                     <input
                         id="dcet-input"
                         type="number"
                         className="calc-input-field"
-                        placeholder="Eg: 94 (Out of 100)"
+                        placeholder="Eg: 94"
                         value={dcetMarks}
                         onChange={(e) => setDcetMarks(e.target.value)}
                         max="100"
@@ -88,26 +99,38 @@ const DCETCalculator = () => {
                 </div>
 
                 <div className="calc-input-group">
-                    <label>Diploma %</label>
+                    <label>Diploma Score (50%)</label>
                     <input
                         type="text"
                         className="calc-input-field"
-                        value={diplomaPercent}
+                        value={dipScore50}
                         disabled
                         readOnly
                     />
                 </div>
 
                 <div className="calc-input-group">
-                    <label>Calculated Marks for DCET Rank</label>
+                    <label>DCET Score (50%)</label>
                     <input
                         type="text"
                         className="calc-input-field"
-                        value={combinedMarks}
+                        value={dcetScore50}
                         disabled
                         readOnly
                     />
                 </div>
+            </div>
+
+            <div className="final-score-overview" style={{ 
+                marginBottom: '1.5rem', 
+                padding: '1rem', 
+                background: 'rgba(255,255,255,0.03)', 
+                borderRadius: '12px',
+                border: '1px dashed rgba(255,255,255,0.1)',
+                textAlign: 'center'
+            }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Total Combined Score</span>
+                <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--accent-color)', marginTop: '0.25rem' }}>{combinedMarks} / 100</div>
             </div>
 
             <button 
