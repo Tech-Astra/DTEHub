@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import IframeModal from '../components/IframeModal';
+import CustomSelect from '../components/CustomSelect';
 import './Admin.css';
 
 // Admin allowed list
@@ -1124,10 +1125,16 @@ export default function Admin() {
                                 <div className="modal-form">
                                     <div className="modal-field">
                                         <label>Inside Folder</label>
-                                        <select value={parentId} onChange={e => setParentId(e.target.value)}>
-                                            <option value="root">Main Directory (Root)</option>
-                                            {foldersList.map(f => <option key={f.id} value={f.id}>{f.title}</option>)}
-                                        </select>
+                                        <CustomSelect 
+                                            options={[
+                                                { value: 'root', label: 'Main Directory (Root)' },
+                                                ...foldersList.map(f => ({ value: f.id, label: f.title }))
+                                            ]}
+                                            value={parentId}
+                                            onChange={setParentId}
+                                            placeholder="Select Folder"
+                                            icon={Folder}
+                                        />
                                     </div>
                                     <div className="modal-field">
                                         <label>Title</label>
@@ -1154,34 +1161,46 @@ export default function Admin() {
                                         <div className="modal-form-row">
                                             <div className="modal-field">
                                                 <label>Syllabus</label>
-                                                <select required value={syllabus} onChange={e => setSyllabus(e.target.value)}>
-                                                    {syllabusesList.map(s => (
-                                                        <option key={s.id} value={s.title}>{s.title} Scheme</option>
-                                                    ))}
-                                                </select>
+                                                <CustomSelect 
+                                                    options={syllabusesList.map(s => ({ value: s.title, label: `${s.title} Scheme` }))}
+                                                    value={syllabus}
+                                                    onChange={setSyllabus}
+                                                    placeholder="Select Scheme"
+                                                    required
+                                                />
                                             </div>
                                             <div className="modal-field">
                                                 <label>Semester</label>
-                                                <select required value={semester} onChange={e => setSemester(e.target.value)}>
-                                                    <option value="1st Sem">1st Sem</option>
-                                                    <option value="2nd Sem">2nd Sem</option>
-                                                    <option value="3rd Sem">3rd Sem</option>
-                                                    <option value="4th Sem">4th Sem</option>
-                                                    <option value="5th Sem">5th Sem</option>
-                                                    <option value="6th Sem">6th Sem</option>
-                                                </select>
+                                                <CustomSelect 
+                                                    options={[
+                                                        { value: '1st Sem', label: '1st Sem' },
+                                                        { value: '2nd Sem', label: '2nd Sem' },
+                                                        { value: '3rd Sem', label: '3rd Sem' },
+                                                        { value: '4th Sem', label: '4th Sem' },
+                                                        { value: '5th Sem', label: '5th Sem' },
+                                                        { value: '6th Sem', label: '6th Sem' }
+                                                    ]}
+                                                    value={semester}
+                                                    onChange={setSemester}
+                                                    placeholder="Select Sem"
+                                                    required
+                                                />
                                             </div>
                                         </div>
                                     )}
                                     <div className="modal-form-row">
                                         <div className="modal-field">
                                             <label>Branch Linkage</label>
-                                            <select required value={branch} onChange={e => setBranch(e.target.value)}>
-                                                <option value="Common">Common to All</option>
-                                                {branchesList.map((b) => (
-                                                    <option key={b.id} value={b.title}>{b.title}</option>
-                                                ))}
-                                            </select>
+                                            <CustomSelect 
+                                                options={[
+                                                    { value: 'Common', label: 'Common to All' },
+                                                    ...branchesList.map(b => ({ value: b.title, label: b.title }))
+                                                ]}
+                                                value={branch}
+                                                onChange={setBranch}
+                                                placeholder="Select Branch"
+                                                required
+                                            />
                                         </div>
                                     </div>
                                 </div>
