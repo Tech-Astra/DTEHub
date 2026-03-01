@@ -211,10 +211,19 @@
     gap: 1.5rem;
     padding: 2rem;
     background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1.5px solid var(--accent-color); /* Yellow Outline as requested */
     border-radius: 20px;
     margin-bottom: 2rem;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.light-theme .workspace-selectors {
+    background: rgba(255, 255, 255, 5); /* Set to 50% opacity to see background clearly */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1.5px solid var(--accent-color);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
 }
 
 .selector-group {
@@ -241,6 +250,10 @@
     padding-left: 0.25rem;
 }
 
+.light-theme .selector-item label {
+    color: #475569;
+}
+
 .selector-box {
     position: relative;
     display: flex;
@@ -251,10 +264,19 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.light-theme .selector-box {
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
 .selector-box:hover, .selector-box:focus-within {
     background: rgba(255, 255, 255, 0.07);
     border-color: var(--accent-color);
     box-shadow: 0 0 15px rgba(253, 224, 71, 0.05);
+}
+
+.light-theme .selector-box:hover {
+    background: rgba(255, 255, 255, 0.8);
 }
 
 .selector-icon {
@@ -273,6 +295,10 @@
     opacity: 0.5;
 }
 
+.light-theme .chevron-icon {
+    color: #000000;
+}
+
 .selector-box select {
     width: 100%;
     padding: 0.85rem 2.5rem;
@@ -286,16 +312,63 @@
     outline: none;
 }
 
+.light-theme .selector-box select {
+    color: #000000;
+}
+
 .selector-box select option {
     background: #1a1f26;
     color: white;
     padding: 1rem;
 }
 
+.light-theme .selector-box select option {
+    background: #ffffff;
+    color: #000000;
+}
+
 .workspace-selectors .search-bar-modern {
     width: 300px;
     background: rgba(255, 255, 255, 0.04);
     height: 52px;
+}
+
+.light-theme .workspace-selectors .search-bar-modern {
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.light-theme .search-bar-modern input {
+    color: #000000;
+}
+
+/* ───────────── Folder Card Theme Overrides ───────────── */
+.folder-card {
+    border: 1.5px solid var(--accent-color); /* Yellow Outline */
+}
+
+.light-theme .folder-card {
+    background: rgba(255, 255, 255, 0.5); /* 50% opacity as requested */
+    backdrop-filter: blur(15px);
+    border: 1.5px solid var(--accent-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.light-theme .folder-card:hover {
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 12px 24px rgba(253, 224, 71, 0.15);
+}
+
+.light-theme .folder-title {
+    color: #000000;
+}
+
+.light-theme .folder-icon-wrapper svg {
+    stroke: #000000;
+}
+
+.light-theme .folder-icon-wrapper {
+    color: #000000;
 }
 
 @media (max-width: 1024px) {
