@@ -2,11 +2,26 @@
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    margin: 0;
+    padding: 0;
 }
 
 .main-content {
     flex: 1;
-    padding: 2rem 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    margin-bottom: 0 !important;
+}
+
+/* Footer Styles */
+.footer {
+    background-color: var(--card-bg);
+    border-top: 1px solid var(--border-color);
+    padding: 2.5rem 0;
+    margin-top: auto;
+    margin-bottom: 0 !important;
+    width: 100%;
 }
 
 /* Navbar Styles */
@@ -53,13 +68,6 @@
 }
 
 /* Footer Styles */
-.footer {
-    background-color: var(--card-bg);
-    border-top: 1px solid var(--border-color);
-    padding: 2rem 0;
-    margin-top: auto;
-}
-
 .footer-content {
     display: flex;
     align-items: center;
@@ -575,8 +583,8 @@ body.workspace-active .floating-dock-left {
 
     /* ── Footer ── */
     .footer {
-        padding: 1.25rem 0;
-        margin-bottom: 4rem;
+        padding: 1.5rem 0;
+        margin-bottom: 0 !important; /* Forces 0 bottom margin */
     }
 
     .footer-content {
@@ -699,7 +707,7 @@ body.workspace-active .floating-dock-left {
     border: none !important;
     box-shadow: none !important;
     padding: 0 !important;
-    margin-bottom: 2rem !important;
+    margin-bottom: 1rem !important;
     width: 100%;
 }
 
@@ -714,7 +722,7 @@ body.workspace-active .floating-dock-left {
     background: rgba(255, 255, 255, 0.05) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
     width: 100%;
-    max-width: 800px;
+    max-width: 1250px;
     margin: 0 auto !important;
 }
 

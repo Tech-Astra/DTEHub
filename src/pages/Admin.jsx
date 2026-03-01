@@ -65,7 +65,8 @@ export default function Admin() {
     const [showTestimonialModal, setShowTestimonialModal] = useState(false);
     const [testimonialForm, setTestimonialForm] = useState({
         name: '',
-        role: '',
+        role: 'DTEHub Student',
+        college: '',
         message: '',
         rating: 5,
         photoUrl: ''
@@ -886,7 +887,7 @@ export default function Admin() {
                                     </div>
                                     <button className="btn-primary" onClick={() => {
                                         setEditingId(null);
-                                        setTestimonialForm({ name: '', role: '', message: '', rating: 5, photoUrl: '' });
+                                        setTestimonialForm({ name: '', role: 'DTEHub Student', college: '', message: '', rating: 5, photoUrl: '' });
                                         setShowTestimonialModal(true);
                                     }}>
                                         <Plus size={16} /> Add Testimonial
@@ -902,7 +903,17 @@ export default function Admin() {
                                                 </div>
                                                 <div className="test-meta">
                                                     <h4>{item.name}</h4>
-                                                    <p>{item.role}</p>
+                                                    <p>{item.role} • {item.college || 'DTEHub Community'}</p>
+                                                    <div className="test-stars-admin" style={{ display: 'flex', gap: '2px', marginTop: '4px' }}>
+                                                        {[...Array(5)].map((_, i) => (
+                                                            <Star 
+                                                                key={i} 
+                                                                size={10} 
+                                                                fill={i < (item.rating || 5) ? "var(--accent-color)" : "transparent"} 
+                                                                color={i < (item.rating || 5) ? "var(--accent-color)" : "rgba(255,255,255,0.2)"} 
+                                                            />
+                                                        ))}
+                                                    </div>
                                                 </div>
                                                 <div className="test-actions">
                                                     <button onClick={() => {
@@ -1596,9 +1607,34 @@ export default function Admin() {
                                         <label>Student Name</label>
                                         <input type="text" value={testimonialForm.name} onChange={e => setTestimonialForm({ ...testimonialForm, name: e.target.value })} required />
                                     </div>
+                                    <div className="modal-form-row">
+                                        <div className="modal-field">
+                                            <label>Student Role</label>
+                                            <input type="text" value={testimonialForm.role} onChange={e => setTestimonialForm({ ...testimonialForm, role: e.target.value })} required />
+                                        </div>
+                                        <div className="modal-field">
+                                            <label>College Name</label>
+                                            <input type="text" value={testimonialForm.college} onChange={e => setTestimonialForm({ ...testimonialForm, college: e.target.value })} required />
+                                        </div>
+                                    </div>
                                     <div className="modal-field">
-                                        <label>Role / College (e.g. 5th Sem CS, Gp Belgaum)</label>
-                                        <input type="text" value={testimonialForm.role} onChange={e => setTestimonialForm({ ...testimonialForm, role: e.target.value })} required />
+                                        <label>Rating (Stars)</label>
+                                        <div className="admin-star-selector" style={{ display: 'flex', gap: '8px' }}>
+                                            {[1, 2, 3, 4, 5].map((s) => (
+                                                <button 
+                                                    key={s}
+                                                    type="button"
+                                                    onClick={() => setTestimonialForm({ ...testimonialForm, rating: s })}
+                                                    style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 0 }}
+                                                >
+                                                    <Star 
+                                                        size={24} 
+                                                        fill={s <= (testimonialForm.rating || 5) ? "var(--accent-color)" : "transparent"} 
+                                                        color={s <= (testimonialForm.rating || 5) ? "var(--accent-color)" : "rgba(255,255,255,0.2)"} 
+                                                    />
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
                                     <div className="modal-field">
                                         <label>Message</label>

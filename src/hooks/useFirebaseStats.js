@@ -3,33 +3,33 @@ import { ref, onValue, runTransaction } from 'firebase/database';
 import { database } from '../firebase';
 
 export function useFirebaseStats() {
-  const [stats, setStats] = useState({
-    totalViews: 0,
-    totalResources: 0,
-    totalVerifiedUsers: 0,
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    // Track counts from multiple nodes
-    let notesCount = 0;
-    let dcetCount = 0;
-    let usersCount = 0;
-    let viewsCount = 0;
-    let ready = { notes: false, dcet: false, users: false, views: false };
-
-    const updateStats = () => {
-      // Only update once all listeners have fired at least once
-      if (ready.notes && ready.dcet && ready.users && ready.views) {
-        setStats({
-          totalResources: notesCount + dcetCount,
-          totalVerifiedUsers: usersCount,
-          totalViews: viewsCount,
-        });
-        setLoading(false);
-      }
-    };
+    const [stats, setStats] = useState({
+      visits: 0,
+      resources: 0,
+      users: 0,
+    });
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+  
+    useEffect(() => {
+      // Track counts from multiple nodes
+      let notesCount = 0;
+      let dcetCount = 0;
+      let usersCount = 0;
+      let viewsCount = 0;
+      let ready = { notes: false, dcet: false, users: false, views: false };
+  
+      const updateStats = () => {
+        // Only update once all listeners have fired at least once
+        if (ready.notes && ready.dcet && ready.users && ready.views) {
+          setStats({
+            resources: notesCount + dcetCount,
+            users: usersCount,
+            visits: viewsCount,
+          });
+          setLoading(false);
+        }
+      };
 
     try {
       // 1. Session-based View Counter (increment once per session)
