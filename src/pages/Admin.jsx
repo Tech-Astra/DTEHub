@@ -48,6 +48,9 @@ export default function Admin() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [showFolderModal, setShowFolderModal] = useState(false);
     const [showResourceModal, setShowResourceModal] = useState(false);
+    const [showBranchModal, setShowBranchModal] = useState(false);
+    const [branchesList, setBranchesList] = useState([]);
+    const [newBranchTitle, setNewBranchTitle] = useState('');
     
     // Form States
     const [title, setTitle] = useState('');
@@ -55,6 +58,7 @@ export default function Admin() {
     const [academicYear, setAcademicYear] = useState('');
     const [branch, setBranch] = useState('');
     const [chapter, setChapter] = useState('');
+    const [resourceType, setResourceType] = useState('Note'); // For Notes/Papers toggle
     
     // Data list states
     const [resources, setResources] = useState([]);
@@ -76,6 +80,18 @@ export default function Admin() {
     useEffect(() => {
         let unsubscribeResources = () => {};
         let profilesUnsubscribe = () => {};
+        let branchesUnsubscribe = () => {};
+
+        // Fetch Branches globally
+        const branchesRef = ref(database, 'branches');
+        branchesUnsubscribe = onValue(branchesRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                setBranchesList(Object.values(data));
+            } else {
+                setBranchesList(['Common', 'Computer Science', 'Mechanical', 'Civil', 'Electrical', 'Electronics']);
+            }
+        });
 
         if (user?.email && ADMIN_EMAILS.includes(user.email)) {
             // Stats node real-time
@@ -103,7 +119,7 @@ export default function Admin() {
                 }
             });
 
-            if (['notes', 'papers', 'dcet'].includes(activeTab)) {
+            if (['notes', 'dcet'].includes(activeTab)) {
                 // Fetch Resources for specific tab
                 const resourcesRef = ref(database, activeTab);
                 unsubscribeResources = onValue(resourcesRef, (snapshot) => {
@@ -123,16 +139,13 @@ export default function Admin() {
             } else if (activeTab === 'dashboard') {
                 // Approximate charts data logic
                 const computeCharts = async () => {
-                   let n = 0, p = 0, d = 0;
+                   let n = 0, d = 0;
                    const snapN = await get(ref(database, 'notes'));
                    if(snapN.exists()) n = Object.keys(snapN.val()).length;
-                   const snapP = await get(ref(database, 'papers'));
-                   if(snapP.exists()) p = Object.keys(snapP.val()).length;
                    const snapD = await get(ref(database, 'dcet'));
                    if(snapD.exists()) d = Object.keys(snapD.val()).length;
                    setCatData([
-                       { name: 'Notes', val: n || 10 },
-                       { name: 'Papers', val: p || 5 },
+                       { name: 'Notes & Papers', val: n || 15 },
                        { name: 'DCET', val: d || 8 },
                        { name: 'Guides', val: 4 }
                    ]);
@@ -144,6 +157,7 @@ export default function Admin() {
         return () => {
             profilesUnsubscribe();
             unsubscribeResources();
+            branchesUnsubscribe();
         };
     }, [activeTab, user]);
 
@@ -186,6 +200,23 @@ export default function Admin() {
         }
     };
 
+    const handleAddBranch = async (e) => {
+        e.preventDefault();
+        if (!newBranchTitle.trim()) return;
+        setIsSaving(true);
+        try {
+            const branchRef = push(ref(database, 'branches'));
+            await set(branchRef, newBranchTitle.trim());
+            setNewBranchTitle('');
+            setShowBranchModal(false);
+            alert("New branch added successfully!");
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const handleAddResource = async (e) => {
         e.preventDefault();
         setIsSaving(true);
@@ -196,9 +227,12 @@ export default function Admin() {
                 timestamp: Date.now(),
             };
 
-            if (activeTab === 'notes') newResource.chapter = chapter || 'General';
-            else if (activeTab === 'papers') newResource.year = chapter || new Date().getFullYear().toString();
-            else if (activeTab === 'dcet') newResource.chapter = chapter || 'Preparation';
+            if (activeTab === 'notes') {
+                newResource.chapter = chapter || 'General';
+                newResource.type = resourceType; // 'Note' or 'Paper'
+            } else if (activeTab === 'dcet') {
+                newResource.chapter = chapter || 'Preparation';
+            }
 
             if (editingId) {
                 await set(ref(database, `${activeTab}/${editingId}`), newResource);
@@ -210,7 +244,7 @@ export default function Admin() {
                 runTransaction(statsRef, (count) => (count || 0) + 1);
                 alert(`New ${activeTab.slice(0, -1)} added!`);
             }
-            setTitle(''); setUrl(''); setChapter(''); setEditingId(null);
+            setTitle(''); setUrl(''); setChapter(''); setEditingId(null); setResourceType('Note');
             setShowResourceModal(false);
         } catch (error) {
             alert("Failed to save.");
@@ -225,7 +259,8 @@ export default function Admin() {
         setUrl(res.url || '');
         setAcademicYear(res.academicYear);
         setBranch(res.branch);
-        setChapter(activeTab === 'notes' ? res.chapter : res.year);
+        setChapter(activeTab === 'notes' ? res.chapter : res.chapter);
+        setResourceType(res.type || 'Note');
         setIsFolder(res.isFolder || false);
         setParentId(res.parentId || 'root');
         setShowResourceModal(true);
@@ -238,7 +273,7 @@ export default function Admin() {
             const userCount = usersSnapshot.exists() ? Object.keys(usersSnapshot.val()).length : 0;
 
             let resourceCount = 0;
-            for (const cat of ['notes', 'papers', 'dcet']) {
+            for (const cat of ['notes', 'dcet']) {
                 const snap = await get(ref(database, cat));
                 if (snap.exists()) resourceCount += Object.keys(snap.val()).length;
             }
@@ -274,6 +309,7 @@ export default function Admin() {
     };
 
     return (
+        <>
         <div className="admin-dashboard-layout">
             {isMobileMenuOpen && (
                 <div className="mobile-overlay" onClick={() => setIsMobileMenuOpen(false)}></div>
@@ -296,10 +332,7 @@ export default function Admin() {
                         <LayoutDashboard size={18} /> Dashboard
                     </button>
                     <button className={`sidebar-btn ${activeTab === 'notes' ? 'active' : ''}`} onClick={() => setActiveTab('notes')}>
-                        <FolderPlus size={18} /> Notes
-                    </button>
-                    <button className={`sidebar-btn ${activeTab === 'papers' ? 'active' : ''}`} onClick={() => setActiveTab('papers')}>
-                        <FileText size={18} /> Papers
+                        <FolderPlus size={18} /> Notes & Papers
                     </button>
                     <button className={`sidebar-btn ${activeTab === 'dcet' ? 'active' : ''}`} onClick={() => setActiveTab('dcet')}>
                         <Zap size={18} /> DCET
@@ -525,6 +558,9 @@ export default function Admin() {
                             <div className="admin-header-actions">
                                 <h3>Manage {activeTab.toUpperCase()}</h3>
                                 <div className="admin-action-buttons">
+                                    <button className="btn-outline" onClick={() => setShowBranchModal(true)}>
+                                        <Plus size={16} /> New Branch
+                                    </button>
                                     <button className="btn-outline" onClick={() => setShowFolderModal(true)}>
                                         <FolderPlus size={16} /> New Folder
                                     </button>
@@ -547,7 +583,10 @@ export default function Admin() {
                                                 <div className="res-meta">
                                                     <span className="res-tag">{res.academicYear}</span>
                                                     <span className="res-tag">{res.branch}</span>
-                                                    <span className="res-val">{activeTab === 'notes' ? res.chapter : res.year}</span>
+                                                    <span className="res-val">{res.chapter}</span>
+                                                    {!res.isFolder && activeTab === 'notes' && (
+                                                        <span className="res-tag" style={{backgroundColor: res.type === 'Paper' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(234, 179, 8, 0.1)', color: res.type === 'Paper' ? '#ef4444' : '#eab308'}}>{res.type || 'Note'}</span>
+                                                    )}
                                                 </div>
                                             </div>
                                             <div className="res-actions">
@@ -571,100 +610,186 @@ export default function Admin() {
                                 </div>
                             </div>
 
-                            {/* Folder Modal */}
-                            {showFolderModal && (
-                                <div className="admin-modal-overlay" onClick={(e) => { if(e.target.className === 'admin-modal-overlay') setShowFolderModal(false); }}>
-                                    <div className="admin-modal-content">
-                                        <button className="admin-modal-close" onClick={() => setShowFolderModal(false)}><X size={20} /></button>
-                                        <div className="card-header-with-icon">
-                                            <FolderPlus size={20} color="var(--accent-color)" />
-                                            <h3>Create New Folder</h3>
-                                        </div>
-                                        <form onSubmit={handleAddFolder} className="admin-form-mini" style={{flexDirection: 'column', gap: '1rem', marginTop: '1rem'}}>
-                                            <input type="text" placeholder="e.g. Unit 1: OS Basics" value={folderTitle} onChange={e => setFolderTitle(e.target.value)} required />
-                                            <div className="form-row" style={{gap: '0.5rem'}}>
-                                                <select className="form-select" value={academicYear} onChange={e => setAcademicYear(e.target.value)} style={{fontSize: '0.9rem', padding: '0.6rem', flex: 1}}>
-                                                    <option value="">Year (All)</option>
-                                                    <option value="1st Year">1st Year</option>
-                                                    <option value="2nd Year">2nd Year</option>
-                                                    <option value="3rd Year">3rd Year</option>
-                                                </select>
-                                                <select className="form-select" value={branch} onChange={e => setBranch(e.target.value)} style={{fontSize: '0.9rem', padding: '0.6rem', flex: 1}}>
-                                                    <option value="">Branch (All)</option>
-                                                    <option value="Common">Common</option>
-                                                    <option value="Computer Science">CS</option>
-                                                    <option value="Mechanical">Mechanical</option>
-                                                </select>
-                                            </div>
-                                            <button type="submit" className="btn-primary" disabled={isSaving} style={{width: '100%', marginTop: '0.5rem'}}>
-                                                <Plus size={16} /> Create Folder
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Resource Modal */}
-                            {showResourceModal && (
-                                <div className="admin-modal-overlay" onClick={(e) => { if(e.target.className === 'admin-modal-overlay') {setShowResourceModal(false); setEditingId(null); setTitle('');} }}>
-                                    <div className="admin-modal-content">
-                                        <button className="admin-modal-close" onClick={() => {setShowResourceModal(false); setEditingId(null); setTitle('');}}><X size={20} /></button>
-                                        <h3>{editingId ? 'Edit' : 'Add'} {activeTab === 'notes' ? 'Note' : activeTab === 'papers' ? 'Paper' : 'DCET Resource'}</h3>
-                                        <form className="admin-form" onSubmit={handleAddResource} style={{marginTop: '1.5rem'}}>
-                                            <div className="form-group">
-                                                <label>Inside Folder:</label>
-                                                <select value={parentId} onChange={e => setParentId(e.target.value)}>
-                                                    <option value="root">Main Directory (Root)</option>
-                                                    {foldersList.map(f => <option key={f.id} value={f.id}>📁 {f.title}</option>)}
-                                                </select>
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Title</label>
-                                                <input type="text" required value={title} onChange={e => setTitle(e.target.value)} />
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Drive URL</label>
-                                                <div className="input-with-icon">
-                                                    <LinkIcon size={16} />
-                                                    <input type="url" required value={url} onChange={e => setUrl(e.target.value)} />
-                                                </div>
-                                            </div>
-                                            <div className="form-row">
-                                                <div className="form-group">
-                                                    <label>Year</label>
-                                                    <select required value={academicYear} onChange={e => setAcademicYear(e.target.value)}>
-                                                        <option value="" disabled>Select</option>
-                                                        <option value="1st Year">1st Year</option>
-                                                        <option value="2nd Year">2nd Year</option>
-                                                        <option value="3rd Year">3rd Year</option>
-                                                    </select>
-                                                </div>
-                                                <div className="form-group">
-                                                    <label>Branch</label>
-                                                    <select required value={branch} onChange={e => setBranch(e.target.value)}>
-                                                        <option value="" disabled>Select</option>
-                                                        <option value="Common">Common</option>
-                                                        <option value="Computer Science">CS</option>
-                                                        <option value="Mechanical">Mechanical</option>
-                                                        <option value="Civil">Civil</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div className="form-group">
-                                                <label>{activeTab === 'notes' ? 'Chapter/Module' : activeTab === 'papers' ? 'Exam Year' : 'Topic'}</label>
-                                                <input type="text" required value={chapter} onChange={e => setChapter(e.target.value)} />
-                                            </div>
-                                            <button type="submit" className="btn-primary w-full" disabled={isSaving} style={{marginTop: '1rem'}}>
-                                                {isSaving ? 'Saving...' : <>{editingId ? <Edit2 size={18} /> : <Plus size={18} />} {editingId ? 'Update' : 'Add'} Resource</>}
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            )}
+                            {/* Modals moved outside the overflow-hidden layout */}
                         </div>
                     )}
                 </div>
             </main>
         </div>
+
+        {/* ===== MODALS (rendered at top level, outside overflow:hidden containers) ===== */}
+
+        {/* Folder Modal */}
+        {showFolderModal && (
+            <div className="admin-modal-overlay" onClick={(e) => { if(e.target.className === 'admin-modal-overlay') setShowFolderModal(false); }}>
+                <div className="admin-modal-content">
+                    <div className="admin-modal-header">
+                        <div className="admin-modal-header-left">
+                            <div className="admin-modal-header-icon folder">
+                                <FolderPlus size={18} />
+                            </div>
+                            <div>
+                                <h3>Create New Folder</h3>
+                                <p>Organize resources into a folder</p>
+                            </div>
+                        </div>
+                        <button className="admin-modal-close" onClick={() => setShowFolderModal(false)}><X size={16} /></button>
+                    </div>
+                    <form onSubmit={handleAddFolder}>
+                        <div className="admin-modal-body">
+                            <div className="modal-form">
+                                <div className="modal-field">
+                                    <label>Folder Name</label>
+                                    <input type="text" placeholder="e.g. Unit 1: OS Basics" value={folderTitle} onChange={e => setFolderTitle(e.target.value)} required />
+                                </div>
+                                <div className="modal-form-row">
+                                    <div className="modal-field">
+                                        <label>Academic Year</label>
+                                        <select value={academicYear} onChange={e => setAcademicYear(e.target.value)}>
+                                            <option value="">All Years</option>
+                                            <option value="1st Year">1st Year</option>
+                                            <option value="2nd Year">2nd Year</option>
+                                            <option value="3rd Year">3rd Year</option>
+                                        </select>
+                                    </div>
+                                    <div className="modal-field">
+                                        <label>Branch</label>
+                                        <select value={branch} onChange={e => setBranch(e.target.value)}>
+                                            <option value="">All Branches</option>
+                                            {branchesList.map((b, idx) => (
+                                                <option key={idx} value={b}>{b}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="admin-modal-footer">
+                            <button type="submit" className="modal-submit-btn primary" disabled={isSaving}>
+                                <FolderPlus size={16} /> {isSaving ? 'Creating...' : 'Create Folder'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        )}
+
+        {/* Resource Modal */}
+        {showResourceModal && (
+            <div className="admin-modal-overlay" onClick={(e) => { if(e.target.className === 'admin-modal-overlay') {setShowResourceModal(false); setEditingId(null); setTitle('');} }}>
+                <div className="admin-modal-content">
+                    <div className="admin-modal-header">
+                        <div className="admin-modal-header-left">
+                            <div className="admin-modal-header-icon resource">
+                                {editingId ? <Edit2 size={18} /> : <Plus size={18} />}
+                            </div>
+                            <div>
+                                <h3>{editingId ? 'Edit' : 'Add'} {activeTab === 'notes' ? 'Note / Paper' : 'DCET Resource'}</h3>
+                                <p>{editingId ? 'Update existing resource details' : 'Add a new resource to the collection'}</p>
+                            </div>
+                        </div>
+                        <button className="admin-modal-close" onClick={() => {setShowResourceModal(false); setEditingId(null); setTitle('');}}><X size={16} /></button>
+                    </div>
+                    <form onSubmit={handleAddResource}>
+                        <div className="admin-modal-body">
+                            <div className="modal-form">
+                                <div className="modal-field">
+                                    <label>Inside Folder</label>
+                                    <select value={parentId} onChange={e => setParentId(e.target.value)}>
+                                        <option value="root">Main Directory (Root)</option>
+                                        {foldersList.map(f => <option key={f.id} value={f.id}>📁 {f.title}</option>)}
+                                    </select>
+                                </div>
+                                <div className="modal-field">
+                                    <label>Title</label>
+                                    <input type="text" placeholder="Resource title" required value={title} onChange={e => setTitle(e.target.value)} />
+                                </div>
+                                <div className="modal-field">
+                                    <label>Drive URL</label>
+                                    <div className="input-icon-wrap">
+                                        <LinkIcon size={15} />
+                                        <input type="url" placeholder="https://drive.google.com/..." required value={url} onChange={e => setUrl(e.target.value)} />
+                                    </div>
+                                </div>
+                                <div className="modal-form-row">
+                                    <div className="modal-field">
+                                        <label>Year</label>
+                                        <select required value={academicYear} onChange={e => setAcademicYear(e.target.value)}>
+                                            <option value="" disabled>Select Year</option>
+                                            <option value="1st Year">1st Year</option>
+                                            <option value="2nd Year">2nd Year</option>
+                                            <option value="3rd Year">3rd Year</option>
+                                        </select>
+                                    </div>
+                                    <div className="modal-field">
+                                        <label>Branch</label>
+                                        <select required value={branch} onChange={e => setBranch(e.target.value)}>
+                                            <option value="" disabled>Select Branch</option>
+                                            {branchesList.map((b, idx) => (
+                                                <option key={idx} value={b}>{b}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                                {activeTab === 'notes' && (
+                                    <div className="modal-field">
+                                        <label>Resource Type</label>
+                                        <select required value={resourceType} onChange={e => setResourceType(e.target.value)}>
+                                            <option value="Note">Notes</option>
+                                            <option value="Paper">Question Paper</option>
+                                        </select>
+                                    </div>
+                                )}
+                                <div className="modal-field">
+                                    <label>{activeTab === 'notes' ? 'Chapter / Module Name' : 'Topic'}</label>
+                                    <input type="text" placeholder={activeTab === 'notes' ? 'e.g. Unit 3: Deadlocks' : 'e.g. Mathematics'} required value={chapter} onChange={e => setChapter(e.target.value)} />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="admin-modal-footer">
+                            <button type="submit" className="modal-submit-btn primary" disabled={isSaving}>
+                                {isSaving ? 'Saving...' : <>{editingId ? <Edit2 size={16} /> : <Plus size={16} />} {editingId ? 'Update Resource' : 'Add Resource'}</>}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        )}
+
+        {/* Branch Modal */}
+        {showBranchModal && (
+            <div className="admin-modal-overlay" onClick={(e) => { if(e.target.className === 'admin-modal-overlay') setShowBranchModal(false); }}>
+                <div className="admin-modal-content" style={{maxWidth: '420px'}}>
+                    <div className="admin-modal-header">
+                        <div className="admin-modal-header-left">
+                            <div className="admin-modal-header-icon branch">
+                                <Plus size={18} />
+                            </div>
+                            <div>
+                                <h3>Add New Branch</h3>
+                                <p>This will appear in all branch dropdowns</p>
+                            </div>
+                        </div>
+                        <button className="admin-modal-close" onClick={() => setShowBranchModal(false)}><X size={16} /></button>
+                    </div>
+                    <form onSubmit={handleAddBranch}>
+                        <div className="admin-modal-body">
+                            <div className="modal-form">
+                                <div className="modal-field">
+                                    <label>Branch Name</label>
+                                    <input type="text" placeholder="e.g. Chemical Engineering" value={newBranchTitle} onChange={e => setNewBranchTitle(e.target.value)} required />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="admin-modal-footer">
+                            <button type="submit" className="modal-submit-btn primary" disabled={isSaving}>
+                                <Plus size={16} /> {isSaving ? 'Adding...' : 'Add Branch'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        )}
+    </>
     );
 }
