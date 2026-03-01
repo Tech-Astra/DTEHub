@@ -2,29 +2,47 @@
 
 :root {
   --font-family: 'Inter', sans-serif;
-  
+
   /* Obsidian & Gold Theme */
-  --bg-color: #0c0c0e; 
+  --bg-color: #0c0c0e;
   --card-bg: #18181b;
   --text-main: #ffffff;
   --text-muted: #a1a1aa;
-  
-  --accent-color: #FDE047; /* Vibrant Yellow */
+
+  --accent-color: #FDE047;
+  /* Vibrant Yellow */
   --accent-hover: #facc15;
   --accent-glow: rgba(253, 224, 71, 0.3);
-  
+
   --border-color: rgba(255, 255, 255, 0.08);
-  
+
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
   --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.6);
   --radius-md: 8px;
   --radius-lg: 16px;
   --radius-full: 9999px;
-  
+
   /* Circular Action Button Colors (Yellow Theme) */
   --btn-add: #FDE047;
   --btn-view: #ffffff;
   --btn-download: #facc15;
+
+  --bg-watermark-opacity: 0.08;
+}
+
+:root[data-theme='light'],
+.light-theme {
+  --bg-color: #f8fafc;
+  --card-bg: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+
+  --border-color: rgba(0, 0, 0, 0.08);
+  --accent-glow: rgba(253, 224, 71, 0.4);
+
+  --btn-view: #000000;
+
+  --bg-watermark-opacity: 0.50;
 }
 
 * {
@@ -35,7 +53,7 @@
 
 body {
   font-family: var(--font-family);
-  background: radial-gradient(circle at top right, #18181b 0%, #0c0c0e 80%);
+  background: radial-gradient(circle at top right, var(--card-bg) 0%, var(--bg-color) 80%);
   color: var(--text-main);
   line-height: 1.5;
   min-height: 100vh;
@@ -100,7 +118,7 @@ button {
 }
 
 .card:hover {
-    border-color: rgba(253, 224, 71, 0.2);
+  border-color: rgba(253, 224, 71, 0.2);
 }
 
 .flex-center {
@@ -117,8 +135,15 @@ button {
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fade {
