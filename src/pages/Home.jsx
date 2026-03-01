@@ -10,23 +10,29 @@ const AnimatedCounter = ({ value, label }) => {
     const countRef = useRef(0);
 
     useEffect(() => {
-        let start = 0;
-        const end = parseInt(value);
+        let start = countRef.current;
+        const end = parseInt(value) || 0;
+
         if (start === end) {
             setCount(end);
             return;
         }
 
         let duration = 2000;
-        let increment = end / (duration / 16);
+        let increment = (end - start) / (duration / 16);
 
         const timer = setInterval(() => {
             start += increment;
-            if (start >= end) {
+
+            // Check if we reached or surpassed the target
+            if ((increment > 0 && start >= end) || (increment < 0 && start <= end)) {
                 setCount(end);
+                countRef.current = end;
                 clearInterval(timer);
             } else {
-                setCount(Math.floor(start));
+                const newCount = Math.floor(start);
+                setCount(newCount);
+                countRef.current = newCount;
             }
         }, 16);
 
@@ -60,7 +66,7 @@ export default function Home() {
                     <p className="hero-tagline">
                         The ultimate study hub for DTE students. Access premium notes, past question papers, and trusted academic resources—all centralized for your success.
                     </p>
-                    
+
                     <button className="btn-explore" onClick={() => navigate('/notes')}>
                         Explore All Resources <ArrowRight size={20} />
                     </button>
@@ -71,11 +77,11 @@ export default function Home() {
 
                     {/* Live Stats Bar */}
                     <div className="home-stats-bar">
-                        <AnimatedCounter value={stats.totalResources || 7} label="TOTAL RESOURCES" />
+                        <AnimatedCounter value={stats.totalResources} label="TOTAL RESOURCES" />
                         <div className="stat-divider" />
-                        <AnimatedCounter value={stats.totalViews || 154} label="TOTAL VISITS" />
+                        <AnimatedCounter value={stats.totalViews} label="TOTAL VISITS" />
                         <div className="stat-divider" />
-                        <AnimatedCounter value={stats.totalVerifiedUsers || 5} label="VERIFIED USERS" />
+                        <AnimatedCounter value={stats.totalVerifiedUsers} label="VERIFIED USERS" />
                     </div>
                 </div>
             </main>
