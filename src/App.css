@@ -707,7 +707,7 @@ body.workspace-active .floating-dock-left {
     border: none !important;
     box-shadow: none !important;
     padding: 0 !important;
-    margin-bottom: 2rem !important;
+    margin-bottom: 1rem !important;
     width: 100%;
 }
 
