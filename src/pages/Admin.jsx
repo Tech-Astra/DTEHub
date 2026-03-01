@@ -364,7 +364,7 @@ export default function Admin() {
             const folderData = {
                 title: folderTitle,
                 isFolder: true,
-                parentId: 'root',
+                parentId: parentId || 'root',
                 branch,
                 timestamp: Date.now()
             };
@@ -374,18 +374,27 @@ export default function Admin() {
                 folderData.semester = semester;
             }
 
-            const folderRef = push(ref(database, `resources/${activeTab}`));
-            await set(folderRef, folderData);
-
-            const statsRef = ref(database, 'stats/totalResources');
-            runTransaction(statsRef, (count) => (count || 0) + 1);
+            if (editingId) {
+                // Update existing folder
+                await set(ref(database, `resources/${activeTab}/${editingId}`), folderData);
+                logAdminAction('Updated Folder', activeTab, folderTitle);
+                alert("Folder updated!");
+            } else {
+                // Create new folder
+                const folderRef = push(ref(database, `resources/${activeTab}`));
+                await set(folderRef, folderData);
+                const statsRef = ref(database, 'stats/totalResources');
+                runTransaction(statsRef, (count) => (count || 0) + 1);
+                logAdminAction('Created Folder', activeTab, folderTitle);
+                alert("New folder created!");
+            }
 
             setFolderTitle('');
+            setEditingId(null);
             setShowFolderModal(false);
-            logAdminAction('Created Folder', activeTab, folderTitle);
-            alert("New folder created!");
         } catch (err) {
             console.error(err);
+            alert("Failed to save folder.");
         } finally {
             setIsSaving(false);
         }
@@ -495,16 +504,24 @@ export default function Admin() {
 
     const handleEdit = (res) => {
         setEditingId(res.id);
-        setTitle(res.title);
-        setUrl(res.url || '');
-        setSyllabus(res.syllabus || 'C-20');
-        setSemester(res.semester || '1st Sem');
-        setBranch(res.branch);
-        setChapter(res.chapter || '');
-        setResourceType(res.type || 'Note');
-        setIsFolder(res.isFolder || false);
-        setParentId(res.parentId || 'root');
-        setShowResourceModal(true);
+        if (res.isFolder) {
+            setFolderTitle(res.title);
+            setSyllabus(res.syllabus || 'C-20');
+            setSemester(res.semester || '1st Sem');
+            setBranch(res.branch || '');
+            setParentId(res.parentId || 'root');
+            setShowFolderModal(true);
+        } else {
+            setTitle(res.title);
+            setUrl(res.url || '');
+            setSyllabus(res.syllabus || 'C-20');
+            setSemester(res.semester || '1st Sem');
+            setBranch(res.branch || '');
+            setChapter(res.chapter || '');
+            setResourceType(res.type || 'Note');
+            setParentId(res.parentId || 'root');
+            setShowResourceModal(true);
+        }
     };
 
     const handleSyncStats = async () => {
@@ -1021,12 +1038,18 @@ export default function Admin() {
                                             <button className="btn-outline" onClick={() => setShowBranchModal(true)}>
                                                 <Plus size={16} /> Branch
                                             </button>
-                                            <button className="btn-outline" onClick={() => setShowFolderModal(true)}>
+                                            <button className="btn-outline" onClick={() => {
+                                                setEditingId(null);
+                                                setFolderTitle('');
+                                                setParentId('root');
+                                                setShowFolderModal(true);
+                                            }}>
                                                 <FolderPlus size={16} /> Folder
                                             </button>
                                             <button className="btn-primary" onClick={() => {
                                                 setEditingId(null);
                                                 setTitle(''); setUrl(''); setChapter('');
+                                                setParentId('root');
                                                 setShowResourceModal(true);
                                             }}>
                                                 <Plus size={16} /> Resource
@@ -1139,6 +1162,19 @@ export default function Admin() {
                         <form onSubmit={handleAddFolder}>
                             <div className="admin-modal-body">
                                 <div className="modal-form">
+                                    <div className="modal-field">
+                                        <label>Inside Folder</label>
+                                        <CustomSelect
+                                            options={[
+                                                { value: 'root', label: 'Main Directory (Root)' },
+                                                ...foldersList.filter(f => f.id !== editingId).map(f => ({ value: f.id, label: f.title }))
+                                            ]}
+                                            value={parentId}
+                                            onChange={setParentId}
+                                            placeholder="Select Parent Folder"
+                                            icon={Folder}
+                                        />
+                                    </div>
                                     <div className="modal-field">
                                         <label>Folder Name (e.g. Subject or Unit Name)</label>
                                         <input type="text" placeholder="e.g. Mathematics" value={folderTitle} onChange={e => setFolderTitle(e.target.value)} required />
