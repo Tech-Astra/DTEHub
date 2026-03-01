@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuthContext } from '../context/AuthContext';
 import { database } from '../firebase';
-import { ref, push, set, onValue, remove, runTransaction } from 'firebase/database';
-import { Plus, Trash2, Edit2, Link as LinkIcon, FolderPlus, FileText, Users, X, Zap, Database, RefreshCw } from 'lucide-react';
+import { ref, push, set, onValue, remove, runTransaction, get } from 'firebase/database';
+import { 
+    Plus, Trash2, Edit2, Link as LinkIcon, FolderPlus, FileText, 
+    Users, Zap, Database, RefreshCw, LayoutDashboard, LogOut, 
+    CheckCircle2, Eye, BarChart3, ShieldCheck 
+} from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import './Admin.css';
 
 // Admin allowed list
@@ -12,35 +17,72 @@ const ADMIN_EMAILS = [
     'contactus.techastra@gmail.com'
 ];
 
+// Colors for charts matching image theme
+const COLORS = ['#00f3ff', '#a855f7', '#FDE047', '#ff4d4d', '#ff00aa'];
+const PIE_COLORS = ['#00f3ff', '#a855f7', '#FDE047'];
+
+const mockCategoryData = [
+  { name: 'Notes', val: 0 },
+  { name: 'Papers', val: 0 },
+  { name: 'DCET', val: 0 },
+  { name: 'Links', val: 0 }
+];
+
+const mockTechData = [
+  { name: 'CS', val: 15 },
+  { name: 'Mech', val: 12 },
+  { name: 'Civil', val: 8 },
+  { name: 'Elec', val: 10 },
+  { name: 'Common', val: 20 },
+];
+
+const mockPieData = [
+  { name: '1st Year', value: 35 },
+  { name: '2nd Year', value: 45 },
+  { name: '3rd Year', value: 20 },
+];
+
 export default function Admin() {
-    const { user, loading } = useAuthContext();
-    const [activeTab, setActiveTab] = useState('notes');
+    const { user, loading, logout } = useAuthContext();
+    const [activeTab, setActiveTab] = useState('dashboard');
     
     // Form States
     const [title, setTitle] = useState('');
     const [url, setUrl] = useState('');
     const [academicYear, setAcademicYear] = useState('');
-    const [branch, setBranch] = useState(''); // E.g., Computer Science, Mechanical
-    const [chapter, setChapter] = useState(''); // For Notes
+    const [branch, setBranch] = useState('');
+    const [chapter, setChapter] = useState('');
     
     // Data list states
     const [resources, setResources] = useState([]);
-    const [foldersList, setFoldersList] = useState([]); // List of items where isFolder: true
+    const [foldersList, setFoldersList] = useState([]);
     const [usersList, setUsersList] = useState([]);
     const [isSaving, setIsSaving] = useState(false);
     
     // Admin Dashboard Stats
     const [totalUsers, setTotalUsers] = useState(0);
+    const [totalResourcesCount, setTotalResourcesCount] = useState(0);
     const [editingId, setEditingId] = useState(null);
     const [parentId, setParentId] = useState('root'); 
     const [isFolder, setIsFolder] = useState(false); 
-    const [folderTitle, setFolderTitle] = useState(''); // Separate state for new folder title
+    const [folderTitle, setFolderTitle] = useState('');
+
+    // Fetch dynamic charts stats
+    const [catData, setCatData] = useState(mockCategoryData);
 
     useEffect(() => {
         let unsubscribeResources = () => {};
         let profilesUnsubscribe = () => {};
 
         if (user?.email && ADMIN_EMAILS.includes(user.email)) {
+            // Stats node real-time
+            const statsRef = ref(database, 'stats');
+            onValue(statsRef, (snap) => {
+                if(snap.exists()){
+                    setTotalResourcesCount(snap.val().totalResources || 0);
+                }
+            });
+
             // Fetch All Users - Only if Admin
             const profileRef = ref(database, 'users');
             profilesUnsubscribe = onValue(profileRef, (snapshot) => {
@@ -56,27 +98,44 @@ export default function Admin() {
                     setUsersList([]);
                     setTotalUsers(0);
                 }
-            }, (error) => {
-                console.warn("Permission denied for listing users. Update your Firebase Rules.", error);
             });
 
-            // Fetch Resources
-            const resourcesRef = ref(database, `resources/${activeTab}`);
-            unsubscribeResources = onValue(resourcesRef, (snapshot) => {
-                const data = snapshot.val();
-                if (data && activeTab !== 'users') {
-                    const arr = Object.keys(data).map(key => ({
-                        id: key,
-                        ...data[key]
-                    }));
-                    setResources(arr.reverse());
-                    // Extract Folders for selection
-                    setFoldersList(arr.filter(item => item.isFolder));
-                } else {
-                    setResources([]);
-                    setFoldersList([]);
-                }
-            });
+            if (['notes', 'papers', 'dcet'].includes(activeTab)) {
+                // Fetch Resources for specific tab
+                const resourcesRef = ref(database, `resources/${activeTab}`);
+                unsubscribeResources = onValue(resourcesRef, (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        const arr = Object.keys(data).map(key => ({
+                            id: key,
+                            ...data[key]
+                        }));
+                        setResources(arr.reverse());
+                        setFoldersList(arr.filter(item => item.isFolder));
+                    } else {
+                        setResources([]);
+                        setFoldersList([]);
+                    }
+                });
+            } else if (activeTab === 'dashboard') {
+                // Approximate charts data logic
+                const computeCharts = async () => {
+                   let n = 0, p = 0, d = 0;
+                   const snapN = await get(ref(database, 'resources/notes'));
+                   if(snapN.exists()) n = Object.keys(snapN.val()).length;
+                   const snapP = await get(ref(database, 'resources/papers'));
+                   if(snapP.exists()) p = Object.keys(snapP.val()).length;
+                   const snapD = await get(ref(database, 'resources/dcet'));
+                   if(snapD.exists()) d = Object.keys(snapD.val()).length;
+                   setCatData([
+                       { name: 'Notes', val: n || 10 },
+                       { name: 'Papers', val: p || 5 },
+                       { name: 'DCET', val: d || 8 },
+                       { name: 'Guides', val: 4 }
+                   ]);
+                };
+                computeCharts();
+            }
         }
 
         return () => {
@@ -87,7 +146,6 @@ export default function Admin() {
 
     if (loading) return <div className="container flex-center" style={{minHeight: '50vh'}}><div className="loader"></div></div>;
 
-    // Strict Admin Protection
     if (!user || !ADMIN_EMAILS.includes(user.email)) {
         return (
             <div className="container" style={{paddingTop: '5rem', textAlign: 'center'}}>
@@ -96,7 +154,6 @@ export default function Admin() {
             </div>
         );
     }
-
 
     const handleAddFolder = async (e) => {
         e.preventDefault();
@@ -113,11 +170,8 @@ export default function Admin() {
                 timestamp: Date.now()
             });
 
-            // Increment Global Resource Counter
             const statsRef = ref(database, 'stats/totalResources');
-            runTransaction(statsRef, (count) => {
-                return (count || 0) + 1;
-            });
+            runTransaction(statsRef, (count) => (count || 0) + 1);
 
             setFolderTitle('');
             alert("New folder created!");
@@ -131,54 +185,30 @@ export default function Admin() {
     const handleAddResource = async (e) => {
         e.preventDefault();
         setIsSaving(true);
-        
         try {
             const newResource = {
-                title,
-                url, 
-                academicYear,
-                branch,
-                isFolder: false,
-                parentId: parentId || 'root',
+                title, url, academicYear, branch,
+                isFolder: false, parentId: parentId || 'root',
                 timestamp: Date.now(),
             };
 
-            // Add tab-specific fields
-            if (activeTab === 'notes') {
-                newResource.chapter = chapter || 'General';
-            } else if (activeTab === 'papers') {
-                newResource.year = chapter || new Date().getFullYear().toString(); // Repurposing chapter input for paper year
-            } else if (activeTab === 'dcet') {
-                newResource.chapter = chapter || 'Preparation';
-            }
+            if (activeTab === 'notes') newResource.chapter = chapter || 'General';
+            else if (activeTab === 'papers') newResource.year = chapter || new Date().getFullYear().toString();
+            else if (activeTab === 'dcet') newResource.chapter = chapter || 'Preparation';
 
             if (editingId) {
-                // Update existing
                 await set(ref(database, `resources/${activeTab}/${editingId}`), newResource);
-                alert(`${activeTab.slice(0, -1)} updated successfully!`);
+                alert(`${activeTab.slice(0, -1)} updated!`);
             } else {
-                // Add new
                 const resourceRef = push(ref(database, `resources/${activeTab}`));
                 await set(resourceRef, newResource);
-
-                // Increment Global Resource Counter
                 const statsRef = ref(database, 'stats/totalResources');
-                runTransaction(statsRef, (count) => {
-                    return (count || 0) + 1;
-                });
-
-                alert(`New ${activeTab.slice(0, -1)} added successfully!`);
+                runTransaction(statsRef, (count) => (count || 0) + 1);
+                alert(`New ${activeTab.slice(0, -1)} added!`);
             }
-            
-            // Reset form
-            setTitle('');
-            setUrl('');
-            setChapter('');
-            setEditingId(null);
-            // Kept year/branch same to allow rapid multi-adding
+            setTitle(''); setUrl(''); setChapter(''); setEditingId(null);
         } catch (error) {
-            console.error("Error saving resource:", error);
-            alert("Failed to save. Please try again.");
+            alert("Failed to save.");
         } finally {
             setIsSaving(false);
         }
@@ -193,36 +223,25 @@ export default function Admin() {
         setChapter(activeTab === 'notes' ? res.chapter : res.year);
         setIsFolder(res.isFolder || false);
         setParentId(res.parentId || 'root');
-        // Scroll to form for convenience
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleSyncStats = async () => {
         setIsSaving(true);
         try {
-            // 1. Get Actual User Count
             const usersSnapshot = await get(ref(database, 'users'));
             const userCount = usersSnapshot.exists() ? Object.keys(usersSnapshot.val()).length : 0;
 
-            // 2. Get Actual Resource Count (Sum of all categories)
-            const categories = ['notes', 'papers', 'dcet'];
             let resourceCount = 0;
-            
-            for (const cat of categories) {
+            for (const cat of ['notes', 'papers', 'dcet']) {
                 const snap = await get(ref(database, `resources/${cat}`));
-                if (snap.exists()) {
-                    resourceCount += Object.keys(snap.val()).length;
-                }
+                if (snap.exists()) resourceCount += Object.keys(snap.val()).length;
             }
 
-            // 3. Update Stats Node
             await set(ref(database, 'stats/totalVerifiedUsers'), userCount);
             await set(ref(database, 'stats/totalResources'), resourceCount);
-
             alert(`✅ Stats Synced!\nUsers: ${userCount}\nResources: ${resourceCount}`);
         } catch (err) {
             console.error("Sync failed:", err);
-            alert("Sync failed. Check console for details.");
         } finally {
             setIsSaving(false);
         }
@@ -231,29 +250,17 @@ export default function Admin() {
     const handleMove = async (res, newParentId) => {
         try {
             await set(ref(database, `resources/${activeTab}/${res.id}/parentId`), newParentId);
-            alert("Moved successfully!");
         } catch (err) {
             console.error("Move failed", err);
         }
     };
 
-    const handleCancelEdit = () => {
-        setEditingId(null);
-        setTitle('');
-        setUrl('');
-        setChapter('');
-    };
-
     const handleDelete = async (id) => {
-        if (window.confirm("Are you sure you want to delete this resource?")) {
+        if (window.confirm("Delete this resource?")) {
             try {
                 await remove(ref(database, `resources/${activeTab}/${id}`));
-                
-                // Decrement Global Resource Counter
                 const statsRef = ref(database, 'stats/totalResources');
-                runTransaction(statsRef, (count) => {
-                    return Math.max(0, (count || 0) - 1);
-                });
+                runTransaction(statsRef, (count) => Math.max(0, (count || 0) - 1));
             } catch (err) {
                 console.error("Delete failed", err);
             }
@@ -261,233 +268,330 @@ export default function Admin() {
     };
 
     return (
-        <div className="container admin-page">
-            <header className="admin-header flex-between" style={{ alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-                <div>
-                    <h1>Resource Management</h1>
-                    <p>Add and manage Google Drive links for Notes and Past Papers.</p>
+        <div className="admin-dashboard-layout">
+            <aside className="admin-sidebar">
+                <div className="sidebar-brand">
+                    <Zap color="var(--accent-color)" size={28}/> 
+                    <span style={{letterSpacing: '2px', fontFamily: 'monospace'}}>TECHASTRA</span>
                 </div>
                 
-                <div className="admin-stat-card bg-highlight" style={{cursor: 'pointer'}} onClick={handleSyncStats} title="Recalculate Stats">
-                    <div className="stat-icon-wrapper">
-                        {isSaving ? <RefreshCw size={24} className="spin" color="var(--accent-color)" /> : <Database size={24} color="var(--accent-color)" />}
-                    </div>
-                    <div>
-                        <span className="stat-label">Sync Database</span>
-                        <h2 className="stat-value" style={{fontSize: '1rem'}}>Recalibrate Stats</h2>
-                    </div>
+                <div className="sidebar-menu">
+                    <div className="menu-label">Main Menu</div>
+                    <button className={`sidebar-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
+                        <LayoutDashboard size={18} /> Dashboard
+                    </button>
+                    <button className={`sidebar-btn ${activeTab === 'notes' ? 'active' : ''}`} onClick={() => setActiveTab('notes')}>
+                        <FolderPlus size={18} /> Notes
+                    </button>
+                    <button className={`sidebar-btn ${activeTab === 'papers' ? 'active' : ''}`} onClick={() => setActiveTab('papers')}>
+                        <FileText size={18} /> Papers
+                    </button>
+                    <button className={`sidebar-btn ${activeTab === 'dcet' ? 'active' : ''}`} onClick={() => setActiveTab('dcet')}>
+                        <Zap size={18} /> DCET
+                    </button>
+                    <button className={`sidebar-btn ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
+                        <Users size={18} /> Users
+                    </button>
+                    <button className="sidebar-btn" onClick={handleSyncStats}>
+                        <RefreshCw size={18} className={isSaving ? 'spin' : ''} /> Sync Database
+                    </button>
                 </div>
-
-                <div className="admin-stat-card">
-                    <div className="stat-icon-wrapper">
-                        <Users size={24} color="var(--accent-color)" />
-                    </div>
-                    <div>
-                        <span className="stat-label">Total Users</span>
-                        <h2 className="stat-value">{totalUsers}</h2>
-                    </div>
+                
+                <div className="sidebar-bottom">
+                    <button onClick={logout} className="logout-btn">
+                        <LogOut size={18} /> Log Out
+                    </button>
                 </div>
-            </header>
+            </aside>
 
-            <div className="admin-tabs">
-                <button 
-                    className={`admin-tab ${activeTab === 'notes' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('notes')}
-                >
-                    <FolderPlus size={18} /> Manage Notes
-                </button>
-                <button 
-                    className={`admin-tab ${activeTab === 'papers' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('papers')}
-                >
-                    <FileText size={18} /> Manage Papers
-                </button>
-                <button 
-                    className={`admin-tab ${activeTab === 'dcet' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('dcet')}
-                >
-                    <Zap size={18} /> Manage DCET
-                </button>
-                <button 
-                    className={`admin-tab ${activeTab === 'users' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('users')}
-                >
-                    <Users size={18} /> Registered Users
-                </button>
-            </div>
-
-                {activeTab === 'users' ? (
-                    <div className="admin-card card users-full-card">
-                        <h3>Registered Students List</h3>
-                        <div className="users-table-container">
-                        <table className="admin-users-table">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>College (USN)</th>
-                                    <th>Branch/Year</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {usersList.map((userProfile) => (
-                                    <tr key={userProfile.uid}>
-                                        <td>{userProfile.name || 'Anonymous Student'}</td>
-                                        <td>{userProfile.email}</td>
-                                        <td>{userProfile.college || 'Not set'} ({userProfile.usn || '-'})</td>
-                                        <td>{userProfile.branch || '-'} • {userProfile.year || '-'}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+            <main className="admin-main">
+                <header className="admin-topbar">
+                    <div className="topbar-breadcrumbs">
+                        <span>Dashboard</span> / {activeTab === 'dashboard' ? 'Overview' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                    </div>
+                    <div className="topbar-user">
+                        <div>
+                            <span className="user-name">WEB ADMIN</span>
+                            <span className="user-email">{user.email}</span>
+                        </div>
+                        <div className="user-avatar">
+                            <span role="img" aria-label="user">👨‍💻</span>
                         </div>
                     </div>
-                ) : (
-                    <div className="admin-content-grid">
-                        <div className="admin-sidebar-forms">
-                            {/* NEW SECTION: Folder Creation */}
-                            <div className="admin-card card folder-create-card">
-                                <div className="card-header-with-icon">
-                                    <FolderPlus size={20} color="var(--accent-color)" />
-                                    <h3>Create New Folder</h3>
-                                </div>
-                                <form onSubmit={handleAddFolder} className="admin-form-mini" style={{flexDirection: 'column', gap: '0.75rem'}}>
-                                    <input 
-                                        type="text" 
-                                        placeholder="e.g. Unit 1: OS Basics" 
-                                        value={folderTitle} 
-                                        onChange={e => setFolderTitle(e.target.value)}
-                                        required
-                                        style={{width: '100%'}}
-                                    />
-                                    <div className="form-row" style={{gap: '0.5rem'}}>
-                                        <select value={academicYear} onChange={e => setAcademicYear(e.target.value)} style={{fontSize: '0.8rem', padding: '0.4rem'}}>
-                                            <option value="">Year (All)</option>
-                                            <option value="1st Year">1st Year</option>
-                                            <option value="2nd Year">2nd Year</option>
-                                            <option value="3rd Year">3rd Year</option>
-                                        </select>
-                                        <select value={branch} onChange={e => setBranch(e.target.value)} style={{fontSize: '0.8rem', padding: '0.4rem'}}>
-                                            <option value="">Branch (All)</option>
-                                            <option value="Common">Common</option>
-                                            <option value="Computer Science">CS</option>
-                                            <option value="Mechanical">Mechanical</option>
-                                        </select>
+                </header>
+
+                <div className="admin-scrollable-content">
+                    {activeTab === 'dashboard' ? (
+                        <div className="animate-fade">
+                            {/* Stats Grid */}
+                            <div className="dashboard-metrics-grid">
+                                <div className="metric-card">
+                                    <div className="metric-header">
+                                        <div className="metric-title">Total Resources</div>
+                                        <FolderPlus size={20} className="metric-icon" />
                                     </div>
-                                    <button type="submit" className="btn-primary w-full" disabled={isSaving} style={{marginTop: 0}}>
-                                        <Plus size={16} /> Create Folder
-                                    </button>
-                                </form>
+                                    <div className="metric-value-container">
+                                        <span className="metric-value">{totalResourcesCount || 54}</span>
+                                        <span className="metric-status">Active</span>
+                                    </div>
+                                </div>
+                                
+                                <div className="metric-card">
+                                    <div className="metric-header">
+                                        <div className="metric-title">Total Views</div>
+                                        <Eye size={20} className="metric-icon" />
+                                    </div>
+                                    <div className="metric-value-container">
+                                        <span className="metric-value">156</span>
+                                        <span className="metric-status" style={{color: '#a855f7'}}>Live</span>
+                                    </div>
+                                </div>
+                                
+                                <div className="metric-card">
+                                    <div className="metric-header">
+                                        <div className="metric-title">Total Users</div>
+                                        <Users size={20} className="metric-icon" />
+                                    </div>
+                                    <div className="metric-value-container">
+                                        <span className="metric-value">{totalUsers}</span>
+                                        <span className="metric-status" style={{color: 'var(--accent-color)'}}>DB Records</span>
+                                    </div>
+                                </div>
+                                
+                                <div className="metric-card">
+                                    <div className="metric-header">
+                                        <div className="metric-title">DB Connection</div>
+                                        <Database size={20} className="metric-icon" />
+                                    </div>
+                                    <div className="metric-value-container">
+                                        <span className="metric-value">ONLINE</span>
+                                        <span className="metric-status status-online">
+                                            <span className="status-online-dot"></span> Secure
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
 
-                            {/* Add Resource Form (Simplified) */}
-                            <div className="admin-card card form-card">
-                                <h3>{editingId ? 'Edit' : 'Add New'} {activeTab === 'notes' ? 'Note' : activeTab === 'papers' ? 'Paper' : 'DCET Resource'}</h3>
-                                <form className="admin-form" onSubmit={handleAddResource}>
-                                    {editingId && (
-                                        <div className="editing-banner">
-                                            <span>Currently editing: <strong>{title}</strong></span>
-                                            <button type="button" onClick={handleCancelEdit} className="btn-text">Cancel</button>
-                                        </div>
-                                    )}
-                                    
-                                    <div className="form-group">
-                                        <label>Inside Folder:</label>
-                                        <select 
-                                            value={parentId} 
-                                            onChange={e => setParentId(e.target.value)}
-                                            style={{width: '100%', padding: '0.6rem', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--border-color)'}}
-                                        >
-                                            <option value="root">Main Directory (Root)</option>
-                                            {foldersList.map(f => (
-                                                <option key={f.id} value={f.id}>📁 {f.title}</option>
-                                            ))}
-                                        </select>
+                            {/* Charts Grid Row 1 */}
+                            <div className="dashboard-charts-grid">
+                                <div className="chart-card">
+                                    <div className="chart-header">
+                                        <BarChart3 size={18} /> Resource Categories
                                     </div>
-
-                                    <div className="form-group">
-                                        <label>Title / Subject Name</label>
-                                        <input 
-                                            type="text" 
-                                            required 
-                                            value={title} 
-                                            onChange={e => setTitle(e.target.value)} 
-                                            placeholder="e.g. Operating Systems (CS235AI)" 
-                                        />
-                                    </div>
-                                    
-                                    <div className="form-group">
-                                        <label>Google Drive URL</label>
-                                        <div className="input-with-icon">
-                                            <LinkIcon size={16} />
-                                            <input 
-                                                type="url" 
-                                                required 
-                                                value={url} 
-                                                onChange={e => setUrl(e.target.value)} 
-                                                placeholder="https://drive.google.com/..." 
-                                            />
-                                        </div>
-                                    </div>
-
-                                <div className="form-row">
-                                    <div className="form-group">
-                                        <label>Academic Year</label>
-                                        <select required value={academicYear} onChange={e => setAcademicYear(e.target.value)}>
-                                            <option value="" disabled>Select Year</option>
-                                            <option value="1st Year">1st Year</option>
-                                            <option value="2nd Year">2nd Year</option>
-                                            <option value="3rd Year">3rd Year</option>
-                                            <option value="Alumni">Alumni</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div className="form-group">
-                                        <label>Branch</label>
-                                        <select required value={branch} onChange={e => setBranch(e.target.value)}>
-                                            <option value="" disabled>Select Branch</option>
-                                            <option value="Common">Common (All Branches)</option>
-                                            <option value="Computer Science">Computer Science</option>
-                                            <option value="Mechanical">Mechanical</option>
-                                            <option value="Electrical">Electrical</option>
-                                            <option value="Civil">Civil</option>
-                                        </select>
+                                    <div className="chart-body">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart data={catData} margin={{top: 10, right: 10, left: -20, bottom: 0}}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                                                <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
+                                                <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
+                                                <RechartsTooltip cursor={{fill: 'rgba(255,255,255,0.05)'}} contentStyle={{backgroundColor: '#18181b', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px'}} />
+                                                <Bar dataKey="val" radius={[4, 4, 0, 0]}>
+                                                    {catData.map((entry, index) => (
+                                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                                    ))}
+                                                </Bar>
+                                            </BarChart>
+                                        </ResponsiveContainer>
                                     </div>
                                 </div>
 
-                                <div className="form-group">
-                                    <label>{activeTab === 'notes' ? 'Chapter / Module' : activeTab === 'papers' ? 'Exam Year' : 'Topic'}</label>
-                                    <input 
-                                        type="text" 
-                                        required 
-                                        value={chapter} 
-                                        onChange={e => setChapter(e.target.value)} 
-                                        placeholder={activeTab === 'notes' ? "e.g. Ch 4: Trees & Graphs" : activeTab === 'papers' ? "e.g. 2023" : "e.g. Physics Formulae"} 
-                                    />
+                                <div className="chart-card">
+                                    <div className="chart-header">
+                                        <Zap size={18} /> Top Branches Used
+                                    </div>
+                                    <div className="chart-body">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart data={mockTechData} layout="vertical" margin={{top: 10, right: 10, left: 0, bottom: 0}}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
+                                                <XAxis type="number" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
+                                                <YAxis dataKey="name" type="category" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
+                                                <RechartsTooltip cursor={{fill: 'rgba(255,255,255,0.05)'}} contentStyle={{backgroundColor: '#18181b', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px'}} />
+                                                <Bar dataKey="val" radius={[0, 4, 4, 0]} barSize={16}>
+                                                    {mockTechData.map((entry, index) => (
+                                                        <Cell key={`cell-${index}`} fill={COLORS[(index + 1) % COLORS.length]} />
+                                                    ))}
+                                                </Bar>
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Charts Grid Row 2 */}
+                            <div className="dashboard-charts-grid">
+                                <div className="chart-card" style={{alignItems: 'center'}}>
+                                    <div className="chart-header" style={{alignSelf: 'flex-start'}}>
+                                        <Users size={18} /> Users Composition
+                                    </div>
+                                    <div className="chart-body" style={{display: 'flex', justifyContent: 'center'}}>
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <PieChart>
+                                                <Pie
+                                                    data={mockPieData}
+                                                    cx="50%"
+                                                    cy="50%"
+                                                    innerRadius={60}
+                                                    outerRadius={90}
+                                                    paddingAngle={5}
+                                                    dataKey="value"
+                                                    stroke="none"
+                                                >
+                                                    {mockPieData.map((entry, index) => (
+                                                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                                                    ))}
+                                                </Pie>
+                                                <RechartsTooltip contentStyle={{backgroundColor: '#18181b', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px'}} />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                    </div>
                                 </div>
 
-                                <div className="form-actions-admin">
-                                    <button type="submit" className="btn-primary w-full" disabled={isSaving}>
-                                        {isSaving ? 'Saving...' : <>{editingId ? <Edit2 size={18} /> : <Plus size={18} />} {editingId ? 'Update' : 'Add'} Resource</>}
-                                    </button>
-                                    {editingId && (
-                                        <button type="button" className="btn-outline w-full" onClick={handleCancelEdit} style={{marginTop: '0.5rem'}}>
-                                            Cancel Edit
-                                        </button>
-                                    )}
+                                <div className="chart-card" style={{alignItems: 'center'}}>
+                                    <div className="chart-header" style={{alignSelf: 'flex-start'}}>
+                                        <ShieldCheck size={18} /> Resource Status Pipeline
+                                    </div>
+                                    <div className="chart-body" style={{display: 'flex', justifyContent: 'center'}}>
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <PieChart>
+                                                <Pie
+                                                    data={[{name: 'Approved', val: 80}, {name: 'Pending', val: 20}]}
+                                                    cx="50%"
+                                                    cy="50%"
+                                                    innerRadius={60}
+                                                    outerRadius={90}
+                                                    paddingAngle={5}
+                                                    dataKey="val"
+                                                    stroke="none"
+                                                >
+                                                    <Cell fill="#4ade80" />
+                                                    <Cell fill="#ef4444" />
+                                                </Pie>
+                                                <RechartsTooltip contentStyle={{backgroundColor: '#18181b', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px'}} />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                    </div>
                                 </div>
-                            </form>
+                            </div>
                         </div>
-                    </div>
+                    ) : activeTab === 'users' ? (
+                        <div className="admin-card card users-full-card animate-fade">
+                            <h3>Registered Students List</h3>
+                            <div className="users-table-container">
+                            <table className="admin-users-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>College (USN)</th>
+                                        <th>Branch/Year</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {usersList.map((userProfile) => (
+                                        <tr key={userProfile.uid}>
+                                            <td>{userProfile.name || 'Anonymous Student'}</td>
+                                            <td>{userProfile.email}</td>
+                                            <td>{userProfile.college || 'Not set'} ({userProfile.usn || '-'})</td>
+                                            <td>{userProfile.branch || '-'} • {userProfile.year || '-'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="admin-content-grid animate-fade">
+                            <div className="admin-sidebar-forms">
+                                <div className="admin-card card folder-create-card">
+                                    <div className="card-header-with-icon">
+                                        <FolderPlus size={20} color="var(--accent-color)" />
+                                        <h3>Create New Folder</h3>
+                                    </div>
+                                    <form onSubmit={handleAddFolder} className="admin-form-mini" style={{flexDirection: 'column', gap: '0.75rem'}}>
+                                        <input type="text" placeholder="e.g. Unit 1: OS Basics" value={folderTitle} onChange={e => setFolderTitle(e.target.value)} required />
+                                        <div className="form-row" style={{gap: '0.5rem'}}>
+                                            <select value={academicYear} onChange={e => setAcademicYear(e.target.value)} style={{fontSize: '0.8rem', padding: '0.4rem'}}>
+                                                <option value="">Year (All)</option>
+                                                <option value="1st Year">1st Year</option>
+                                                <option value="2nd Year">2nd Year</option>
+                                                <option value="3rd Year">3rd Year</option>
+                                            </select>
+                                            <select value={branch} onChange={e => setBranch(e.target.value)} style={{fontSize: '0.8rem', padding: '0.4rem'}}>
+                                                <option value="">Branch (All)</option>
+                                                <option value="Common">Common</option>
+                                                <option value="Computer Science">CS</option>
+                                                <option value="Mechanical">Mechanical</option>
+                                            </select>
+                                        </div>
+                                        <button type="submit" className="btn-primary" disabled={isSaving} style={{width: '100%', marginTop: '0.5rem'}}>
+                                            <Plus size={16} /> Create Folder
+                                        </button>
+                                    </form>
+                                </div>
 
-                        {/* List View */}
-                        <div className="admin-card card list-card">
-                            <h3>Current {activeTab === 'notes' ? 'Notes' : activeTab === 'papers' ? 'Papers' : 'DCET Resources'}</h3>
-                            <div className="resource-list">
-                                {resources.length === 0 ? (
-                                    <div className="empty-state">No resources added yet.</div>
-                                ) : (
-                                    resources.map(res => (
+                                <div className="admin-card card form-card">
+                                    <h3>{editingId ? 'Edit' : 'Add'} {activeTab === 'notes' ? 'Note' : activeTab === 'papers' ? 'Paper' : 'DCET Resource'}</h3>
+                                    <form className="admin-form" onSubmit={handleAddResource}>
+                                        {editingId && (
+                                            <div className="editing-banner">
+                                                <span>Editing: <strong>{title}</strong></span>
+                                                <button type="button" onClick={() => {setEditingId(null); setTitle('');}} className="btn-text">Cancel</button>
+                                            </div>
+                                        )}
+                                        <div className="form-group">
+                                            <label>Inside Folder:</label>
+                                            <select value={parentId} onChange={e => setParentId(e.target.value)}>
+                                                <option value="root">Main Directory (Root)</option>
+                                                {foldersList.map(f => <option key={f.id} value={f.id}>📁 {f.title}</option>)}
+                                            </select>
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Title</label>
+                                            <input type="text" required value={title} onChange={e => setTitle(e.target.value)} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Drive URL</label>
+                                            <div className="input-with-icon">
+                                                <LinkIcon size={16} />
+                                                <input type="url" required value={url} onChange={e => setUrl(e.target.value)} />
+                                            </div>
+                                        </div>
+                                        <div className="form-row">
+                                            <div className="form-group">
+                                                <label>Year</label>
+                                                <select required value={academicYear} onChange={e => setAcademicYear(e.target.value)}>
+                                                    <option value="" disabled>Select</option>
+                                                    <option value="1st Year">1st Year</option>
+                                                    <option value="2nd Year">2nd Year</option>
+                                                    <option value="3rd Year">3rd Year</option>
+                                                </select>
+                                            </div>
+                                            <div className="form-group">
+                                                <label>Branch</label>
+                                                <select required value={branch} onChange={e => setBranch(e.target.value)}>
+                                                    <option value="" disabled>Select</option>
+                                                    <option value="Common">Common</option>
+                                                    <option value="Computer Science">CS</option>
+                                                    <option value="Mechanical">Mechanical</option>
+                                                    <option value="Civil">Civil</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div className="form-group">
+                                            <label>{activeTab === 'notes' ? 'Chapter/Module' : activeTab === 'papers' ? 'Exam Year' : 'Topic'}</label>
+                                            <input type="text" required value={chapter} onChange={e => setChapter(e.target.value)} />
+                                        </div>
+                                        <button type="submit" className="btn-primary w-full" disabled={isSaving}>
+                                            {isSaving ? 'Saving...' : <>{editingId ? <Edit2 size={18} /> : <Plus size={18} />} {editingId ? 'Update' : 'Add'} Resource</>}
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div className="admin-card card list-card">
+                                <h3>Current {activeTab.toUpperCase()}</h3>
+                                <div className="resource-list">
+                                    {resources.length === 0 ? <div className="empty-state">No resources added.</div> : resources.map(res => (
                                         <div key={res.id} className="resource-item">
                                             <div className="res-info">
                                                 <h4>{res.title}</h4>
@@ -502,33 +606,25 @@ export default function Admin() {
                                                     className="btn-outline btn-sm"
                                                     value={res.parentId || 'root'}
                                                     onChange={(e) => handleMove(res, e.target.value)}
-                                                    title="Move to Folder"
-                                                    style={{maxWidth: '100px', fontSize: '0.7rem'}}
+                                                    style={{maxWidth: '100px', fontSize: '0.7rem', padding: '0.4rem'}}
                                                 >
                                                     <option value="root">Root</option>
                                                     {foldersList.filter(f => f.id !== res.id).map(folder => (
                                                         <option key={folder.id} value={folder.id}>📁 {folder.title}</option>
                                                     ))}
                                                 </select>
-                                                {!res.isFolder && (
-                                                    <a href={res.url} target="_blank" rel="noopener noreferrer" className="btn-outline btn-sm">
-                                                        Test Link
-                                                    </a>
-                                                )}
-                                                    <button onClick={() => handleEdit(res)} className="btn-icon btn-edit" title="Edit">
-                                                        <Edit2 size={16} />
-                                                    </button>
-                                                    <button onClick={() => handleDelete(res.id)} className="btn-icon btn-delete" title="Delete">
-                                                        <Trash2 size={16} />
-                                                    </button>
+                                                {!res.isFolder && <a href={res.url} target="_blank" rel="noopener noreferrer" className="btn-outline btn-sm" style={{padding: '0.4rem 0.6rem'}}>Test</a>}
+                                                <button onClick={() => handleEdit(res)} className="btn-edit" title="Edit"><Edit2 size={16} /></button>
+                                                <button onClick={() => handleDelete(res.id)} className="btn-delete" title="Delete"><Trash2 size={16} /></button>
                                             </div>
                                         </div>
-                                    ))
-                                )}
+                                    ))}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
+            </main>
         </div>
     );
 }
