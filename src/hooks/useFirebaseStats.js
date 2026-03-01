@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ref, onValue, runTransaction, get, set } from 'firebase/database';
+import { ref, onValue, runTransaction } from 'firebase/database';
 import { database } from '../firebase';
 
 export function useFirebaseStats() {
@@ -12,46 +12,73 @@ export function useFirebaseStats() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const syncAndListen = async () => {
-      try {
-        // 1. Session-based View Counter
-        const SESSION_KEY = 'dte_hub_view_counted';
-        if (!sessionStorage.getItem(SESSION_KEY)) {
-          const viewsRef = ref(database, 'stats/totalViews');
-          await runTransaction(viewsRef, (currentValue) => {
-            return (currentValue || 0) + 1;
-          });
-          sessionStorage.setItem(SESSION_KEY, 'true');
-        }
+    // Track counts from multiple nodes
+    let notesCount = 0;
+    let dcetCount = 0;
+    let usersCount = 0;
+    let viewsCount = 0;
+    let ready = { notes: false, dcet: false, users: false, views: false };
 
-        // 2. Setup listener for the stats node
-
-        const statsRef = ref(database, 'stats');
-        const unsubscribe = onValue(statsRef, (snapshot) => {
-          const data = snapshot.val() || {};
-          setStats({
-            totalViews: data.totalViews || 0,
-            totalResources: data.totalResources || 0,
-            totalVerifiedUsers: data.totalVerifiedUsers || 0
-          });
-          setLoading(false);
+    const updateStats = () => {
+      // Only update once all listeners have fired at least once
+      if (ready.notes && ready.dcet && ready.users && ready.views) {
+        setStats({
+          totalResources: notesCount + dcetCount,
+          totalVerifiedUsers: usersCount,
+          totalViews: viewsCount,
         });
-
-        return unsubscribe;
-
-      } catch (err) {
-        console.error('Stats Sync Error:', err);
-        setError(err.message);
         setLoading(false);
       }
     };
 
-    let unsubscribeStats = () => { };
-    syncAndListen().then(cleanup => {
-      if (typeof cleanup === 'function') unsubscribeStats = cleanup;
-    });
+    try {
+      // 1. Session-based View Counter (increment once per session)
+      const SESSION_KEY = 'dte_hub_view_counted';
+      if (!sessionStorage.getItem(SESSION_KEY)) {
+        const viewsRef = ref(database, 'stats/totalViews');
+        runTransaction(viewsRef, (currentValue) => (currentValue || 0) + 1);
+        sessionStorage.setItem(SESSION_KEY, 'true');
+      }
 
-    return () => unsubscribeStats();
+      // 2. Listen to stats/totalViews (this is a counter, not derivable)
+      const unsubViews = onValue(ref(database, 'stats/totalViews'), (snap) => {
+        viewsCount = snap.val() || 0;
+        ready.views = true;
+        updateStats();
+      });
+
+      // 3. Listen to resources/notes — count all items
+      const unsubNotes = onValue(ref(database, 'resources/notes'), (snap) => {
+        notesCount = snap.exists() ? Object.keys(snap.val()).length : 0;
+        ready.notes = true;
+        updateStats();
+      });
+
+      // 4. Listen to resources/dcet — count all items
+      const unsubDcet = onValue(ref(database, 'resources/dcet'), (snap) => {
+        dcetCount = snap.exists() ? Object.keys(snap.val()).length : 0;
+        ready.dcet = true;
+        updateStats();
+      });
+
+      // 5. Listen to users — count all verified users
+      const unsubUsers = onValue(ref(database, 'users'), (snap) => {
+        usersCount = snap.exists() ? Object.keys(snap.val()).length : 0;
+        ready.users = true;
+        updateStats();
+      });
+
+      return () => {
+        unsubViews();
+        unsubNotes();
+        unsubDcet();
+        unsubUsers();
+      };
+    } catch (err) {
+      console.error('Stats Sync Error:', err);
+      setError(err.message);
+      setLoading(false);
+    }
   }, []);
 
   return { stats, loading, error };
