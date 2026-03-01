@@ -14,6 +14,7 @@ import Admin from './pages/Admin';
 import PrivacyPolicy from './pages/Legal';
 import Papers from './pages/Papers';
 import ProtectedRoute from './components/ProtectedRoute';
+import InstallPWA from './components/InstallPWA';
 import './App.css';
 
 function App() {
@@ -46,6 +47,9 @@ function App() {
 
           {/* Profile Onboarding Modal for first-time sign-ins */}
           <ProfileOnboardingModal />
+
+          {/* PWA Install Prompt */}
+          <InstallPWA />
         </div>
       </AuthProvider>
     </Router>
