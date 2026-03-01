@@ -64,13 +64,45 @@
     opacity: 0.4;
 }
 
-.hub-title {
-    font-size: 5.5rem;
+.main-text-branding {
+    margin-bottom: 2.5rem;
+    animation: fadeInDown 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hub-title-welcome {
+    font-size: 5rem;
     font-weight: 900;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.04em;
     color: white;
-    line-height: 1;
-    text-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    line-height: 1.1;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.welcome-text,
+.dte-text {
+    font-weight: 800;
+    color: white;
+}
+
+html[data-theme='light'] .welcome-text {
+    color: #0c0c0e;
+    /* Dark black for "Welcome to" */
+}
+
+html[data-theme='light'] .dte-text {
+    color: var(--accent-color);
+    /* Yellow for "DTE" */
+}
+
+.hub-text {
+    color: var(--accent-color);
+    font-weight: 900;
+    position: relative;
 }
 
 .hero-tagline {
@@ -148,8 +180,15 @@
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.95) translateY(30px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 @media (max-width: 768px) {
@@ -184,8 +223,9 @@
         background: linear-gradient(to right, transparent, var(--accent-color), transparent);
     }
 
-    .hub-title {
-        font-size: 3rem;
+    .hub-title-welcome {
+        font-size: 2.8rem;
+        gap: 0.2rem;
     }
 
     .hero-tagline {
