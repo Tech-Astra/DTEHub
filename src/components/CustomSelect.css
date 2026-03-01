@@ -30,6 +30,10 @@
     box-shadow: 0 0 15px var(--accent-glow);
 }
 
+.custom-select-container.is-open {
+    z-index: 9999;
+}
+
 .trigger-content {
     display: flex;
     align-items: center;
@@ -68,15 +72,14 @@
     top: calc(100% + 8px);
     left: 0;
     right: 0;
-    background: #1c1c1f;
-    border: 1.5px solid var(--border-color);
+    background: #1a1a1e;
+    border: 1.5px solid rgba(255, 255, 255, 0.12);
     border-radius: var(--radius-md);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
-    z-index: 1000;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    z-index: 9999;
     overflow: hidden;
     padding: 0.5rem;
     animation: selectDropdownFade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    backdrop-filter: blur(20px);
 }
 
 @keyframes selectDropdownFade {
@@ -84,6 +87,7 @@
         opacity: 0;
         transform: translateY(-8px) scale(0.98);
     }
+
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
@@ -136,15 +140,20 @@
     }
 
     @keyframes slideUpSheet {
-        from { transform: translateY(100%); }
-        to { transform: translateY(0); }
+        from {
+            transform: translateY(100%);
+        }
+
+        to {
+            transform: translateY(0);
+        }
     }
 
     .custom-select-option {
         padding: 1rem 1.25rem;
         font-size: 1rem;
     }
-    
+
     .custom-select-container.is-open::before {
         content: '';
         position: fixed;

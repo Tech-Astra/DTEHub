@@ -722,6 +722,8 @@ body.workspace-active .floating-dock-left {
     margin-bottom: 1rem !important;
     width: 100%;
     align-self: stretch;
+    display: flex;
+    justify-content: center;
 }
 
 .search-only-global .selectors-body {

@@ -29,7 +29,7 @@ export default function DCET() {
     useEffect(() => {
         const bRef = ref(database, 'branches');
         const sRef = ref(database, 'syllabuses');
-        
+
         onValue(bRef, (snap) => {
             const data = snap.val();
             if (data) {
@@ -90,7 +90,7 @@ export default function DCET() {
 
     const handleDownload = (item) => {
         if (!item.url) return;
-        
+
         // Convert to download link if it's a direct file
         let downloadLink = item.url;
         if (item.url.includes('drive.google.com/file/d/')) {
@@ -107,7 +107,7 @@ export default function DCET() {
                 title: item.title,
             });
         }
-        
+
         window.open(downloadLink, '_blank');
     };
 
@@ -132,14 +132,14 @@ export default function DCET() {
     const filteredDcet = dcetData
         .filter(item => {
             const matchesFolder = (currentFolder?.id || 'root') === (item.parentId || 'root');
-            
+
             const matchesSearch = !searchQuery || item.title.toLowerCase().includes(searchQuery.toLowerCase());
 
             if (item.isFolder) return matchesFolder && matchesSearch;
 
             const matchesBranch = !selBranch || item.branch === selBranch || item.branch === 'Common';
             const matchesSyllabus = !selSyllabus || item.syllabus === selSyllabus;
-            
+
             return matchesFolder && matchesBranch && matchesSyllabus && matchesSearch;
         })
         .sort((a, b) => {
@@ -153,93 +153,15 @@ export default function DCET() {
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
     return (
-        <div className="container notes-page">
-            {/* Desktop View & Mobile Search Only */}
-            <div className="workspace-selectors search-only-global">
-                <div className="selectors-body">
-                    <div className="selector-group desktop-only-flex">
-                        <div className="selector-item">
-                            <label>Academic Branch</label>
-                            <CustomSelect 
-                                options={[
-                                    { value: '', label: 'Select Branch' },
-                                    { value: 'Common', label: 'Common to All' },
-                                    ...branches.map(b => ({ value: b.title, label: b.title }))
-                                ]}
-                                value={selBranch}
-                                onChange={setSelBranch}
-                                placeholder="Select Branch"
-                                icon={Filter}
-                            />
-                        </div>
-
-                        <div className="selector-item">
-                            <label>Syllabus Scheme</label>
-                            <CustomSelect 
-                                options={[
-                                    { value: '', label: 'Select Scheme' },
-                                    ...syllabuses.map(s => ({ value: s.title, label: `${s.title} Scheme` }))
-                                ]}
-                                value={selSyllabus}
-                                onChange={setSelSyllabus}
-                                placeholder="Select Scheme"
-                                icon={Filter}
-                            />
-                        </div>
-
-                        <div className="selector-item">
-                            <label>Sort By</label>
-                            <CustomSelect 
-                                options={[
-                                    { value: 'newest', label: 'Newest First' },
-                                    { value: 'oldest', label: 'Oldest First' },
-                                    { value: 'az', label: 'Alphabetical (A-Z)' },
-                                    { value: 'za', label: 'Alphabetical (Z-A)' }
-                                ]}
-                                value={sortBy}
-                                onChange={setSortBy}
-                                placeholder="Sort By"
-                                icon={ChevronDown}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="search-bar-modern">
-                        <Search className="search-icon" size={18} />
-                        <input
-                            type="text"
-                            placeholder="Search DCET materials..."
-                            value={searchQuery}
-                            onChange={handleSearch}
-                            onKeyDown={handleSearch}
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* Unified Filter FAB — sits above Workspace Dock */}
-            <div className="global-filter-dock">
-                <button 
-                    className="dock-btn filter-fab" 
-                    onClick={() => setIsFilterModalOpen(true)}
-                    title="Filters & Sorting"
-                >
-                    <Filter size={24} />
-                </button>
-            </div>
-
-            {/* Mobile Filter Popup Modal */}
-            {isFilterModalOpen && (
-                <div className="filter-modal-overlay" onClick={() => setIsFilterModalOpen(false)}>
-                    <div className="filter-modal-content card" onClick={e => e.stopPropagation()}>
-                        <div className="filter-modal-header">
-                            <h3><Filter size={18} /> Filters & Sorting</h3>
-                            <button className="close-btn" onClick={() => setIsFilterModalOpen(false)}>&times;</button>
-                        </div>
-                        <div className="filter-modal-body">
+        <div className="notes-page-wrapper">
+            {/* Centered Search Bar */}
+            <div className="notes-search-center">
+                <div className="workspace-selectors search-only-global">
+                    <div className="selectors-body">
+                        <div className="selector-group desktop-only-flex">
                             <div className="selector-item">
                                 <label>Academic Branch</label>
-                                <CustomSelect 
+                                <CustomSelect
                                     options={[
                                         { value: '', label: 'Select Branch' },
                                         { value: 'Common', label: 'Common to All' },
@@ -248,12 +170,13 @@ export default function DCET() {
                                     value={selBranch}
                                     onChange={setSelBranch}
                                     placeholder="Select Branch"
+                                    icon={Filter}
                                 />
                             </div>
 
                             <div className="selector-item">
                                 <label>Syllabus Scheme</label>
-                                <CustomSelect 
+                                <CustomSelect
                                     options={[
                                         { value: '', label: 'Select Scheme' },
                                         ...syllabuses.map(s => ({ value: s.title, label: `${s.title} Scheme` }))
@@ -261,12 +184,13 @@ export default function DCET() {
                                     value={selSyllabus}
                                     onChange={setSelSyllabus}
                                     placeholder="Select Scheme"
+                                    icon={Filter}
                                 />
                             </div>
 
                             <div className="selector-item">
                                 <label>Sort By</label>
-                                <CustomSelect 
+                                <CustomSelect
                                     options={[
                                         { value: 'newest', label: 'Newest First' },
                                         { value: 'oldest', label: 'Oldest First' },
@@ -276,106 +200,188 @@ export default function DCET() {
                                     value={sortBy}
                                     onChange={setSortBy}
                                     placeholder="Sort By"
+                                    icon={ChevronDown}
                                 />
                             </div>
+                        </div>
 
-                            <button className="btn-primary w-full" style={{ marginTop: '1.5rem' }} onClick={() => setIsFilterModalOpen(false)}>
-                                Apply Filters
-                            </button>
+                        <div className="search-bar-modern">
+                            <Search className="search-icon" size={18} />
+                            <input
+                                type="text"
+                                placeholder="Search DCET materials..."
+                                value={searchQuery}
+                                onChange={handleSearch}
+                                onKeyDown={handleSearch}
+                            />
                         </div>
                     </div>
                 </div>
-            )}
-
-            {/* Breadcrumbs */}
-            <div className="breadcrumbs" style={{margin: '1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem'}}>
-                <span 
-                    onClick={() => setCurrentFolder(null)} 
-                    style={{cursor: 'pointer', color: !currentFolder ? 'var(--accent-color)' : 'inherit', fontWeight: !currentFolder ? '600' : '400'}}
-                >
-                    DCET Home
-                </span>
-                {currentFolder && (
-                    <>
-                        <span>/</span>
-                        <span style={{color: 'var(--accent-color)', fontWeight: '600'}}>{currentFolder.title}</span>
-                    </>
-                )}
             </div>
 
-            {loading ? (
-                <div style={{ textAlign: 'center', padding: '4rem 0' }}>
-                    <div className="loader"></div>
-                </div>
-            ) : filteredDcet.length > 0 ? (
-                <div className="notes-grid">
-                    {filteredDcet.map(item => (
-                        <div key={item.id} className="folder-card card" onClick={() => handleView(item)}>
-                            <div className="folder-icon-wrapper">
-                                {item.isFolder ? (
-                                    <Folder size={20} color="#ffffff" strokeWidth={2.5} />
-                                ) : (
-                                    <FileText size={20} color="#ffffff" strokeWidth={2} />
-                                )}
-                            </div>
-                            <div className="folder-info">
-                                <h3 className="folder-title" title={item.title}>{item.title}</h3>
-                                {!item.isFolder && (
-                                    <div className="res-card-meta" style={{ display: 'flex', gap: '0.5rem', marginTop: '0.2rem' }}>
-                                        <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>
-                                            Resources • Materials
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
+            {/* Left-aligned container */}
+            <div className="container notes-page">
 
-                            {!item.isFolder && (
-                                <div className="folder-actions-overlay">
-                                    <div className="action-button-group">
-                                        <button 
-                                            className={`circle-action-btn btn-add ${isFavorited(item.id, 'dcet') ? 'active' : ''}`}
-                                            onClick={(e) => { e.stopPropagation(); handleFavorite(item); }}
-                                            title={isFavorited(item.id, 'dcet') ? "Remove from Favorites" : "Add to Favorites"}
-                                        >
-                                            {isFavorited(item.id, 'dcet') ? <Heart size={20} fill="white" /> : <Plus size={20} />}
-                                        </button>
-                                        <button 
-                                            className="circle-action-btn btn-view"
-                                            onClick={(e) => { 
-                                                e.stopPropagation(); 
-                                                handleView(item); 
-                                                setViewUrl(item.url);
-                                            }}
-                                            title="Quick View"
-                                        >
-                                            <Eye size={20} />
-                                        </button>
-                                        <button 
-                                            className="circle-action-btn btn-download"
-                                            onClick={(e) => { 
-                                                e.stopPropagation(); 
-                                                handleDownload(item);
-                                            }}
-                                            title="Download"
-                                        >
-                                            <Download size={20} />
-                                        </button>
-                                    </div>
+                {/* Unified Filter FAB — sits above Workspace Dock */}
+                <div className="global-filter-dock">
+                    <button
+                        className="dock-btn filter-fab"
+                        onClick={() => setIsFilterModalOpen(true)}
+                        title="Filters & Sorting"
+                    >
+                        <Filter size={24} />
+                    </button>
+                </div>
+
+                {/* Mobile Filter Popup Modal */}
+                {isFilterModalOpen && (
+                    <div className="filter-modal-overlay" onClick={() => setIsFilterModalOpen(false)}>
+                        <div className="filter-modal-content card" onClick={e => e.stopPropagation()}>
+                            <div className="filter-modal-header">
+                                <h3><Filter size={18} /> Filters & Sorting</h3>
+                                <button className="close-btn" onClick={() => setIsFilterModalOpen(false)}>&times;</button>
+                            </div>
+                            <div className="filter-modal-body">
+                                <div className="selector-item">
+                                    <label>Academic Branch</label>
+                                    <CustomSelect
+                                        options={[
+                                            { value: '', label: 'Select Branch' },
+                                            { value: 'Common', label: 'Common to All' },
+                                            ...branches.map(b => ({ value: b.title, label: b.title }))
+                                        ]}
+                                        value={selBranch}
+                                        onChange={setSelBranch}
+                                        placeholder="Select Branch"
+                                    />
                                 </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
-            ) : (
-                <div style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-muted)' }}>
-                    <FilterX size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-                    <h3>No materials found</h3>
-                    <p>Preparation materials for DCET will appear here soon.</p>
-                </div>
-            )}
 
-            {/* In-page Document Viewer */}
-            {viewUrl && <IframeModal url={viewUrl} onClose={() => setViewUrl(null)} />}
+                                <div className="selector-item">
+                                    <label>Syllabus Scheme</label>
+                                    <CustomSelect
+                                        options={[
+                                            { value: '', label: 'Select Scheme' },
+                                            ...syllabuses.map(s => ({ value: s.title, label: `${s.title} Scheme` }))
+                                        ]}
+                                        value={selSyllabus}
+                                        onChange={setSelSyllabus}
+                                        placeholder="Select Scheme"
+                                    />
+                                </div>
+
+                                <div className="selector-item">
+                                    <label>Sort By</label>
+                                    <CustomSelect
+                                        options={[
+                                            { value: 'newest', label: 'Newest First' },
+                                            { value: 'oldest', label: 'Oldest First' },
+                                            { value: 'az', label: 'Alphabetical (A-Z)' },
+                                            { value: 'za', label: 'Alphabetical (Z-A)' }
+                                        ]}
+                                        value={sortBy}
+                                        onChange={setSortBy}
+                                        placeholder="Sort By"
+                                    />
+                                </div>
+
+                                <button className="btn-primary w-full" style={{ marginTop: '1.5rem' }} onClick={() => setIsFilterModalOpen(false)}>
+                                    Apply Filters
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Breadcrumbs */}
+                <div className="breadcrumbs" style={{ margin: '1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                    <span
+                        onClick={() => setCurrentFolder(null)}
+                        style={{ cursor: 'pointer', color: !currentFolder ? 'var(--accent-color)' : 'inherit', fontWeight: !currentFolder ? '600' : '400' }}
+                    >
+                        DCET Home
+                    </span>
+                    {currentFolder && (
+                        <>
+                            <span>/</span>
+                            <span style={{ color: 'var(--accent-color)', fontWeight: '600' }}>{currentFolder.title}</span>
+                        </>
+                    )}
+                </div>
+
+                {loading ? (
+                    <div style={{ textAlign: 'center', padding: '4rem 0' }}>
+                        <div className="loader"></div>
+                    </div>
+                ) : filteredDcet.length > 0 ? (
+                    <div className="notes-grid">
+                        {filteredDcet.map(item => (
+                            <div key={item.id} className="folder-card card" onClick={() => handleView(item)}>
+                                <div className="folder-icon-wrapper">
+                                    {item.isFolder ? (
+                                        <Folder size={20} color="#ffffff" strokeWidth={2.5} />
+                                    ) : (
+                                        <FileText size={20} color="#ffffff" strokeWidth={2} />
+                                    )}
+                                </div>
+                                <div className="folder-info">
+                                    <h3 className="folder-title" title={item.title}>{item.title}</h3>
+                                    {!item.isFolder && (
+                                        <div className="res-card-meta" style={{ display: 'flex', gap: '0.5rem', marginTop: '0.2rem' }}>
+                                            <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>
+                                                Resources • Materials
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {!item.isFolder && (
+                                    <div className="folder-actions-overlay">
+                                        <div className="action-button-group">
+                                            <button
+                                                className={`circle-action-btn btn-add ${isFavorited(item.id, 'dcet') ? 'active' : ''}`}
+                                                onClick={(e) => { e.stopPropagation(); handleFavorite(item); }}
+                                                title={isFavorited(item.id, 'dcet') ? "Remove from Favorites" : "Add to Favorites"}
+                                            >
+                                                {isFavorited(item.id, 'dcet') ? <Heart size={20} fill="white" /> : <Plus size={20} />}
+                                            </button>
+                                            <button
+                                                className="circle-action-btn btn-view"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleView(item);
+                                                    setViewUrl(item.url);
+                                                }}
+                                                title="Quick View"
+                                            >
+                                                <Eye size={20} />
+                                            </button>
+                                            <button
+                                                className="circle-action-btn btn-download"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDownload(item);
+                                                }}
+                                                title="Download"
+                                            >
+                                                <Download size={20} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-muted)' }}>
+                        <FilterX size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
+                        <h3>No materials found</h3>
+                        <p>Preparation materials for DCET will appear here soon.</p>
+                    </div>
+                )}
+
+                {/* In-page Document Viewer */}
+                {viewUrl && <IframeModal url={viewUrl} onClose={() => setViewUrl(null)} />}
+            </div>
         </div>
     );
 }
