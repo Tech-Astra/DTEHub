@@ -14,14 +14,12 @@ import Admin from './pages/Admin';
 import PrivacyPolicy from './pages/Legal';
 import Papers from './pages/Papers';
 import ProtectedRoute from './components/ProtectedRoute';
-import InstallPWA from './components/InstallPWA';
 import './App.css';
 
 function App() {
   return (
     <Router>
       <AuthProvider>
-        <InstallPWA />
         <div className="app-container">
           {/* Background Branding Watermark for all pages */}
           <div className="bg-branding-watermark flex-center">

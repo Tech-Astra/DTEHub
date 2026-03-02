@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Download, X } from 'lucide-react';
+import { Download } from 'lucide-react';
 import './InstallPWA.css';
 
 const InstallPWA = () => {
     const [deferredPrompt, setDeferredPrompt] = useState(null);
     const [isVisible, setIsVisible] = useState(false);
+    const [installing, setInstalling] = useState(false);
 
     useEffect(() => {
         const handler = (e) => {
+            console.log('DTEHub PWA: App installation prompt caught.');
             e.preventDefault();
             setDeferredPrompt(e);
             setIsVisible(true);
@@ -26,30 +28,42 @@ const InstallPWA = () => {
     }, []);
 
     const handleInstall = async () => {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-            setDeferredPrompt(null);
-            setIsVisible(false);
+        if (!deferredPrompt) {
+            // Check if already installed
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                alert("DTEHub is already installed on your device!");
+            } else {
+                alert("To install the app:\n\n1. Check if your browser supports PWAs (Chrome/Edge recommended)\n2. If on mobile, use 'Add to Home Screen' from your browser menu.");
+            }
+            return;
         }
-        // If dismissed, keep the banner visible
+
+        try {
+            setInstalling(true);
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`DTEHub PWA: Installation outcome: ${outcome}`);
+            
+            if (outcome === 'accepted') {
+                setDeferredPrompt(null);
+                setIsVisible(false);
+            }
+        } catch (err) {
+            console.error("DTEHub PWA: Installation error:", err);
+        } finally {
+            setInstalling(false);
+        }
     };
 
-    if (!isVisible) return null;
-
     return (
-        <div className="install-pwa-banner">
-            <div className="install-pwa-content">
-                <div className="install-pwa-info">
-                    <Download className="install-icon" size={20} />
-                    <span>Install DTEHub app for better experience!</span>
-                </div>
-                <div className="install-pwa-actions">
-                    <button className="btn-install" onClick={handleInstall}>Install Now</button>
-                </div>
-            </div>
-        </div>
+        <button 
+            className={`ws-download-app-btn ${installing ? 'installing' : ''}`} 
+            onClick={handleInstall}
+            disabled={installing}
+        >
+            <Download size={18} />
+            <span>{installing ? 'Installing...' : 'Download the App'}</span>
+        </button>
     );
 };
 

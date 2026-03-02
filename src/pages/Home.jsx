@@ -57,7 +57,13 @@ export default function Home() {
     const { stats, loading } = useFirebaseStats();
     const [testimonials, setTestimonials] = useState([]);
     const [selectedTestimonial, setSelectedTestimonial] = useState(null);
-    const [isAddingFeedback, setIsAddingFeedback] = useState(sessionStorage.getItem('open_feedback_post_login') === 'true');
+    const [isAddingFeedback, setIsAddingFeedback] = useState(() => {
+        try {
+            return sessionStorage.getItem('open_feedback_post_login') === 'true';
+        } catch (e) {
+            return false;
+        }
+    });
     const [feedbackMsg, setFeedbackMsg] = useState('');
     const [college, setCollege] = useState('');
     const [rating, setRating] = useState(5);
@@ -66,7 +72,9 @@ export default function Home() {
     // Clear feedback persistence on mount/render if modal is shown
     useEffect(() => {
         if (isAddingFeedback && user) {
-            sessionStorage.removeItem('open_feedback_post_login');
+            try {
+                sessionStorage.removeItem('open_feedback_post_login');
+            } catch (e) {}
         }
     }, [isAddingFeedback, user]);
 
@@ -84,7 +92,9 @@ export default function Home() {
 
     const handleAddFeedback = async () => {
         if (!user) {
-            sessionStorage.setItem('open_feedback_post_login', 'true');
+            try {
+                sessionStorage.setItem('open_feedback_post_login', 'true');
+            } catch (e) {}
             await loginWithGoogle();
             return;
         }

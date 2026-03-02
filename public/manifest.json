@@ -2,18 +2,18 @@
   "name": "DTEHub",
   "short_name": "DTEHub",
   "description": "Premium study platform for Diploma students. Access notes, question papers, and DCET resources.",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#09090b",
   "theme_color": "#facc15",
   "icons": [
     {
-      "src": "/Logo.jpeg",
+      "src": "Logo.jpeg",
       "sizes": "192x192",
       "type": "image/jpeg"
     },
     {
-      "src": "/Logo.jpeg",
+      "src": "Logo.jpeg",
       "sizes": "512x512",
       "type": "image/jpeg"
     }

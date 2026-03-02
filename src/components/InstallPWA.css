@@ -1,103 +1,49 @@
-.install-pwa-banner {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    right: 20px;
-    z-index: 3000;
-    display: flex;
-    justify-content: center;
-    pointer-events: none;
-}
-
-.install-pwa-content {
-    background: #18181b;
-    border: 1px solid var(--accent-color);
-    border-radius: 12px;
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    pointer-events: auto;
+.ws-download-app-btn {
     width: 100%;
-    max-width: 500px;
-    animation: slideUp 0.3s ease-out;
-}
-
-@keyframes slideUp {
-    from { transform: translateY(100px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-
-.install-pwa-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: white;
-    font-size: 0.9rem;
-    font-weight: 600;
-}
-
-.install-icon {
-    color: var(--accent-color);
-}
-
-.install-pwa-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.btn-install {
-    background: var(--accent-color);
-    color: black;
+    background: linear-gradient(135deg, var(--accent-color) 0%, #facc15 100%);
+    color: #000;
     border: none;
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-install:hover {
-    filter: brightness(1.1);
-    transform: scale(1.05);
-}
-
-.btn-close-pwa {
-    background: transparent;
-    border: none;
-    color: #a1a1aa;
+    padding: 1rem;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    font-weight: 800;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 4px;
-    border-radius: 4px;
-    transition: all 0.2s;
+    gap: 0.75rem;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-.btn-close-pwa:hover {
-    color: white;
-    background: rgba(255, 255, 255, 0.05);
+.ws-download-app-btn:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(253, 224, 71, 0.2);
 }
 
-/* Positioning for mobile above bottom nav */
+.ws-download-app-btn svg {
+    transition: transform 0.3s ease;
+}
+
+.ws-download-app-btn:hover svg {
+    transform: translateY(2px);
+}
+
+.ws-panel-footer {
+    padding: 1.25rem 1.75rem;
+    border-top: 1px solid var(--border-color);
+    background: rgba(24, 24, 27, 0.5);
+    backdrop-filter: blur(10px);
+}
+
 @media (max-width: 768px) {
-    .install-pwa-banner {
-        bottom: calc(4.5rem + 15px + env(safe-area-inset-bottom));
-        left: 10px;
-        right: 10px;
+    .ws-panel-footer {
+        padding: 1rem 1.25rem;
     }
-
-    .install-pwa-info span {
-        font-size: 0.8rem;
-    }
-
-    .btn-install {
-        padding: 6px 10px;
-        font-size: 0.8rem;
+    
+    .ws-download-app-btn {
+        padding: 0.85rem;
+        font-size: 0.85rem;
     }
 }

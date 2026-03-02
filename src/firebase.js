@@ -14,6 +14,11 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
+// Safety Check: Ensure environment variables are loaded
+if (!firebaseConfig.apiKey) {
+  console.error("DTEHub: Firebase API Key is missing! Environment variables (VITE_...) must be set for the app to initialize. Ensure your .env file exists locally or deployment environment variables are configured.");
+}
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);

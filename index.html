@@ -7,6 +7,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#facc15" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DTEHub" />
+  <link rel="apple-touch-icon" href="/Logo.jpeg" />
   <title>DTEHub</title>
 </head>
 
@@ -16,9 +21,21 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js')
+        navigator.serviceWorker.register('/service-worker.js?v=3')
           .then(registration => {
-            console.log('SW registered:', registration);
+            console.log('DTEHub: SW registered:', registration);
+            // Handle updates automatically
+            registration.onupdatefound = () => {
+              const installingWorker = registration.installing;
+              installingWorker.onstatechange = () => {
+                if (installingWorker.state === 'installed') {
+                  if (navigator.serviceWorker.controller) {
+                    console.log('DTEHub: New content is available; please refresh.');
+                    window.location.reload();
+                  }
+                }
+              };
+            };
           })
           .catch(error => {
             console.log('SW registration failed:', error);
