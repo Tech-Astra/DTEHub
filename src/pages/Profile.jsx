@@ -3,9 +3,9 @@ import { useAuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { ref, onValue, set } from 'firebase/database';
 import { database } from '../firebase';
-import { 
-    Building, 
-    Hash, 
+import {
+    Building,
+    Hash,
     GraduationCap,
     Edit2,
     Save,
@@ -42,7 +42,7 @@ export default function Profile() {
                         year: data.year || ''
                     });
                 } else {
-                    setProfileData(prev => ({...prev, name: user.displayName || ''}));
+                    setProfileData(prev => ({ ...prev, name: user.displayName || '' }));
                 }
             });
             return () => unsubscribe();
@@ -82,33 +82,33 @@ export default function Profile() {
             <header className="profile-header">
                 <div className="profile-user-info">
                     <img src={user.photoURL} alt={user.displayName} className="profile-large-avatar" referrerPolicy="no-referrer" />
-                    
+
                     <div className="profile-details-section">
                         {isEditing ? (
                             <div className="profile-edit-form">
-                                <input 
-                                    type="text" 
-                                    placeholder="Full Name" 
+                                <input
+                                    type="text"
+                                    placeholder="Full Name"
                                     value={profileData.name}
-                                    onChange={e => setProfileData({...profileData, name: e.target.value})}
+                                    onChange={e => setProfileData({ ...profileData, name: e.target.value })}
                                     className="profile-input"
                                 />
-                                <input 
-                                    type="text" 
-                                    placeholder="College Name" 
+                                <input
+                                    type="text"
+                                    placeholder="College Name"
                                     value={profileData.college}
-                                    onChange={e => setProfileData({...profileData, college: e.target.value})}
+                                    onChange={e => setProfileData({ ...profileData, college: e.target.value })}
                                     className="profile-input"
                                 />
                                 <div className="profile-input-row">
-                                    <input 
-                                        type="text" 
-                                        placeholder="USN (e.g. 1RV20CS001)" 
+                                    <input
+                                        type="text"
+                                        placeholder="USN (Optional, e.g. 1RV20CS001)"
                                         value={profileData.usn}
-                                        onChange={e => setProfileData({...profileData, usn: e.target.value})}
+                                        onChange={e => setProfileData({ ...profileData, usn: e.target.value })}
                                         className="profile-input"
                                     />
-                                    <CustomSelect 
+                                    <CustomSelect
                                         options={[
                                             { value: '1st Year', label: '1st Year' },
                                             { value: '2nd Year', label: '2nd Year' },
@@ -116,17 +116,17 @@ export default function Profile() {
                                             { value: 'Alumni', label: 'Alumni' }
                                         ]}
                                         value={profileData.year}
-                                        onChange={val => setProfileData({...profileData, year: val})}
+                                        onChange={val => setProfileData({ ...profileData, year: val })}
                                         placeholder="Select Year"
                                         icon={GraduationCap}
                                     />
                                 </div>
                                 <div className="profile-edit-actions">
                                     <button className="btn-save" onClick={handleSaveProfile} disabled={saving}>
-                                        {saving ? 'Saving...' : <><Save size={16}/> Save</>}
+                                        {saving ? 'Saving...' : <><Save size={16} /> Save</>}
                                     </button>
                                     <button className="btn-cancel" onClick={() => setIsEditing(false)}>
-                                        <X size={16}/> Cancel
+                                        <X size={16} /> Cancel
                                     </button>
                                 </div>
                             </div>
@@ -139,16 +139,16 @@ export default function Profile() {
                                     </button>
                                 </div>
                                 <p className="profile-email">{user.email}</p>
-                                
+
                                 <div className="profile-meta-tags">
                                     {profileData.college && (
-                                        <span className="profile-tag"><Building size={14}/> {profileData.college}</span>
+                                        <span className="profile-tag"><Building size={14} /> {profileData.college}</span>
                                     )}
                                     {profileData.usn && (
-                                        <span className="profile-tag"><Hash size={14}/> {profileData.usn.toUpperCase()}</span>
+                                        <span className="profile-tag"><Hash size={14} /> {profileData.usn.toUpperCase()}</span>
                                     )}
                                     {profileData.year && (
-                                        <span className="profile-tag"><GraduationCap size={14}/> {profileData.year}</span>
+                                        <span className="profile-tag"><GraduationCap size={14} /> {profileData.year}</span>
                                     )}
                                 </div>
                             </div>

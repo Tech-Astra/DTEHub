@@ -52,9 +52,9 @@ export default function ProfileOnboardingModal() {
 
     const handleSave = async (e) => {
         e.preventDefault();
-        
-        if (!profileData.name || !profileData.college || !profileData.usn || !profileData.year) {
-            alert("Please fill in all details to continue.");
+
+        if (!profileData.name || !profileData.college || !profileData.year) {
+            alert("Please fill in all required details to continue.");
             return;
         }
 
@@ -82,44 +82,43 @@ export default function ProfileOnboardingModal() {
                     <h2>Complete Your Profile</h2>
                     <p>Tell us a bit about yourself so we can personalize your study hub experience.</p>
                 </div>
-                
+
                 <form className="onboarding-form" onSubmit={handleSave}>
                     <div className="input-group">
                         <User size={18} className="input-icon" />
-                        <input 
-                            type="text" 
-                            placeholder="Full Name" 
+                        <input
+                            type="text"
+                            placeholder="Full Name"
                             value={profileData.name}
-                            onChange={e => setProfileData({...profileData, name: e.target.value})}
+                            onChange={e => setProfileData({ ...profileData, name: e.target.value })}
                             required
                         />
                     </div>
-                    
+
                     <div className="input-group">
                         <Building size={18} className="input-icon" />
-                        <input 
-                            type="text" 
-                            placeholder="College Name" 
+                        <input
+                            type="text"
+                            placeholder="College Name"
                             value={profileData.college}
-                            onChange={e => setProfileData({...profileData, college: e.target.value})}
+                            onChange={e => setProfileData({ ...profileData, college: e.target.value })}
                             required
                         />
                     </div>
-                    
+
                     <div className="input-group-row">
                         <div className="input-group">
                             <Hash size={18} className="input-icon" />
-                            <input 
-                                type="text" 
-                                placeholder="USN (e.g. 1RV20CS001)" 
+                            <input
+                                type="text"
+                                placeholder="USN (Optional, e.g. 1RV20CS001)"
                                 value={profileData.usn}
-                                onChange={e => setProfileData({...profileData, usn: e.target.value})}
-                                required
+                                onChange={e => setProfileData({ ...profileData, usn: e.target.value })}
                             />
                         </div>
-                        
+
                         <div className="input-group select-group">
-                            <CustomSelect 
+                            <CustomSelect
                                 options={[
                                     { value: '1st Year', label: '1st Year' },
                                     { value: '2nd Year', label: '2nd Year' },
@@ -127,14 +126,14 @@ export default function ProfileOnboardingModal() {
                                     { value: 'Alumni', label: 'Alumni' }
                                 ]}
                                 value={profileData.year}
-                                onChange={val => setProfileData({...profileData, year: val})}
+                                onChange={val => setProfileData({ ...profileData, year: val })}
                                 placeholder="Select Year"
                                 icon={GraduationCap}
                                 required
                             />
                         </div>
                     </div>
-                    
+
                     <button type="submit" className="btn-onboarding-save" disabled={saving}>
                         {saving ? 'Saving...' : <><Save size={18} /> Complete Setup</>}
                     </button>

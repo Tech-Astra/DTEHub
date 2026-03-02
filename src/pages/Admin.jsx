@@ -648,7 +648,7 @@ export default function Admin() {
                             </div>
                             <div className="user-avatar" style={{ overflow: 'hidden' }}>
                                 {user?.photoURL ? (
-                                    <img src={user.photoURL} alt="Admin" style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
+                                    <img src={user.photoURL} alt="Admin" style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" onError={(e) => { e.target.style.display = 'none'; }} />
                                 ) : (
                                     <Users size={20} />
                                 )}
@@ -916,7 +916,7 @@ export default function Admin() {
                                         <div key={item.id} className="testimonial-card-admin">
                                             <div className="test-header">
                                                 <div className="test-avatar">
-                                                    {item.photoUrl ? <img src={item.photoUrl} alt={item.name} /> : <Users size={20} />}
+                                                    {item.photoUrl ? <img src={item.photoUrl} alt={item.name} referrerPolicy="no-referrer" onError={(e) => { e.target.style.display = 'none'; }} /> : <Users size={20} />}
                                                 </div>
                                                 <div className="test-meta">
                                                     <h4>{item.name}</h4>
@@ -973,7 +973,7 @@ export default function Admin() {
                                                 <div key={log.id} className="log-item clickable" onClick={() => setSelectedLog(log)}>
                                                     <div className="log-admin-avatar">
                                                         {log.adminPhoto ? (
-                                                            <img src={log.adminPhoto} alt={log.adminName} />
+                                                            <img src={log.adminPhoto} alt={log.adminName} referrerPolicy="no-referrer" onError={(e) => { e.target.style.display = 'none'; }} />
                                                         ) : (
                                                             <div className="avatar-placeholder">{log.adminName?.charAt(0) || 'A'}</div>
                                                         )}
@@ -1498,7 +1498,7 @@ export default function Admin() {
                                     <div className="log-detail-card admin-info">
                                         <div className="log-admin-avatar-lg">
                                             {selectedLog.adminPhoto ? (
-                                                <img src={selectedLog.adminPhoto} alt={selectedLog.adminName} />
+                                                <img src={selectedLog.adminPhoto} alt={selectedLog.adminName} referrerPolicy="no-referrer" onError={(e) => { e.target.style.display = 'none'; }} />
                                             ) : (
                                                 <div className="avatar-placeholder">{selectedLog.adminName?.charAt(0) || 'A'}</div>
                                             )}
@@ -1548,7 +1548,7 @@ export default function Admin() {
                                 <div className="profile-hero">
                                     <div className="profile-avatar-xl">
                                         {selectedUser.photoURL ? (
-                                            <img src={selectedUser.photoURL} alt={selectedUser.name} />
+                                            <img src={selectedUser.photoURL} alt={selectedUser.name} referrerPolicy="no-referrer" onError={(e) => { e.target.style.display = 'none'; }} />
                                         ) : (
                                             <div className="avatar-placeholder-xl">{selectedUser.name?.charAt(0) || 'S'}</div>
                                         )}

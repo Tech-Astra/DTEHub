@@ -74,7 +74,7 @@ export default function Home() {
         if (isAddingFeedback && user) {
             try {
                 sessionStorage.removeItem('open_feedback_post_login');
-            } catch (e) {}
+            } catch (e) { }
         }
     }, [isAddingFeedback, user]);
 
@@ -94,7 +94,7 @@ export default function Home() {
         if (!user) {
             try {
                 sessionStorage.setItem('open_feedback_post_login', 'true');
-            } catch (e) {}
+            } catch (e) { }
             await loginWithGoogle();
             return;
         }
@@ -140,8 +140,8 @@ export default function Home() {
                         The ultimate study hub for Diploma students. Access premium notes, past question papers, and DCET Question papers from trusted academic resources—all centralized for your success.
                     </p>
 
-                    <button 
-                        className="btn-explore" 
+                    <button
+                        className="btn-explore"
                         onClick={() => navigate('/notes')}
                     >
                         Explore All Resources <ArrowRight size={20} />
@@ -165,7 +165,7 @@ export default function Home() {
                                 <span className="prompt-arrow">&gt;</span>
                                 <h2 className="marquee-title">What People Say</h2>
                             </div>
-                            <button 
+                            <button
                                 className="btn-add-testimonial"
                                 onClick={() => setIsAddingFeedback(true)}
                             >
@@ -178,14 +178,14 @@ export default function Home() {
                         <div className="marquee-wrapper">
                             <div className="marquee-track track-left">
                                 {[...testimonials, ...testimonials].map((test, i) => (
-                                    <div 
-                                        key={`row1-${i}`} 
+                                    <div
+                                        key={`row1-${i}`}
                                         className="marquee-card"
                                         onClick={() => setSelectedTestimonial(test)}
                                     >
                                         <div className="card-inner">
                                             <div className="user-avatar-circle">
-                                                {test.photoUrl ? <img src={test.photoUrl} alt={test.name} /> : <Users size={14} />}
+                                                {test.photoUrl ? <img src={test.photoUrl} alt={test.name} referrerPolicy="no-referrer" onError={(e) => { e.target.style.display = 'none'; }} /> : <Users size={14} />}
                                             </div>
                                             <div className="card-content-mini">
                                                 <p className="test-msg-mini">"{test.message}"</p>
@@ -201,14 +201,14 @@ export default function Home() {
                         <div className="marquee-wrapper">
                             <div className="marquee-track track-right">
                                 {[...testimonials, ...testimonials].reverse().map((test, i) => (
-                                    <div 
-                                        key={`row2-${i}`} 
+                                    <div
+                                        key={`row2-${i}`}
                                         className="marquee-card"
                                         onClick={() => setSelectedTestimonial(test)}
                                     >
                                         <div className="card-inner">
                                             <div className="user-avatar-circle">
-                                                {test.photoUrl ? <img src={test.photoUrl} alt={test.name} /> : <Users size={14} />}
+                                                {test.photoUrl ? <img src={test.photoUrl} alt={test.name} referrerPolicy="no-referrer" onError={(e) => { e.target.style.display = 'none'; }} /> : <Users size={14} />}
                                             </div>
                                             <div className="card-content-mini">
                                                 <p className="test-msg-mini">"{test.message}"</p>
@@ -231,7 +231,7 @@ export default function Home() {
                         <div className="test-modal-header">
                             <div className="test-modal-avatar">
                                 {selectedTestimonial.photoUrl ? (
-                                    <img src={selectedTestimonial.photoUrl} alt={selectedTestimonial.name} />
+                                    <img src={selectedTestimonial.photoUrl} alt={selectedTestimonial.name} referrerPolicy="no-referrer" onError={(e) => { e.target.style.display = 'none'; }} />
                                 ) : (
                                     <Users size={32} />
                                 )}
@@ -274,17 +274,17 @@ export default function Home() {
 
                         {!user ? (
                             <div className="login-prompt-feedback">
-                                 <p>Please sign in to leave a testimonial about DTEHub.</p>
-                                 <button className="btn-primary" onClick={async () => {
-                                     sessionStorage.setItem('open_feedback_post_login', 'true');
-                                     await loginWithGoogle();
-                                 }}>Sign In with Google</button>
+                                <p>Please sign in to leave a testimonial about DTEHub.</p>
+                                <button className="btn-primary" onClick={async () => {
+                                    sessionStorage.setItem('open_feedback_post_login', 'true');
+                                    await loginWithGoogle();
+                                }}>Sign In with Google</button>
                             </div>
                         ) : (
                             <div className="feedback-form-compact">
                                 <div className="user-indicator-feedback">
                                     <div className="test-modal-avatar">
-                                        <img src={user.photoURL} alt={user.displayName} />
+                                        <img src={user.photoURL} alt={user.displayName} referrerPolicy="no-referrer" onError={(e) => { e.target.style.display = 'none'; }} />
                                     </div>
                                     <div>
                                         <strong>{user.displayName}</strong>
@@ -294,15 +294,15 @@ export default function Home() {
 
                                 <div className="feedback-input-group">
                                     <label className="rating-label-feedback">Your College Name</label>
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         className="feedback-input-text"
-                                        placeholder="e.g. Government Polytechnic, Bangalore"
+                                        placeholder="e.g. Government Polytechnic, Bangalore (Optional)"
                                         value={college}
                                         onChange={(e) => setCollege(e.target.value)}
                                     />
                                 </div>
-                                
+
                                 <div>
                                     <p className="rating-label-feedback">Rate your experience</p>
                                     <div className="star-rating-selector">
@@ -313,17 +313,17 @@ export default function Home() {
                                                 onClick={() => setRating(star)}
                                                 className={`star-select-btn ${star <= rating ? 'active' : ''}`}
                                             >
-                                                <Star 
-                                                    size={24} 
-                                                    fill={star <= rating ? "var(--accent-color)" : "transparent"} 
+                                                <Star
+                                                    size={24}
+                                                    fill={star <= rating ? "var(--accent-color)" : "transparent"}
                                                     color={star <= rating ? "var(--accent-color)" : "rgba(255,255,255,0.2)"}
                                                 />
                                             </button>
                                         ))}
                                     </div>
                                 </div>
-                                
-                                <textarea 
+
+                                <textarea
                                     className="feedback-textarea"
                                     placeholder="Tell others how DTEHub helped you in your academics..."
                                     value={feedbackMsg}
@@ -332,9 +332,9 @@ export default function Home() {
                                 />
                                 <div className="char-count">{feedbackMsg.length}/200</div>
 
-                                <button 
+                                <button
                                     className="btn-submit-feedback"
-                                    disabled={!feedbackMsg.trim() || !college.trim() || isSubmitting}
+                                    disabled={!feedbackMsg.trim() || isSubmitting}
                                     onClick={handleAddFeedback}
                                 >
                                     {isSubmitting ? 'Posting student voice...' : 'Publish Feedback'}
