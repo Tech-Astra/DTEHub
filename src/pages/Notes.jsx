@@ -551,7 +551,6 @@ export default function Notes() {
                                     <div className="folder-info">
                                         <h3 className="folder-title" title={note.title}>
                                             {note.title}
-                                            {note.isDriveFolder && <span style={{ fontSize: '0.65rem', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px', marginLeft: '6px', color: '#22c55e', verticalAlign: 'middle' }}>Drive</span>}
                                         </h3>
                                         {!note.isFolder && (
                                             <div className="res-card-meta" style={{ display: 'flex', gap: '0.5rem', marginTop: '0.2rem' }}>
