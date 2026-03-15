@@ -176,7 +176,8 @@
     font-size: 12vw;
     font-weight: 900;
     color: var(--accent-color);
-    opacity: var(--bg-watermark-opacity);
+    opacity: 0.25;
+    /* Increased from var(--bg-watermark-opacity) */
     pointer-events: none;
     z-index: 1;
     white-space: nowrap;
