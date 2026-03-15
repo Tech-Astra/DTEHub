@@ -1212,7 +1212,7 @@ export default function Admin() {
                                                 {folder.isDriveFolder ? <LinkIcon size={24} color="#fff" /> : <Folder size={24} />}
                                             </div>
                                             <div className="folder-info">
-                                                <h4>{folder.title} {folder.isDriveFolder && <span style={{ fontSize: '0.6rem', background: 'rgba(255,255,255,0.1)', padding: '2px 4px', borderRadius: '4px', marginLeft: '4px', color: '#22c55e' }}>Drive Ext.</span>}</h4>
+                                                <h4>{folder.title}</h4>
                                                 <p>{folder.branch} • {folder.syllabus || folder.academicYear || 'No Year'} {folder.semester ? `• ${folder.semester}` : ''}</p>
                                             </div>
                                             <div className="folder-actions-overlay">
