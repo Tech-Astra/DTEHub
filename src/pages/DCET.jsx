@@ -14,7 +14,10 @@ export default function DCET() {
     const [openWindows, setOpenWindows] = useState(() => loadWorkspace());
     const [nextZ, setNextZ] = useState(10);
     const [currentFolder, setCurrentFolder] = useState(null);
+    const [folderHistory, setFolderHistory] = useState([]);
     const [activeCardId, setActiveCardId] = useState(null);
+    const [driveFiles, setDriveFiles] = useState([]);
+    const [loadingDrive, setLoadingDrive] = useState(false);
 
     // Dynamic Filter Lists
     const [branches, setBranches] = useState([]);
@@ -82,6 +85,65 @@ export default function DCET() {
         return () => document.removeEventListener('click', handleClickOutside);
     }, [activeCardId]);
 
+    // Fetch Drive Folder Contents if currentFolder is a Google Drive Folder
+    useEffect(() => {
+        if (!currentFolder?.isDriveFolder) {
+            setDriveFiles([]);
+            return;
+        }
+
+        const fetchDriveDocs = async () => {
+            setLoadingDrive(true);
+            try {
+                const folderId = currentFolder.driveFolderId;
+                const apiKey = import.meta.env.VITE_GOOGLE_DRIVE_API_KEY;
+                if (!apiKey) {
+                    console.error("Missing VITE_GOOGLE_DRIVE_API_KEY in .env");
+                    setLoadingDrive(false);
+                    return;
+                }
+
+                // Fetch files in this folder
+                const res = await fetch(`https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&key=${apiKey}&fields=files(id, name, mimeType, webViewLink, iconLink)`);
+                const data = await res.json();
+
+                if (data.files) {
+                    const mappedFiles = data.files.map(f => {
+                        const isFolder = f.mimeType === 'application/vnd.google-apps.folder';
+                        return {
+                            id: `drive-${f.id}`,
+                            title: f.name,
+                            isFolder: isFolder,
+                            isDriveFolder: isFolder,
+                            driveFolderId: f.id, // For subfolders
+                            url: f.webViewLink || `https://drive.google.com/file/d/${f.id}/preview`,
+                            originalDriveId: f.id,
+                            type: isFolder ? 'Folder' : 'DCET Resources',
+                            // Inherit traits from parent link
+                            branch: currentFolder.branch,
+                            syllabus: currentFolder.syllabus
+                        };
+                    });
+
+                    // Sort folders first, then alphabetically
+                    mappedFiles.sort((a, b) => {
+                        if (a.isFolder === b.isFolder) return a.title.localeCompare(b.title);
+                        return a.isFolder ? -1 : 1;
+                    });
+                    setDriveFiles(mappedFiles);
+                } else {
+                    setDriveFiles([]);
+                }
+            } catch (err) {
+                console.error("Failed to fetch Google Drive folder:", err);
+            } finally {
+                setLoadingDrive(false);
+            }
+        };
+
+        fetchDriveDocs();
+    }, [currentFolder]);
+
     // ── Window management ────────────────────────────
     const openWindow = (item) => {
         setOpenWindows(prev => {
@@ -120,8 +182,12 @@ export default function DCET() {
 
     // ── Resource actions ─────────────────────────────
     const handleView = (item) => {
-        if (item.isFolder) { setCurrentFolder(item); return; }
-        if (user) {
+        if (item.isFolder) {
+            setFolderHistory(prev => [...prev, currentFolder]);
+            setCurrentFolder(item);
+            return;
+        }
+        if (user && !item.originalDriveId) {
             addRecentlyViewed({ itemId: item.id, type: 'dcet', title: item.title });
         }
         openWindow(item);
@@ -242,8 +308,18 @@ export default function DCET() {
                     {currentFolder && (
                         <button
                             onClick={() => {
-                                const parent = dcetData.find(n => n.id === currentFolder.parentId);
-                                setCurrentFolder(parent || null);
+                                if (folderHistory.length > 0) {
+                                    const prev = folderHistory[folderHistory.length - 1];
+                                    setFolderHistory(h => h.slice(0, -1));
+                                    setCurrentFolder(prev);
+                                } else {
+                                    const parent = dcetData.find(n => n.id === currentFolder.parentId);
+                                    if (parent) {
+                                        setCurrentFolder(parent);
+                                    } else {
+                                        setCurrentFolder(null);
+                                    }
+                                }
                             }}
                             className="btn-back-nav"
                             style={{
@@ -256,7 +332,7 @@ export default function DCET() {
                             <ChevronLeft size={20} strokeWidth={3} />
                         </button>
                     )}
-                    <span onClick={() => setCurrentFolder(null)} style={{ cursor: 'pointer', color: !currentFolder ? 'var(--accent-color)' : 'inherit', fontWeight: !currentFolder ? '600' : '400' }}>
+                    <span onClick={() => { setCurrentFolder(null); setFolderHistory([]); }} style={{ cursor: 'pointer', color: !currentFolder ? 'var(--accent-color)' : 'inherit', fontWeight: !currentFolder ? '600' : '400' }}>
                         DCET Resources
                     </span>
                     {currentFolder && (
@@ -270,6 +346,75 @@ export default function DCET() {
                 {loading ? (
                     <div style={{ textAlign: 'center', padding: '4rem 0' }}>
                         <div className="loader"></div>
+                    </div>
+                ) : currentFolder?.isDriveFolder ? (
+                    <div className="notes-grid">
+                        {loadingDrive ? (
+                            <div style={{ textAlign: 'center', padding: '4rem 0', gridColumn: '1 / -1' }}>
+                                <div className="loader"></div>
+                                <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>Fetching from Google Drive...</p>
+                            </div>
+                        ) : driveFiles.length > 0 ? (
+                            driveFiles.map(item => {
+                                const isActive = activeCardId === item.id;
+                                return (
+                                    <div
+                                        key={item.id}
+                                        className={`folder-card card ${isActive ? 'active-mobile' : ''}`}
+                                        onClick={(e) => {
+                                            if (window.innerWidth <= 768 && !item.isFolder) {
+                                                if (!isActive) {
+                                                    e.stopPropagation();
+                                                    setActiveCardId(item.id);
+                                                    return;
+                                                }
+                                            }
+                                            handleView(item);
+                                        }}
+                                    >
+                                        <div className="folder-icon-wrapper" style={item.isDriveFolder ? { background: 'linear-gradient(135deg, #34a853, #fbbc05, #ea4335, #4285f4)' } : {}}>
+                                            {item.isFolder ? <Folder size={20} color="#ffffff" strokeWidth={2.5} /> : <FileText size={20} color="#ffffff" strokeWidth={2} />}
+                                        </div>
+                                        <div className="folder-info">
+                                            <h3 className="folder-title" title={item.title}>
+                                                {item.title}
+                                            </h3>
+                                            {!item.isFolder && (
+                                                <div className="res-card-meta" style={{ display: 'flex', gap: '0.5rem', marginTop: '0.2rem' }}>
+                                                    <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>
+                                                        {item.syllabus} • {item.branch}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        {!item.isFolder && (
+                                            <div className="folder-actions-overlay">
+                                                <div className="action-button-group">
+                                                    <button className="circle-action-btn btn-view"
+                                                        onClick={(e) => { e.stopPropagation(); handleView(item); }}
+                                                        title="Quick View"
+                                                    >
+                                                        <Eye size={20} />
+                                                    </button>
+                                                    <button className="circle-action-btn btn-download"
+                                                        onClick={(e) => { e.stopPropagation(); handleDownload(item); }}
+                                                        title="Download"
+                                                    >
+                                                        <Download size={20} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            <div style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-muted)', gridColumn: '1 / -1' }}>
+                                <FilterX size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
+                                <h3>Empty Drive Folder</h3>
+                                <p>No files found in this Google Drive folder.</p>
+                            </div>
+                        )}
                     </div>
                 ) : filteredData.length > 0 ? (
                     <div className="notes-grid">
@@ -291,11 +436,14 @@ export default function DCET() {
                                         handleView(item);
                                     }}
                                 >
-                                    <div className="folder-icon-wrapper">
+                                    <div className="folder-icon-wrapper" style={item.isDriveFolder ? { background: 'linear-gradient(135deg, #34a853, #fbbc05, #ea4335, #4285f4)' } : {}}>
                                         {item.isFolder ? <Folder size={20} color="#ffffff" strokeWidth={2.5} /> : <FileText size={20} color="#ffffff" strokeWidth={2} />}
                                     </div>
                                     <div className="folder-info">
-                                        <h3 className="folder-title" title={item.title}>{item.title}</h3>
+                                        <h3 className="folder-title" title={item.title}>
+                                            {item.title}
+                                            {item.isDriveFolder && <span style={{ fontSize: '0.65rem', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px', marginLeft: '6px', color: '#22c55e', verticalAlign: 'middle' }}>Drive</span>}
+                                        </h3>
                                         {!item.isFolder && (
                                             <div className="res-card-meta" style={{ display: 'flex', gap: '0.5rem', marginTop: '0.2rem' }}>
                                                 <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>

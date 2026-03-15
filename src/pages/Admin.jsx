@@ -60,6 +60,10 @@ export default function Admin() {
     const [syllabusesList, setSyllabusesList] = useState([]);
     const [newSyllabusTitle, setNewSyllabusTitle] = useState('');
 
+    // Drive Folder integration
+    const [showDriveFolderModal, setShowDriveFolderModal] = useState(false);
+    const [driveFolderUrl, setDriveFolderUrl] = useState('');
+
     // Testimonial States
     const [testimonialsList, setTestimonialsList] = useState([]);
     const [showTestimonialModal, setShowTestimonialModal] = useState(false);
@@ -400,6 +404,68 @@ export default function Admin() {
         }
     };
 
+    const handleAddDriveFolder = async (e) => {
+        e.preventDefault();
+        if (!folderTitle.trim() || !driveFolderUrl.trim()) return;
+
+        // Extract Google Drive Folder ID
+        let driveFolderId = '';
+        if (driveFolderUrl.includes('drive.google.com/drive/folders/')) {
+            driveFolderId = driveFolderUrl.split('/folders/')[1]?.split('?')[0];
+        } else {
+            alert('Please enter a valid Google Drive Folder URL (e.g., https://drive.google.com/drive/folders/ID)');
+            return;
+        }
+
+        if (!driveFolderId) {
+            alert('Could not extract Folder ID from the URL.');
+            return;
+        }
+
+        setIsSaving(true);
+        try {
+            const folderData = {
+                title: folderTitle,
+                isFolder: true,
+                isDriveFolder: true,
+                driveFolderId: driveFolderId,
+                parentId: parentId || 'root',
+                branch,
+                timestamp: Date.now()
+            };
+
+            if (activeTab === 'notes') {
+                folderData.syllabus = syllabus;
+                folderData.semester = semester;
+            }
+
+            if (editingId) {
+                // Update existing folder
+                await set(ref(database, `resources/${activeTab}/${editingId}`), folderData);
+                logAdminAction('Updated Drive Folder', activeTab, folderTitle);
+                alert("Drive Folder updated!");
+            } else {
+                // Create new folder
+                const folderRef = push(ref(database, `resources/${activeTab}`));
+                await set(folderRef, folderData);
+                const statsRef = ref(database, 'stats/totalResources');
+                runTransaction(statsRef, (count) => (count || 0) + 1);
+                logAdminAction('Created Drive Folder', activeTab, folderTitle);
+                alert("New Drive Folder connected!");
+            }
+
+            setFolderTitle('');
+            setDriveFolderUrl('');
+            setEditingId(null);
+            setShowDriveFolderModal(false);
+        } catch (err) {
+            console.error(err);
+            alert("Failed to save Drive folder.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const handleAddBranch = async (e) => {
         e.preventDefault();
         if (!newBranchTitle.trim()) return;
@@ -510,7 +576,12 @@ export default function Admin() {
             setSemester(res.semester || '1st Sem');
             setBranch(res.branch || '');
             setParentId(res.parentId || 'root');
-            setShowFolderModal(true);
+            if (res.isDriveFolder) {
+                setDriveFolderUrl(`https://drive.google.com/drive/folders/${res.driveFolderId}`);
+                setShowDriveFolderModal(true);
+            } else {
+                setShowFolderModal(true);
+            }
         } else {
             setTitle(res.title);
             setUrl(res.url || '');
@@ -1046,6 +1117,15 @@ export default function Admin() {
                                             }}>
                                                 <FolderPlus size={16} /> Folder
                                             </button>
+                                            <button className="btn-outline" style={{ borderColor: '#22c55e', color: '#22c55e' }} onClick={() => {
+                                                setEditingId(null);
+                                                setFolderTitle('');
+                                                setDriveFolderUrl('');
+                                                setParentId('root');
+                                                setShowDriveFolderModal(true);
+                                            }}>
+                                                <LinkIcon size={16} /> Connect Drive
+                                            </button>
                                             <button className="btn-primary" onClick={() => {
                                                 setEditingId(null);
                                                 setTitle(''); setUrl(''); setChapter('');
@@ -1064,12 +1144,12 @@ export default function Admin() {
                                 </div>
                                 <div className="folder-grid">
                                     {displayFolders.length > 0 ? displayFolders.map(folder => (
-                                        <div key={folder.id} className="folder-card-premium" onClick={() => setPeakedFolder(folder)}>
-                                            <div className="folder-icon-wrapper">
-                                                <Folder size={24} />
+                                        <div key={folder.id} className={`folder-card-premium ${folder.isDriveFolder ? 'drive-folder' : ''}`} onClick={() => setPeakedFolder(folder)}>
+                                            <div className="folder-icon-wrapper" style={folder.isDriveFolder ? { background: 'linear-gradient(135deg, #34a853, #fbbc05, #ea4335, #4285f4)' } : {}}>
+                                                {folder.isDriveFolder ? <LinkIcon size={24} color="#fff" /> : <Folder size={24} />}
                                             </div>
                                             <div className="folder-info">
-                                                <h4>{folder.title}</h4>
+                                                <h4>{folder.title} {folder.isDriveFolder && <span style={{ fontSize: '0.6rem', background: 'rgba(255,255,255,0.1)', padding: '2px 4px', borderRadius: '4px', marginLeft: '4px', color: '#22c55e' }}>Drive Ext.</span>}</h4>
                                                 <p>{folder.branch} • {folder.syllabus || folder.academicYear || 'No Year'} {folder.semester ? `• ${folder.semester}` : ''}</p>
                                             </div>
                                             <div className="folder-actions-overlay">
@@ -1645,6 +1725,114 @@ export default function Admin() {
 
             {/* View Document Modal */}
             {viewUrl && <IframeModal url={viewUrl} onClose={() => setViewUrl(null)} />}
+
+            {/* Drive Folder Modal */}
+            {showDriveFolderModal && (
+                <div className="admin-modal-overlay" onClick={() => setShowDriveFolderModal(false)}>
+                    <div className="admin-modal-content card" onClick={e => e.stopPropagation()}>
+                        <div className="admin-modal-header">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <LinkIcon size={20} color="#22c55e" />
+                                <h3>Connect Google Drive Folder</h3>
+                            </div>
+                            <button className="admin-modal-close" onClick={() => setShowDriveFolderModal(false)}><X size={20} /></button>
+                        </div>
+                        <form onSubmit={handleAddDriveFolder} className="admin-modal-form">
+                            <div className="form-group row">
+                                <div style={{ flex: 1 }}>
+                                    <label>Google Drive Folder URL (Must be "Anyone with the link")</label>
+                                    <input
+                                        type="url"
+                                        value={driveFolderUrl}
+                                        onChange={(e) => setDriveFolderUrl(e.target.value)}
+                                        placeholder="https://drive.google.com/drive/folders/..."
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div className="form-group row">
+                                <div style={{ flex: 1 }}>
+                                    <label>Display Title in DTEHub</label>
+                                    <input
+                                        type="text"
+                                        value={folderTitle}
+                                        onChange={(e) => setFolderTitle(e.target.value)}
+                                        placeholder="e.g., Computer Networks Notes"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div className="form-group row">
+                                <div style={{ flex: 1 }}>
+                                    <label>Parent Folder (Optional)</label>
+                                    <CustomSelect
+                                        options={[
+                                            { value: 'root', label: 'Root Directory' },
+                                            ...foldersList.filter(f => f.id !== editingId).map(f => ({ value: f.id, label: f.title }))
+                                        ]}
+                                        value={parentId || 'root'}
+                                        onChange={setParentId}
+                                        placeholder="Select Parent"
+                                    />
+                                </div>
+                            </div>
+                            <div className="form-group row">
+                                <div style={{ flex: 1 }}>
+                                    <label>Branch Tag</label>
+                                    <CustomSelect
+                                        options={[
+                                            { value: '', label: 'None/Common' },
+                                            { value: 'Common', label: 'Common' },
+                                            ...branchesList.map(b => ({ value: b.title, label: b.title }))
+                                        ]}
+                                        value={branch}
+                                        onChange={setBranch}
+                                        placeholder="Select Branch"
+                                    />
+                                </div>
+                            </div>
+                            {activeTab === 'notes' && (
+                                <div className="form-group row">
+                                    <div style={{ flex: 1 }}>
+                                        <label>Syllabus Scheme</label>
+                                        <CustomSelect
+                                            options={[
+                                                { value: 'C-20', label: 'C-20' },
+                                                ...syllabusesList.map(s => ({ value: s.title, label: s.title }))
+                                            ]}
+                                            value={syllabus}
+                                            onChange={setSyllabus}
+                                            placeholder="Select Syllabus"
+                                        />
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <label>Semester</label>
+                                        <CustomSelect
+                                            options={[
+                                                { value: '1st Sem', label: '1st Sem' },
+                                                { value: '2nd Sem', label: '2nd Sem' },
+                                                { value: '3rd Sem', label: '3rd Sem' },
+                                                { value: '4th Sem', label: '4th Sem' },
+                                                { value: '5th Sem', label: '5th Sem' },
+                                                { value: '6th Sem', label: '6th Sem' }
+                                            ]}
+                                            value={semester}
+                                            onChange={setSemester}
+                                            placeholder="Select Semester"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                            <div className="admin-modal-footer">
+                                <button type="submit" className="modal-submit-btn" disabled={isSaving}>
+                                    {isSaving ? 'Connecting...' : editingId ? 'Update Connection' : 'Connect Drive Folder'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             {/* Testimonial Modal */}
             {showTestimonialModal && (
                 <div className="admin-modal-overlay" onClick={(e) => { if (e.target.className === 'admin-modal-overlay') setShowTestimonialModal(false); }}>
