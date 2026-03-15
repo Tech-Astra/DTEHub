@@ -113,8 +113,7 @@ export default function Notes() {
                 }
 
                 // Fetch files in this folder
-                const fetchUrl = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&key=${apiKey}&fields=files(id, name, mimeType, webViewLink, iconLink)`;
-                console.log("Fetching Drive URL:", fetchUrl.replace(apiKey, "HIDDEN_API_KEY"));
+                const fetchUrl = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&key=${apiKey}&fields=files(id, name, mimeType, webViewLink, iconLink)&pageSize=1000`;
                 const res = await fetch(fetchUrl);
 
                 console.log("Drive API Response Status:", res.status);
@@ -466,7 +465,7 @@ export default function Notes() {
                                             handleView(note);
                                         }}
                                     >
-                                        <div className="folder-icon-wrapper" style={note.isDriveFolder ? { background: 'linear-gradient(135deg, #34a853, #fbbc05, #ea4335, #4285f4)' } : {}}>
+                                        <div className="folder-icon-wrapper">
                                             {note.isDriveFolder ? (
                                                 <Folder size={20} color="#ffffff" strokeWidth={2.5} />
                                             ) : note.isFolder ? (
@@ -538,7 +537,7 @@ export default function Notes() {
                                         handleView(note);
                                     }}
                                 >
-                                    <div className="folder-icon-wrapper" style={note.isDriveFolder ? { background: 'linear-gradient(135deg, #34a853, #fbbc05, #ea4335, #4285f4)' } : {}}>
+                                    <div className="folder-icon-wrapper">
                                         {note.isDriveFolder ? (
                                             <Folder size={20} color="#ffffff" strokeWidth={2.5} /> // Using default folder or a link icon
                                         ) : note.isFolder ? (

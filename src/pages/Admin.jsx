@@ -7,7 +7,8 @@ import {
     Plus, Trash2, Edit2, Link as LinkIcon, FolderPlus, FileText,
     Users, Zap, Database, RefreshCw, LayoutDashboard, LogOut,
     CheckCircle2, Eye, BarChart3, ShieldCheck, Menu, X, Home, History,
-    Search, Filter, ChevronDown, Folder, MessageSquare, Quote, Star
+    Search, Filter, ChevronDown, Folder, MessageSquare, Quote, Star,
+    FilterX, ChevronLeft
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import IframeModal from '../components/IframeModal';
@@ -110,7 +111,10 @@ export default function Admin() {
     const [resourceSearchTerm, setResourceSearchTerm] = useState('');
     const [resourceSortOrder, setResourceSortOrder] = useState('title'); // 'title', 'year'
     const [peakedFolder, setPeakedFolder] = useState(null); // For "view inside" pop up
+    const [peakedFolderHistory, setPeakedFolderHistory] = useState([]); // For navigating back in nested drive folders
     const [viewUrl, setViewUrl] = useState(null); // For viewer modal
+    const [driveFiles, setDriveFiles] = useState([]);
+    const [loadingDrive, setLoadingDrive] = useState(false);
 
     // Fetch dynamic charts stats
     const [catData, setCatData] = useState(mockCategoryData);
@@ -295,6 +299,65 @@ export default function Admin() {
             logsUnsubscribe();
         };
     }, [activeTab, user]);
+
+    // Fetch Drive Folder Contents if peakedFolder is a Google Drive Folder
+    useEffect(() => {
+        if (!peakedFolder?.isDriveFolder) {
+            setDriveFiles([]);
+            return;
+        }
+
+        const fetchDriveDocs = async () => {
+            setLoadingDrive(true);
+            try {
+                const folderId = peakedFolder.driveFolderId;
+                const apiKey = import.meta.env.VITE_GOOGLE_DRIVE_API_KEY;
+                if (!apiKey) {
+                    console.error("Missing VITE_GOOGLE_DRIVE_API_KEY in .env");
+                    setLoadingDrive(false);
+                    return;
+                }
+
+                const fetchUrl = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&key=${apiKey}&fields=files(id, name, mimeType, webViewLink, iconLink)&pageSize=1000`;
+                const res = await fetch(fetchUrl);
+                const data = await res.json();
+
+                if (data.files) {
+                    const mappedFiles = data.files.map(f => {
+                        const isFolder = f.mimeType === 'application/vnd.google-apps.folder';
+                        return {
+                            id: `drive-${f.id}`,
+                            title: f.name,
+                            isFolder: isFolder,
+                            isDriveFolder: isFolder,
+                            driveFolderId: f.id,
+                            url: f.webViewLink || `https://drive.google.com/file/d/${f.id}/preview`,
+                            originalDriveId: f.id,
+                            type: isFolder ? 'Folder' : 'Note',
+                            branch: peakedFolder.branch,
+                            syllabus: peakedFolder.syllabus,
+                            semester: peakedFolder.semester,
+                            chapter: 'Drive Resource'
+                        };
+                    });
+
+                    mappedFiles.sort((a, b) => {
+                        if (a.isFolder === b.isFolder) return a.title.localeCompare(b.title);
+                        return a.isFolder ? -1 : 1;
+                    });
+                    setDriveFiles(mappedFiles);
+                } else {
+                    setDriveFiles([]);
+                }
+            } catch (err) {
+                console.error("Failed to fetch Google Drive folder:", err);
+            } finally {
+                setLoadingDrive(false);
+            }
+        };
+
+        fetchDriveDocs();
+    }, [peakedFolder]);
 
     // Computed: Filtered and Sorted Users
     const filteredUsers = usersList
@@ -1145,7 +1208,7 @@ export default function Admin() {
                                 <div className="folder-grid">
                                     {displayFolders.length > 0 ? displayFolders.map(folder => (
                                         <div key={folder.id} className={`folder-card-premium ${folder.isDriveFolder ? 'drive-folder' : ''}`} onClick={() => setPeakedFolder(folder)}>
-                                            <div className="folder-icon-wrapper" style={folder.isDriveFolder ? { background: 'linear-gradient(135deg, #34a853, #fbbc05, #ea4335, #4285f4)' } : {}}>
+                                            <div className="folder-icon-wrapper">
                                                 {folder.isDriveFolder ? <LinkIcon size={24} color="#fff" /> : <Folder size={24} />}
                                             </div>
                                             <div className="folder-info">
@@ -1680,13 +1743,59 @@ export default function Admin() {
                     <div className="admin-modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px' }}>
                         <div className="peak-modal-header">
                             <div className="peak-modal-title">
+                                {peakedFolderHistory.length > 0 && (
+                                    <button onClick={() => {
+                                        const prev = peakedFolderHistory[peakedFolderHistory.length - 1];
+                                        setPeakedFolderHistory(h => h.slice(0, -1));
+                                        setPeakedFolder(prev);
+                                    }} style={{ background: 'transparent', border: 'none', color: 'var(--accent-color)', cursor: 'pointer', marginRight: '0.5rem', display: 'flex', alignItems: 'center' }} title="Go Back">
+                                        <ChevronLeft size={20} />
+                                    </button>
+                                )}
                                 <Folder size={24} color="var(--accent-color)" />
                                 <h3>Peaking inside: {peakedFolder.title}</h3>
                             </div>
-                            <button className="admin-modal-close" onClick={() => setPeakedFolder(null)}><X size={18} /></button>
+                            <button className="admin-modal-close" onClick={() => { setPeakedFolder(null); setPeakedFolderHistory([]); }}><X size={18} /></button>
                         </div>
                         <div className="peak-modal-grid">
-                            {resources.filter(r => r.parentId === peakedFolder.id).length > 0 ? (
+                            {peakedFolder.isDriveFolder ? (
+                                loadingDrive ? (
+                                    <div style={{ textAlign: 'center', padding: '3rem', gridColumn: '1 / -1' }}>
+                                        <div className="loader"></div>
+                                        <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>Fetching from Google Drive...</p>
+                                    </div>
+                                ) : driveFiles.length > 0 ? (
+                                    driveFiles.map(res => (
+                                        <div key={res.id} className="peek-resource-item">
+                                            <div className="peek-res-info" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                {res.isFolder ? <Folder size={18} color="#22c55e" /> : <FileText size={18} color="#00f3ff" />}
+                                                <div>
+                                                    <h5 style={{ margin: 0, fontSize: '0.9rem' }}>{res.title}</h5>
+                                                    <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>{res.isFolder ? 'Drive Folder' : 'Drive File'}</p>
+                                                </div>
+                                            </div>
+                                            <div className="res-actions">
+                                                <button onClick={() => {
+                                                    if (res.isFolder) {
+                                                        setPeakedFolderHistory(prev => [...prev, peakedFolder]);
+                                                        setPeakedFolder(res);
+                                                    } else {
+                                                        setViewUrl(res.url);
+                                                    }
+                                                }} className="btn-outline btn-sm">
+                                                    {res.isFolder ? 'Open Folder' : 'View File'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)', gridColumn: '1 / -1' }}>
+                                        <FilterX size={32} style={{ opacity: 0.5, marginBottom: '0.5rem' }} />
+                                        <p>This Drive folder is empty or not publicly shared.</p>
+                                        <p style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>Note: Folders must be set to "Anyone with the link can view".</p>
+                                    </div>
+                                )
+                            ) : resources.filter(r => r.parentId === peakedFolder.id).length > 0 ? (
                                 resources.filter(r => r.parentId === peakedFolder.id).map(res => (
                                     <div key={res.id} className="peek-resource-item">
                                         <div className="peek-res-info">
@@ -1711,13 +1820,13 @@ export default function Admin() {
                                     </div>
                                 ))
                             ) : (
-                                <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                                <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)', gridColumn: '1 / -1' }}>
                                     <p>This folder is currently empty.</p>
                                 </div>
                             )}
                         </div>
                         <div className="admin-modal-footer">
-                            <button className="modal-submit-btn" style={{ width: '100%', background: 'rgba(255,255,255,0.05)', color: 'white' }} onClick={() => setPeakedFolder(null)}>Close View</button>
+                            <button className="modal-submit-btn" style={{ width: '100%', background: 'rgba(255,255,255,0.05)', color: 'white' }} onClick={() => { setPeakedFolder(null); setPeakedFolderHistory([]); }}>Close View</button>
                         </div>
                     </div>
                 </div>
